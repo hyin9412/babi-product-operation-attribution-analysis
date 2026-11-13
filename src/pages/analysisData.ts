@@ -9,11 +9,12 @@ export const TOS = '对象存储tos';
 export const OTHER = '强一致的键值数据库';
 export const products = [BYTEGRAPH, TOS, OTHER];
 export const months = Array.from({length:9}, (_, i) => `2026-${String(9-i).padStart(2,'0')}`);
-export const areaNames: Record<string,string> = { cn:'中国', us:'美国', eu:'欧洲(TTP)', ap:'海外其他', OCI:'美国TTP' };
+export const areaNames: Record<string,string> = { cn:'中国', us:'美国', eu:'欧洲 TTP', ap:'海外其他', OCI:'美国 TTP' };
 export const areaRegions: Record<string,string[]> = {cn:['cn-east-1','cn-east-2','cn-north-1','cn-north-2','cn-north-3','cn-north-5','cn-north-6'],us:['us-east-1','us-west-1'],eu:['eu-west-1'],ap:['ap-1','ap-thailand','Asia-SouthEastBD'],OCI:['us-ttp-1']};
 // References: none — V205 target display options; source target records remain unapproved.
 export const targetOptions = ['月度目标值','季度目标值','年度目标值'];
 export const defaultFilters: AnalysisFilters = {month:'2026-09', product:BYTEGRAPH, productLine:'研发商品中心-基础架构', trueUp:'不包含', sameProduct:'否', targets:[...targetOptions], areas:null, regions:null, categories:null, units:null};
+export const normalizeAnalysisFilters = (filters:AnalysisFilters):AnalysisFilters => filters.product===TOS ? {...filters,regions:null} : filters;
 export const unitCategories = (product:string):Record<string,string[]> => product===TOS ? {'请求':['Request'],'存储':['Storage','StorageEC']} : product===BYTEGRAPH ? {'计算':['bytegraph.cpu','bytegraph.mem'],'存储':['bytegraph.storage']} : {'其他':['kv.storage']};
 export const unitOptions = (product:string, categories:string[]|null=null) => Object.entries(unitCategories(product)).filter(([category]) => categories===null || categories.includes(category)).flatMap(([,units])=>units);
 export interface AnalysisRow { id:string; month:string; product:string; category:string; unit:string; area:string; region:string; income:number; cost:number|null; profit:number|null; rate:number|null; quantity:number; capacity:number|null; price:number|null; cumulativePrice:number|null; priceStatus:string; unitLabel:string; modelVersion:string; dataVersion:string; }

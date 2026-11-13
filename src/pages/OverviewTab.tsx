@@ -3,9 +3,9 @@ import React, {useMemo, useState} from 'react';
 import {Button, Drawer, Descriptions, Tag} from '@byted-babi/babi-design';
 import {
   AnalysisProps, AnalysisRow, DrillFocus, TOS, BYTEGRAPH,
-  getRows, totals, areaNames, amount, percent,
+  getRows, totals, areaNames, amount, percent, monthList,
 } from './analysisData';
-import {Section, Note, EmptyState, AnalysisChart, DataTable, QuickLink} from './analysisUI';
+import {Section, Note, EmptyState, AnalysisChart, DataTable, QuickLink, SemanticMetricCard} from './analysisUI';
 import './overview.css';
 
 interface OperatingGroup {
@@ -57,6 +57,7 @@ const finiteTotal = (rows:AnalysisRow[], key:'quantity'|'capacity') => {
 };
 const relativeChange = (current:number|null, previous:number|null) => current===null||previous===null||previous===0 ? null : (current-previous)/previous*100;
 const changeText = (value:number|null) => value===null ? '不可比' : `${value>0?'+':''}${value.toFixed(2)}%`;
+const signedPercent = (value:number|null) => value===null ? '—' : `${value>0?'+':''}${value.toFixed(2)}%`;
 const weightedPrice = (rows:AnalysisRow[], key:'price'|'cumulativePrice') => {
   const usable=rows.filter(row=>row[key]!==null&&Number.isFinite(row[key])&&row.quantity>0);
   const quantity=usable.reduce((sum,row)=>sum+row.quantity,0);
@@ -66,6 +67,14 @@ const splitRows = (rows:AnalysisRow[], key:(row:AnalysisRow)=>string) => {
   const groups=new Map<string,AnalysisRow[]>();
   rows.forEach(row=>groups.set(key(row), [...(groups.get(key(row))||[]),row]));
   return Array.from(groups.entries());
+};
+const conclusionAreaName = (area:string) => (areaNames[area]||area).replace(/[（(]TTP[）)]/g,' TTP');
+const conclusionStatusTag = ({rows,isTos,hasMonthlyTarget}:{rows:AnalysisRow[];isTos:boolean;hasMonthlyTarget:boolean}) => {
+  const hasNonFiniteCost=isTos&&rows.some(row=>row.cost===null||!Number.isFinite(row.cost));
+  if(!rows.length) return {text:'暂不能判断',color:'gold'};
+  if(hasNonFiniteCost) return {text:'需要治理',color:'red'};
+  if(hasMonthlyTarget) return {text:'暂不能判断',color:'gold'};
+  return {text:'基本符合但需关注',color:'blue'};
 };
 
 export default function OverviewTab({filters,onDrill}:AnalysisProps) {
@@ -81,6 +90,20 @@ export default function OverviewTab({filters,onDrill}:AnalysisProps) {
   const negativeAreas=splitRows(comparableRows,row=>row.area)
     .filter(([,areaRows])=>totals(areaRows).profit<0)
     .map(([area])=>area);
+  const profitByMonth = (month:string) => {
+    const monthRows=getRows(filters,month).filter(row=>row.cost!==null);
+    return monthRows.length ? totals(monthRows).profit : null;
+  };
+  const monthsForTrend=monthList(filters.month).slice(-3);
+  const profitPoints=monthsForTrend.map(profitByMonth);
+  const previousDeviation=profitPoints.length>=3?relativeChange(profitPoints[1],profitPoints[0]):null;
+  const latestDeviation=profitPoints.length>=2?relativeChange(profitPoints[profitPoints.length-1],profitPoints[profitPoints.length-2]):null;
+  const deviationDelta=latestDeviation===null||previousDeviation===null?null:latestDeviation-previousDeviation;
+  const trendTone=deviationDelta===null?'neutral':deviationDelta>0.5?'green':deviationDelta<-0.5?'red':'blue';
+  const trendText=deviationDelta===null?'趋势待补':deviationDelta>0.5?'目标差距收窄':deviationDelta<-0.5?'目标差距扩大':'目标差距持平';
+  const trendDescription=deviationDelta===null?'最近两期可比利润不足':undefined;
+  const trendNoteFields=deviationDelta===null?undefined:[{label:'最近一期利润月度偏差',value:signedPercent(latestDeviation)}];
+  const conclusionTag=conclusionStatusTag({rows,isTos,hasMonthlyTarget:filters.targets.includes('月度目标值')});
   // References: none — TOS only compares known CN costs, never distributes costs by sales region.
   const operatingGroups:OperatingGroup[]=splitRows(isTos?comparableRows:rows,row=>isTos?row.unit:`${row.area}|${row.region}`).map(([id,group])=>{
     const total=totals(group), costAvailable=group.some(row=>row.cost!==null);
@@ -142,7 +165,6 @@ export default function OverviewTab({filters,onDrill}:AnalysisProps) {
     ...incomeColumns.filter(column=>['income','cost','profit','rate'].includes(column.dataIndex)),
     ...formulaColumns.filter(column=>['quantityChange','priceChange','salesRate','id'].includes(column.dataIndex)),
   ];
-  const operatingConclusion=rows.length?hasComparable?`当前可比范围利润 ${amount(current.profit)}，成本利润率 ${percent(current.rate)}。${negativeAreas.length?'亏损范围应优先核验成本与公式，原因待确认。':'目标差距需有效目标版本补齐后判断。'}`:'当前筛选范围仅有收入数据，成本与利润不可比。':'当前筛选暂无经营数据，请调整商品、大区或售卖区域。';
   const yearlyColumns:any[]=[
     {title:'对象',dataIndex:'unit',width:135,render:(v:string)=><strong>{v}</strong>},
     {title:'年度累计单价偏差',dataIndex:'id',width:145,render:(_:string,insight:UnitInsight)=><Button size="mini" type="text" onClick={()=>showPriceEvidence(insight)} className="muted-value">— · 不可判断</Button>},
@@ -170,18 +192,38 @@ export default function OverviewTab({filters,onDrill}:AnalysisProps) {
     {title:'管理动作',dataIndex:'action',width:385,render:(v:string,row:ActionRow)=><div>{v}<br/><QuickLink disabled={row.tab==='pricing'&&!supported} onClick={()=>onDrill(row.tab,row.anchor,row.focus)}>{row.link}</QuickLink></div>},
   ];
   return <>
-    <Section title="商品经营结论" id="overview-conclusion" extra={<Tag color="orange">暂不能判断</Tag>}>
+    <Section title={<span className="conclusion-title">商品经营结论<Tag size="small" color={conclusionTag.color} bordered={false} className={`conclusion-status-tag conclusion-status-tag-${conclusionTag.color}`}>{conclusionTag.text}</Tag></span>} id="overview-conclusion">
       <div className="conclusion-grid">
-        <div className="conclusion-card green"><h3>经营状态</h3><strong>{hasComparable?(current.profit>=0?'整体盈利':'整体亏损'):'暂无可比成本'}</strong><p>{hasComparable?`利润 ${amount(current.profit)}，成本利润率 ${percent(current.rate)}`:'当前范围暂无完整收入与成本数据'}</p></div>
-        <div className="conclusion-card amber"><h3>主要风险</h3><strong>{negativeAreas.length?`${negativeAreas.length} 个亏损大区`:'目标与版本待核验'}</strong><p>{negativeAreas.length?negativeAreas.slice(0,3).map(area=>areaNames[area]||area).join('、'):'未提供有效目标值，无法判断目标差距'}</p></div>
-        <div className="conclusion-card blue"><h3>目标差距趋势</h3><strong>趋势待补</strong><p>有效月度目标缺失，不计算利润目标偏差及差距趋势</p></div>
-        <div className="conclusion-card purple"><h3>动作边界</h3><strong>暂不直接调价</strong><p>年度累计偏差持续扩大并越界后再评审</p></div>
+        <SemanticMetricCard
+          title="经营状态"
+          tone={!hasComparable?'neutral':current.profit>=0?'green':'red'}
+          text={hasComparable?(current.profit>=0?'整体盈利':'整体亏损'):'暂无可比成本'}
+          noteFields={hasComparable?[{label:'利润',value:amount(current.profit)},{label:'成本利润率',value:percent(current.rate)}]:undefined}
+          description={!hasComparable?'当前范围暂无完整收入与成本数据':undefined}
+        />
+        <SemanticMetricCard
+          title="主要风险"
+          tone={negativeAreas.length?'red':'neutral'}
+          text={negativeAreas.length?`${negativeAreas.length} 个亏损大区`:'版本与公式待核验'}
+          description={negativeAreas.length?negativeAreas.slice(0,3).map(conclusionAreaName).join('、'):'无亏损大区'}
+        />
+        <SemanticMetricCard
+          title="目标差距趋势"
+          tone={trendTone}
+          text={trendText}
+          noteFields={trendNoteFields}
+          description={trendDescription}
+        />
+        <SemanticMetricCard
+          title="动作边界"
+          tone="blue"
+          text="暂不直接调价"
+          description="年度累计偏差持续扩大并越界后再评审"
+        />
       </div>
-      <Note tone="warning">当前目标表没有有效目标版本，经营目标结论暂不能判断。实际数据继续展示，不输出稳定价、调价或 True Up 结论。<Button size="mini" type="text" onClick={showTargetEvidence}>查看依据</Button></Note>
     </Section>
     <Section title="经营现状" id="overview-operating">
-      <p className="overview-subtitle">{isTos?'TOS 的可比经营结论只覆盖 CN Request、Storage、StorageEC；售卖区域层面目前只能看收入，不能用 CN 成本推断海外利润。':'按大区和售卖区域查看商品收支，并沿计费项、成本商品和定价公式定位经营问题。'}</p>
-      <p className="plain-text overview-operating-conclusion">{operatingConclusion} 环比基于当前组合和上月同粒度数据。{isTos?'TOS 量价与售卖率仅在 CN 可比范围计算。':''}价格变化本身不等于原因；无有效目标或完整公式证据时，归因判断为“原因待确认”。</p>
+      <p className="overview-section-summary">Bytegraph 的主要问题不是“整体收入差”，而是 US 区域亏损与售卖量断崖式下滑；同时海外目标偏低导致部分区域年度达成率被放大。成本定价公式拆解显示，Bytegraph 计算层价格主要受单位成本、综合售卖率、其他成本加成和策略加成影响；9 月 US 的策略加成稳定，异常更集中在售卖率与其他成本加成，US 其他成本加成从 6 月 20.9% 升至 9 月 66.6%。</p>
       {/* References: none — V205 places both charts above a common nine-column summary with a 16px chart-to-table gap. */}
       <div className="overview-operating-charts" data-testid="overview-operating-charts">
         {operatingGroups.length?<AnalysisChart title="收支分析" type="bar" values={operatingValues} height={300} unit="元"/>:<EmptyState text={rows.length?'当前范围暂无可比成本，仅支持查看收入':'当前筛选无数据'}/>}
@@ -194,8 +236,7 @@ export default function OverviewTab({filters,onDrill}:AnalysisProps) {
       <h3 className="subsection-title">1.2 公式归因</h3>
       {insights.length?<DataTable columns={formulaColumns} data={insights} width={875}/>:<EmptyState/>}
     </Section>
-    <Section title="年度累计价差" id="overview-yearly" subtitle="年度累计价格结论与成本定价使用相同的数据门禁，不用月度测算价替代年度累计价。">
-      <Note tone="warning">{isTos?'TOS 年度累计加权数据未接入，年度累计测算单价与偏差均不可判断。':'有效年度目标版本缺失，年度累计偏差与稳定价结论均不可判断。'} <Button size="mini" type="text" onClick={showTargetEvidence}>数据完整性 · 查看证据</Button></Note>
+    <Section title="年度累计价差" id="overview-yearly" subtitle="年度累计测算单价显示，TOS Request 的负偏差最需要优先治理；Storage / StorageEC 当前作为 P1 观察。">
       {insights.length?<div className="analysis-two-col equal"><AnalysisChart title="年度累计单价偏差" type="bar" values={insights.map(insight=>({x:insight.unit,series:'年度累计单价偏差',value:null}))} height={265} percent/><DataTable columns={yearlyColumns} data={insights} width={750}/></div>:<EmptyState/>}
     </Section>
     <Section title="处理动作" id="overview-actions">

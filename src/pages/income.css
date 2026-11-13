@@ -53,21 +53,32 @@
   white-space: nowrap;
 }
 .analysis-page .income-detail-table { width: 100%; min-width: 0; }
-.analysis-page .income-detail-table .arco-table-th,
-.analysis-page .income-detail-table .arco-table-td {
+.analysis-page .income-source-summary {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  min-width: 100%;
+  overflow-x: auto;
+  color: var(--color-text-2);
   font-size: 13px;
-  line-height: 1.4;
+  line-height: 22px;
 }
-.analysis-page .income-detail-table .arco-table-cell {
-  overflow-wrap: normal;
+.analysis-page .income-source-summary > span {
+  flex: 0 0 auto;
+  font-weight: 600;
+}
+.analysis-page .income-source-summary > div {
+  display: flex;
+  flex: 1 0 auto;
+  justify-content: flex-end;
+  gap: 20px;
+  min-width: 0;
+}
+.analysis-page .income-source-summary strong {
   white-space: nowrap;
+  font-weight: 600;
 }
-.analysis-page .income-detail-table .arco-table-th .arco-table-cell { overflow: visible; }
 .analysis-page .income-summary-dimension { font-weight: 600; }
-.analysis-page .income-detail-table .arco-table-summary .arco-table-td {
-  background: var(--color-bg-4);
-  white-space: nowrap;
-}
 .analysis-page .income-actual {
   font-weight: 500;
   font-variant-numeric: tabular-nums;

@@ -247,9 +247,9 @@ const renderPushT1ReadyNoPassReason = (dailyUnreadyChargeItemCount: number, mont
 export const costIncomeAreaNameMap: Record<string, string> = {
   ap: i18n.t('other_overseas', {}, '海外其他'),
   cn: i18n.t('china', {}, '中国'),
-  eu: i18n.t('european_ttp', {}, '欧洲TTP'),
+  eu: i18n.t('european_ttp', {}, '欧洲 TTP'),
   us: i18n.t('united_states', {}, '美国'),
-  OCI: i18n.t('us_ttp', {}, '美国TTP'),
+  OCI: i18n.t('us_ttp', {}, '美国 TTP'),
   non_cn: i18n.t('k6486998', {}, '非中'),
 };
 

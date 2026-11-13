@@ -1,0 +1,756 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>商品经营结论卡片与状态 Tag 交互说明</title>
+    <style>
+      :root {
+        --bg: #f6f8fa;
+        --panel: #ffffff;
+        --text-1: #0c0d0e;
+        --text-2: #41464f;
+        --text-3: #737a87;
+        --border-2: #eaedf1;
+        --primary: #3370ff;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        color: var(--text-1);
+        background: var(--bg);
+        font-family:
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          "PingFang SC",
+          "Hiragino Sans GB",
+          "Microsoft YaHei",
+          sans-serif;
+        font-size: 14px;
+        line-height: 1.6;
+      }
+
+      .page {
+        width: min(1240px, calc(100vw - 64px));
+        margin: 0 auto;
+        padding: 40px 0 80px;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        font-size: 28px;
+        font-weight: 600;
+        line-height: 36px;
+      }
+
+      h2 {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0 0 18px;
+        padding-left: 11px;
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 22px;
+      }
+
+      h2::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 50%;
+        width: 3px;
+        height: 12px;
+        transform: translateY(-50%);
+        background: var(--primary);
+        border-radius: 0 2px 2px 0;
+      }
+
+      h3 {
+        margin: 32px 0 14px;
+        font-size: 18px;
+        font-weight: 600;
+        line-height: 26px;
+      }
+
+      .subtitle {
+        margin-top: 10px;
+        color: var(--text-2);
+        font-size: 15px;
+      }
+
+      .section {
+        margin-top: 28px;
+        padding: 24px;
+        background: var(--panel);
+        border: 1px solid var(--border-2);
+        border-radius: 8px;
+      }
+
+      .scenario-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 20px;
+      }
+
+      .scenario-button {
+        height: 32px;
+        padding: 0 12px;
+        border: 1px solid var(--border-2);
+        border-radius: 4px;
+        background: #fff;
+        color: var(--text-2);
+        cursor: pointer;
+        font-size: 13px;
+      }
+
+      .scenario-button.active {
+        color: #1664ff;
+        border-color: #1664ff;
+        background: #f0f6ff;
+      }
+
+      .source-tag {
+        display: inline-flex;
+        align-items: center;
+        height: 20px;
+        padding: 0 6px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 20px;
+        white-space: nowrap;
+      }
+
+      .tag-gold {
+        color: #9f6400;
+        background: #fff7e8;
+      }
+
+      .tag-red {
+        color: #cc2814;
+        background: #fff0ed;
+      }
+
+      .tag-blue {
+        color: #1664ff;
+        background: #f0f6ff;
+      }
+
+      .conclusion-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .semantic-card {
+        display: flex;
+        min-width: 0;
+        min-height: 132px;
+        overflow: hidden;
+        flex-direction: column;
+        gap: 8px;
+        padding: 16px;
+        border: 1px solid #eaedf1;
+        border-radius: 6px;
+        color: #0c0d0e;
+      }
+
+      .semantic-card-red {
+        background: linear-gradient(-1deg, rgba(255, 255, 255, .75) 0%, rgba(255, 255, 255, .75) 32%, rgba(255, 235, 235, .75) 98%);
+      }
+
+      .semantic-card-blue {
+        background: linear-gradient(-1deg, rgba(255, 255, 255, .75) 0%, rgba(255, 255, 255, .75) 32%, rgba(235, 241, 255, .75) 98%);
+      }
+
+      .semantic-card-green {
+        background: linear-gradient(-1deg, rgba(255, 255, 255, .75) 0%, rgba(255, 255, 255, .75) 32%, rgba(227, 251, 224, .75) 98%);
+      }
+
+      .semantic-card-yellow {
+        background: linear-gradient(-1deg, rgba(255, 255, 255, .75) 0%, rgba(255, 255, 255, .75) 32%, rgba(255, 245, 220, .75) 98%);
+      }
+
+      .semantic-card-neutral {
+        background: linear-gradient(-1deg, rgba(255, 255, 255, .75) 0%, rgba(255, 255, 255, .75) 32%, rgba(236, 237, 237, .75) 98%);
+      }
+
+      .semantic-card-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+        color: #0c0d0e;
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 22px;
+        letter-spacing: .003em;
+      }
+
+      .semantic-card-truncate {
+        display: block;
+        min-width: 0;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .semantic-card-icon {
+        display: inline-flex;
+        flex: 0 0 16px;
+        align-items: center;
+        justify-content: center;
+        width: 16px;
+        height: 16px;
+        color: #737a87;
+      }
+
+      .semantic-card-icon svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      .semantic-card-main {
+        display: flex;
+        align-items: flex-end;
+        min-height: 33px;
+        min-width: 0;
+        max-width: 100%;
+        overflow: hidden;
+        color: #0c0d0e;
+        font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, sans-serif;
+        font-size: 24px;
+        font-weight: 600;
+        line-height: 33px;
+      }
+
+      .semantic-card-main.numeric {
+        gap: 4px;
+        font-family: Roboto, "PingFang SC", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, sans-serif;
+        font-size: 28px;
+      }
+
+      .semantic-card-main span {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .semantic-card-fields {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        min-width: 0;
+        max-width: 100%;
+        overflow: hidden;
+      }
+
+      .semantic-card-field {
+        position: relative;
+        display: flex;
+        box-sizing: border-box;
+        flex: 0 1 auto;
+        align-items: center;
+        gap: 4px;
+        min-width: 0;
+        max-width: 100%;
+        overflow: hidden;
+        color: #737a87;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 20px;
+      }
+
+      .semantic-card-field + .semantic-card-field {
+        margin-left: 8px;
+        padding-left: 9px;
+      }
+
+      .semantic-card-field + .semantic-card-field::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 4px;
+        width: 1px;
+        height: 12px;
+        background: #eaedf1;
+      }
+
+      .semantic-card-field-label {
+        min-width: 0;
+        max-width: 100%;
+        flex: 0 1 auto;
+      }
+
+      .semantic-card-field strong {
+        min-width: 0;
+        max-width: 100%;
+        flex: 0 9999 auto;
+        color: #0c0d0e;
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 20px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .semantic-card-description {
+        min-width: 0;
+        max-width: 100%;
+        color: #737a87;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 20px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .spec-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #fff;
+        border: 1px solid var(--border-2);
+      }
+
+      .spec-table th,
+      .spec-table td {
+        padding: 12px 14px;
+        border: 1px solid var(--border-2);
+        text-align: left;
+        vertical-align: top;
+      }
+
+      .spec-table th {
+        color: var(--text-2);
+        background: #f6f8fa;
+        font-weight: 600;
+      }
+
+      .code {
+        display: inline-flex;
+        padding: 1px 6px;
+        border-radius: 4px;
+        background: #f6f8fa;
+        color: #41464f;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 12px;
+      }
+
+      .rules {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .rule-card {
+        padding: 16px;
+        border: 1px solid var(--border-2);
+        border-radius: 6px;
+        background: #fff;
+      }
+
+      .rule-card strong {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 15px;
+      }
+
+      .rule-card p {
+        color: var(--text-2);
+      }
+
+      @media (max-width: 1100px) {
+        .conclusion-grid,
+        .rules {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 720px) {
+        .page {
+          width: calc(100vw - 32px);
+          padding-top: 24px;
+        }
+
+        .section {
+          padding: 16px;
+        }
+
+        .conclusion-grid,
+        .rules {
+          grid-template-columns: 1fr;
+        }
+
+        .spec-table {
+          display: block;
+          overflow-x: auto;
+          white-space: nowrap;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <header>
+        <h1>商品经营结论卡片与状态 Tag 交互说明</h1>
+        <p class="subtitle">
+          本页用于给前端实现对齐：标题旁状态 Tag、四张结论卡片、语义颜色映射、不同数据情况下的展示规则。
+        </p>
+      </header>
+
+      <section class="section" aria-labelledby="preview-title">
+        <div class="scenario-tabs" role="tablist" aria-label="场景切换">
+          <button class="scenario-button active" type="button" data-scenario="targetMissing">月度目标缺失</button>
+          <button class="scenario-button" type="button" data-scenario="tosGovernance">TOS 需要治理</button>
+          <button class="scenario-button" type="button" data-scenario="overallLoss">整体亏损</button>
+          <button class="scenario-button" type="button" data-scenario="healthy">基本符合但需关注</button>
+          <button class="scenario-button" type="button" data-scenario="noData">无明细数据</button>
+        </div>
+
+        <h2 id="preview-title">
+          商品经营结论
+          <span id="status-tag" class="source-tag tag-gold">暂不能判断</span>
+        </h2>
+
+        <div id="card-grid" class="conclusion-grid" aria-live="polite"></div>
+      </section>
+
+      <h3>标题状态 Tag 规则</h3>
+      <table class="spec-table">
+        <thead>
+          <tr>
+            <th>触发条件</th>
+            <th>展示文案</th>
+            <th>源力 Tag 色值</th>
+            <th>优先级</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>查询无明细数据，或收入 / 成本 / 利润 / 利润率任一月度目标缺失</td>
+            <td>暂不能判断</td>
+            <td><span class="source-tag tag-gold">黄色</span>，实现可用 <span class="code">color="gold"</span></td>
+            <td>无数据优先；目标缺失低于 TOS 治理态</td>
+          </tr>
+          <tr>
+            <td>TOS 明细存在非有限成本值</td>
+            <td>需要治理</td>
+            <td><span class="source-tag tag-red">红色</span>，实现可用 <span class="code">color="red"</span></td>
+            <td>高于目标缺失，避免治理问题被「暂不能判断」覆盖</td>
+          </tr>
+          <tr>
+            <td>其余情况</td>
+            <td>基本符合但需关注</td>
+            <td><span class="source-tag tag-blue">蓝色</span>，实现可用 <span class="code">color="blue"</span></td>
+            <td>兜底状态</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>卡片语义与颜色映射</h3>
+      <table class="spec-table">
+        <thead>
+          <tr>
+            <th>语义 tone</th>
+            <th>使用场景</th>
+            <th>渐变背景</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="code">green</span></td>
+            <td>整体盈利、目标差距收窄等正向改善</td>
+            <td>浅绿渐变</td>
+          </tr>
+          <tr>
+            <td><span class="code">red</span></td>
+            <td>整体亏损、存在亏损大区、目标差距扩大</td>
+            <td>浅红渐变</td>
+          </tr>
+          <tr>
+            <td><span class="code">blue</span></td>
+            <td>目标差距持平、动作边界、基本关注态</td>
+            <td>浅蓝渐变</td>
+          </tr>
+          <tr>
+            <td><span class="code">yellow</span></td>
+            <td>提示、待补、谨慎关注。设计稿中如写琥珀色，统一替换为黄色</td>
+            <td>浅黄渐变</td>
+          </tr>
+          <tr>
+            <td><span class="code">neutral</span></td>
+            <td>无数据、无亏损大区、版本与公式待核验</td>
+            <td>浅灰渐变</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>四张卡片生成规则</h3>
+      <div class="rules">
+        <div class="rule-card">
+          <strong>1. 经营状态</strong>
+          <p>利润 >= 0 展示「整体盈利」并用绿色；利润 < 0 展示「整体亏损」并用红色；无可比成本展示「暂无可比成本」并用灰色。下方利润金额、成本利润率属于补充字段。</p>
+        </div>
+        <div class="rule-card">
+          <strong>2. 主要风险</strong>
+          <p>存在亏损大区时展示「N 个亏损大区」并用红色，下方展示前 3 个大区名；无亏损大区时展示「版本与公式待核验」并用灰色。</p>
+        </div>
+        <div class="rule-card">
+          <strong>3. 目标差距趋势</strong>
+          <p>对比最近两期利润月度偏差，按 +/-0.5pct 判定「目标差距收窄 / 扩大 / 持平」；不足两期展示「趋势待补」。下方只要含数值，比如「最近一期利润月度偏差 -24.34%」，就按补充字段样式。</p>
+        </div>
+        <div class="rule-card">
+          <strong>4. 动作边界</strong>
+          <p>固定展示「暂不直接调价」，蓝色卡片。下方策略文案是单句补充说明，不拆字段。</p>
+        </div>
+      </div>
+
+      <h3>溢出与 Popover 约束</h3>
+      <table class="spec-table">
+        <thead>
+          <tr>
+            <th>区域</th>
+            <th>布局约束</th>
+            <th>溢出处理</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>单个卡片内容区</td>
+            <td>上下左右统一 16px padding，卡片本体隐藏溢出</td>
+            <td>任何文本不得撑破卡片</td>
+          </tr>
+          <tr>
+            <td>标题、主体文案、数值、单位</td>
+            <td>单行展示</td>
+            <td>仅实际超出省略时，hover 用 Popover 查看全文；未截断不展示 hover 层</td>
+          </tr>
+          <tr>
+            <td>补充字段</td>
+            <td>字段按内容自适应宽度，分隔线两侧各 8px，多个字段整体不超过卡片内容区宽度</td>
+            <td>空间不足时优先截断后面的字段；字段内部先截断 value，再截断 label；仅实际截断时 hover 用 Popover 查看完整 label/value</td>
+          </tr>
+          <tr>
+            <td>description</td>
+            <td>单句补充说明，不换行</td>
+            <td>仅实际超出省略时，hover 用 Popover 查看全文；未截断不展示 hover 层</td>
+          </tr>
+        </tbody>
+      </table>
+    </main>
+
+    <script>
+      const scenarios = {
+        targetMissing: {
+          tag: { text: "暂不能判断", color: "gold" },
+          cards: [
+            { title: "经营状态", tone: "green", text: "整体盈利", fields: [["利润", "243.87 万元"], ["成本利润率", "11.08%"]] },
+            { title: "主要风险", tone: "red", text: "2 个亏损大区", description: "美国、海外其他" },
+            { title: "目标差距趋势", tone: "red", text: "目标差距扩大", fields: [["最近一期利润月度偏差", "-24.34%"]] },
+            { title: "动作边界", tone: "blue", text: "暂不直接调价", description: "年度累计偏差持续扩大并越界后再评审" }
+          ]
+        },
+        tosGovernance: {
+          tag: { text: "需要治理", color: "red" },
+          cards: [
+            { title: "经营状态", tone: "green", text: "整体盈利", fields: [["利润", "1.12 亿元"], ["成本利润率", "9.86%"]] },
+            { title: "主要风险", tone: "red", text: "1 个亏损大区", description: "海外其他" },
+            { title: "目标差距趋势", tone: "yellow", text: "趋势待补", description: "最近两期可比利润不足" },
+            { title: "动作边界", tone: "blue", text: "暂不直接调价", description: "年度累计偏差持续扩大并越界后再评审" }
+          ]
+        },
+        overallLoss: {
+          tag: { text: "基本符合但需关注", color: "blue" },
+          cards: [
+            { title: "经营状态", tone: "red", text: "整体亏损", fields: [["利润", "-128.45 万元"], ["成本利润率", "-6.32%"]] },
+            { title: "主要风险", tone: "red", text: "3 个亏损大区", description: "美国、欧洲 TTP、海外其他" },
+            { title: "目标差距趋势", tone: "red", text: "目标差距扩大", fields: [["最近一期利润月度偏差", "-49.77%"]] },
+            { title: "动作边界", tone: "blue", text: "暂不直接调价", description: "年度累计偏差持续扩大并越界后再评审" }
+          ]
+        },
+        healthy: {
+          tag: { text: "基本符合但需关注", color: "blue" },
+          cards: [
+            { title: "经营状态", tone: "green", text: "整体盈利", fields: [["利润", "386.20 万元"], ["成本利润率", "18.42%"]] },
+            { title: "主要风险", tone: "neutral", text: "版本与公式待核验", description: "无亏损大区" },
+            { title: "目标差距趋势", tone: "green", text: "目标差距收窄", fields: [["最近一期利润月度偏差", "+3.68%"]] },
+            { title: "动作边界", tone: "blue", text: "暂不直接调价", description: "年度累计偏差持续扩大并越界后再评审" }
+          ]
+        },
+        noData: {
+          tag: { text: "暂不能判断", color: "gold" },
+          cards: [
+            { title: "经营状态", tone: "neutral", text: "暂无可比成本", description: "当前范围暂无完整收入与成本数据" },
+            { title: "主要风险", tone: "neutral", text: "版本与公式待核验", description: "无明细数据" },
+            { title: "目标差距趋势", tone: "neutral", text: "趋势待补", description: "最近两期可比利润不足" },
+            { title: "动作边界", tone: "blue", text: "暂不直接调价", description: "年度累计偏差持续扩大并越界后再评审" }
+          ]
+        }
+      };
+
+      const grid = document.querySelector("#card-grid");
+      const tag = document.querySelector("#status-tag");
+      const buttons = Array.from(document.querySelectorAll(".scenario-button"));
+
+      function renderCard(card) {
+        const fields = card.fields?.length
+          ? `<div class="semantic-card-fields">${card.fields.map(([label, value]) => `<div class="semantic-card-field"><span class="semantic-card-truncate semantic-card-field-label" data-full-text="${label}">${label}</span><strong data-full-text="${value}">${value}</strong></div>`).join("")}</div>`
+          : "";
+        const description = !card.fields?.length && card.description
+          ? `<div class="semantic-card-description" data-full-text="${card.description}">${card.description}</div>`
+          : "";
+        return `
+          <article class="semantic-card semantic-card-${card.tone}">
+            <div class="semantic-card-title"><span class="semantic-card-truncate" data-full-text="${card.title}">${card.title}</span></div>
+            <div class="semantic-card-main"><span class="semantic-card-truncate" data-full-text="${card.text}">${card.text}</span></div>
+            ${fields}
+            ${description}
+          </article>
+        `;
+      }
+
+      function bindOverflowTitles() {
+        document.querySelectorAll("[data-full-text]").forEach((element) => {
+          const overflowing = element.scrollWidth > element.clientWidth + 1 || element.scrollHeight > element.clientHeight + 1;
+          if (overflowing) {
+            element.setAttribute("title", element.dataset.fullText);
+            element.dataset.overflowPopover = "true";
+          } else {
+            element.removeAttribute("title");
+            delete element.dataset.overflowPopover;
+          }
+        });
+      }
+
+      function allocateFieldWidths() {
+        document.querySelectorAll(".semantic-card-fields").forEach((group) => {
+          const fields = Array.from(group.querySelectorAll(".semantic-card-field"));
+          if (!fields.length) return;
+          fields.forEach((field) => {
+            field.style.width = "";
+            field.style.maxWidth = "";
+            field.style.flexBasis = "";
+            field.style.flexShrink = `${1 + index * 1000}`;
+            const label = field.querySelector(".semantic-card-field-label");
+            const value = field.querySelector("strong");
+            [label, value].forEach((node) => {
+              if (!node) return;
+              node.style.width = "";
+              node.style.maxWidth = "";
+              node.style.flexBasis = "";
+            });
+          });
+          const margins = fields.reduce((sum, field, index) => {
+            return sum + (index === 0 ? 0 : parseFloat(getComputedStyle(field).marginLeft) || 0);
+          }, 0);
+          const available = Math.max(0, group.clientWidth - margins);
+          const measured = fields.map((field) => {
+            const clone = field.cloneNode(true);
+            Object.assign(clone.style, {
+              position: "absolute",
+              visibility: "hidden",
+              pointerEvents: "none",
+              flex: "none",
+              width: "max-content",
+              maxWidth: "none",
+              left: "-9999px",
+              top: "0"
+            });
+            group.appendChild(clone);
+            const width = clone.getBoundingClientRect().width;
+            const labelWidth = clone.querySelector(".semantic-card-field-label")?.getBoundingClientRect().width || 0;
+            const valueWidth = clone.querySelector("strong")?.getBoundingClientRect().width || 0;
+            const styles = getComputedStyle(clone);
+            const gap = parseFloat(styles.gap) || 0;
+            const horizontalPadding = (parseFloat(styles.paddingLeft) || 0) + (parseFloat(styles.paddingRight) || 0);
+            group.removeChild(clone);
+            return { field: width, label: labelWidth, value: valueWidth, gap, horizontalPadding };
+          });
+          const desired = measured.map((item) => item.field);
+          const total = desired.reduce((sum, width) => sum + width, 0);
+          if (total <= available) {
+            return;
+          }
+          let remaining = available;
+          const minWidth = 36;
+          const minValueWidth = 16;
+          fields.forEach((field, index) => {
+            const laterCount = fields.length - index - 1;
+            const reserveForLater = laterCount * minWidth;
+            const maxForCurrent = Math.max(0, remaining - reserveForLater);
+            const allocated = Math.min(desired[index], maxForCurrent);
+            remaining -= allocated;
+            const item = measured[index];
+            const innerAvailable = Math.max(0, allocated - item.horizontalPadding - item.gap);
+            const label = field.querySelector(".semantic-card-field-label");
+            const value = field.querySelector("strong");
+            field.style.width = `${allocated}px`;
+            field.style.maxWidth = `${allocated}px`;
+            field.style.flexBasis = `${allocated}px`;
+            field.style.flexShrink = `${1 + index * 1000}`;
+            if (allocated < desired[index]) {
+              let labelWidth;
+              let valueWidth;
+              if (innerAvailable >= item.label + minValueWidth) {
+                labelWidth = null;
+                valueWidth = Math.max(0, innerAvailable - item.label);
+              } else {
+                valueWidth = Math.min(item.value, minValueWidth, innerAvailable);
+                labelWidth = Math.max(0, innerAvailable - valueWidth);
+              }
+              if (label && labelWidth !== null) {
+                label.style.width = `${labelWidth}px`;
+                label.style.maxWidth = `${labelWidth}px`;
+                label.style.flexBasis = `${labelWidth}px`;
+              }
+              if (value && valueWidth !== null) {
+                value.style.width = `${valueWidth}px`;
+                value.style.maxWidth = `${valueWidth}px`;
+                value.style.flexBasis = `${valueWidth}px`;
+              }
+            }
+          });
+        });
+      }
+
+      function renderScenario(name) {
+        const scenario = scenarios[name];
+        tag.textContent = scenario.tag.text;
+        tag.className = `source-tag tag-${scenario.tag.color}`;
+        grid.innerHTML = scenario.cards.map(renderCard).join("");
+        allocateFieldWidths();
+        bindOverflowTitles();
+        buttons.forEach(button => button.classList.toggle("active", button.dataset.scenario === name));
+      }
+
+      window.addEventListener("resize", () => {
+        allocateFieldWidths();
+        bindOverflowTitles();
+      });
+
+      buttons.forEach(button => {
+        button.addEventListener("click", () => renderScenario(button.dataset.scenario));
+      });
+
+      renderScenario("targetMissing");
+    </script>
+  </body>
+</html>

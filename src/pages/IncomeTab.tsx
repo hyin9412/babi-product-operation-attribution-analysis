@@ -1,11 +1,11 @@
 // References: none — new income analysis tab, based on section 4 of the supplied PRD and its screenshots.
 import React, { useEffect, useMemo, useState } from 'react';
-import { Button, Table, Tag, Tooltip } from '@byted-babi/babi-design';
+import { Button, Tag, Tooltip } from '@byted-babi/babi-design';
 import {
   AnalysisProps, AnalysisFilters, AnalysisRow, BYTEGRAPH, TOS, areaNames,
   amount, percent, getRows, monthList, totals, trendValues,
 } from './analysisData';
-import { AnalysisChart, ChartValue, DataTable, EmptyState, Fold, MultiFilter, Note, Section } from './analysisUI';
+import { AnalysisChart, ChartValue, DataTable, EmptyState, Fold, MultiFilter, Note, Section, SourceTable, sourcePaginationProps } from './analysisUI';
 import CostAnalysis from './CostAnalysis';
 import './income.css';
 
@@ -105,7 +105,7 @@ function CategoryCard({category,filters,onDrill}:AnalysisProps&{category:string}
   const tableWidth=widths.unit+widths.area+(!tos?widths.region:0)+flatFields.reduce((sum,column)=>sum+column.width,0);
   const summaryCurrent=scopeTotal(selectedRows),summaryAnnual=scopeTotal(accumulatedRows);
   const summaryValues={...summaryCurrent,accumulatedIncome:summaryAnnual.income,accumulatedCost:summaryAnnual.cost,accumulatedProfit:summaryAnnual.profit};
-  const summary=()=> <Table.Summary fixed="bottom"><Table.Summary.Row><Table.Summary.Cell colSpan={tos?2:3} className="income-summary-dimension">总计</Table.Summary.Cell>{flatFields.map((column,index)=><Table.Summary.Cell key={index} style={{textAlign:'right'}}><strong className={column.field==='missing'?'muted-value':''}>{column.render((summaryValues as any)[column.field])}</strong></Table.Summary.Cell>)}</Table.Summary.Row></Table.Summary>;
+  const summaryFooter=()=> <div className="income-source-summary"><span className="income-summary-dimension">总计</span><div>{flatFields.map((column,index)=><strong key={index} className={column.field==='missing'?'muted-value':''}>{column.render((summaryValues as any)[column.field])}</strong>)}</div></div>;
   const trendCombos=grouped(selectedRows,tos);
   const comboTrends=(key:Metric)=>monthList(filters.month).flatMap(month=>{
     const monthRows=grouped(getRows(localFilters,month),tos);
@@ -115,7 +115,7 @@ function CategoryCard({category,filters,onDrill}:AnalysisProps&{category:string}
   const supported=filters.product===BYTEGRAPH||tos;
   return <div className="income-category-card">
     <div className="income-category-heading"><div className="income-category-controls"><span className="income-category-title">{category}</span><div className="income-unit-select"><MultiFilter value={units} options={candidates} onChange={setUnits}/></div><Button type="text" className="income-formula-link" disabled={!supported||!selectedRows.length} onClick={()=>onDrill('pricing','pricing-item-formula',{categories:[category],units:units===null?candidates:units,areas:Array.from(new Set(selectedRows.map(row=>row.area))),regions:null})}>{supported?'定价公式分析':'暂无定价公式'}</Button></div><span className="income-table-hint">拖动维度列边缘调整列宽</span></div>
-    {units!==null&&!units.length?<EmptyState text="当前筛选无数据，请至少选择一项或点击“全选”"/>:<div className="income-detail-table"><Table rowKey="id" size="small" border={{wrapper:true}} stripe columns={columns} data={sortedRows} pagination={false} scroll={{x:tableWidth,y:320}} noDataElement={<EmptyState/>} summary={summary} onChange={(_pagination:any,sorter:any)=>{if(sorter?.field&&sorter?.direction)setSort({field:sorter.field,direction:sorter.direction});else setSort({field:'rate',direction:'descend'});}}/></div>}
+    {units!==null&&!units.length?<EmptyState text="当前筛选无数据，请至少选择一项或点击“全选”"/>:<div className="income-detail-table"><SourceTable columns={columns} data={sortedRows} pagination={sourcePaginationProps(sortedRows.length)} width={tableWidth} maxHeight={320} footer={summaryFooter} onChange={(_pagination:any,sorter:any)=>{if(sorter?.field&&sorter?.direction)setSort({field:sorter.field,direction:sorter.direction});else setSort({field:'rate',direction:'descend'});}}/></div>}
     <Fold title="月趋势"><div className="analysis-chart-grid">{metrics.map(metric=><AnalysisChart key={metric.key} title={metric.label} values={comboTrends(metric.key)} percent={metric.key==='rate'} unit={metric.key==='rate'?'%':'人民币'} height={250}/>)}</div></Fold>
     {/* References: none — reuse the snapshot cost view inside this category's unit selection, preserving TOS scope and illustrative-cost notices. */}
     <CostAnalysis filters={localFilters} id={`income-item-cost-${encodeURIComponent(filters.product)}-${encodeURIComponent(category)}`} detailed/>

@@ -1,8 +1,8 @@
 // References: none — PRD cost-pricing behavior retained; standard Pagination and Alert follow project design rules.
 import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, Button, Drawer, Pagination, Select, Table, Tooltip } from '@byted-babi/babi-design';
+import { Alert, Button, Drawer, Select, Tooltip } from '@byted-babi/babi-design';
 import { AnalysisFilters, AnalysisProps, AnalysisRow, BYTEGRAPH, TOS, amount, areaNames, getRows, monthList, percent, priceFormat, quantityFormat, snapshot } from './analysisData';
-import { AnalysisChart, ChartValue, EmptyState, ExactValue, Field, Fold, Note, Section, SELECT_SEARCH_THRESHOLD, getSelectPlaceholder } from './analysisUI';
+import { AnalysisChart, ChartValue, EmptyState, ExactValue, Field, Fold, Note, Section, SELECT_SEARCH_THRESHOLD, SourceTable, getSelectPlaceholder, sourcePaginationProps } from './analysisUI';
 import CostAnalysis from './CostAnalysis';
 import './pricing.css';
 
@@ -95,7 +95,6 @@ export default function PricingTab({ filters }: AnalysisProps) {
   const rows = useMemo(() => getRows(filters), [filters]);
   const filterKey = JSON.stringify(filters);
   const [priceSort, setPriceSort] = useState<SortState>({ key: 'monthDeviation', order: 'descend' });
-  const [page, setPage] = useState(1), [pageSize, setPageSize] = useState(10);
   const [formulaUnit, setFormulaUnit] = useState('');
   const [formulaArea, setFormulaArea] = useState('');
   const [formulaRegion, setFormulaRegion] = useState('');
@@ -129,14 +128,13 @@ export default function PricingTab({ filters }: AnalysisProps) {
   const metricTrendValues: ChartValue[] = monthlyFormulaRows.flatMap(row => metricSeries.map(series => ({ x: row.month.slice(5) + '月', series, value: series === '实际值' ? row.actual : null })));
   const metricUnavailable = timeGrain === 'day' || aggregation === 'dailyAverage';
   const metricUnavailableText = timeGrain === 'day' ? '按天粒度暂未接入，暂无可展示的日趋势与明细；请切换“按月”查看。' : '月日均聚合口径暂未接入：分母、支持指标及单位换算尚未核验，不将单价、比率或数量统一除以自然日。请切换“月总计”查看。';
-  useEffect(() => { setPage(1); setPriceSort({ key: 'monthDeviation', order: 'descend' }); setExpanded(new Set()); setMetric('root'); setTimeGrain('month'); setAggregation('total'); }, [filterKey]);
+  useEffect(() => { setPriceSort({ key: 'monthDeviation', order: 'descend' }); setExpanded(new Set()); setMetric('root'); setTimeGrain('month'); setAggregation('total'); }, [filterKey]);
   useEffect(() => { setExpanded(new Set()); setMetric('root'); setMetricSort({ key: 'deviation', order: 'descend' }); }, [activeUnit, activeArea, activeRegion]);
   useEffect(() => { setMetricSort({ key: 'deviation', order: 'descend' }); }, [metric]);
   const toggle = (id: string) => setExpanded(current => { const next = new Set(current); if (next.has(id)) next.delete(id); else next.add(id); return next; });
   const showTrend = (id: string) => { setMetric(id); setTimeout(() => document.getElementById('pricing-metric-trend')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80); };
   const priceRows: PriceRow[] = rows.map(row => ({ ...row, price: normalizedPrice(row), monthTarget: null, monthDeviation: null, quarterTarget: null, quarterDeviation: null, annualTarget: null, annualDeviation: null }));
   const sortedPrices = sortRows(priceRows, priceSort);
-  const pagePrices = sortedPrices.slice((page - 1) * pageSize, page * pageSize);
   const priceColumns: any[] = [
     { title: '账期月份', dataIndex: 'month', width: 120, fixed: 'left', ...sortColumn('month', priceSort) },
     { title: '计费单元', dataIndex: 'unit', width: 170, fixed: 'left' },
@@ -187,9 +185,7 @@ export default function PricingTab({ filters }: AnalysisProps) {
     <Section title="单价目标差距" id="pricing-item-income" extra={<span className="pricing-source">定价快照</span>} subtitle="月度偏差幅度 =（月度测算单价 - 月度目标单价）/ 月度目标单价 × 100%；年度累计单价采用同组合、同单位的售卖量加权快照。">
       <p className="plain-text pricing-quarter-caliber">季度偏差幅度 =（月度测算单价 - 季度目标单价）/ 季度目标单价 × 100%。{isTos ? 'TOS 按计费单元 × 大区匹配。' : ''}季度目标口径尚未核验：“当季已过月度目标之和”不能直接用于单价或比率；有效季度目标缺失时显示“—”。</p>
       <Note tone="warning">{isTos ? 'TOS 尚未接入年度累计加权数据，年度累计测算单价与偏差暂不可用；月度价格不能作为年度累计价格。' : '目标表尚无有效目标版本，保留月度与累计实际快照；目标、偏差和稳定价结论暂不能判断。'}</Note>
-      {rows.length === 0 ? <EmptyState text="当前筛选组合暂无线上单价数据"/> : <><div className="analysis-table"><Table rowKey="id" size="small" stripe border={{ wrapper: true }} columns={priceColumns} data={pagePrices} pagination={false} scroll={{ x: priceColumns.reduce((sum, column) => sum + (column.width || 150), 0) }} onChange={(_pagination, sorter) => { setPriceSort(stateFromSorter(sorter, { key: 'monthDeviation', order: 'descend' })); setPage(1); }}/></div>
-        <div className="pricing-pagination"><span>共 {sortedPrices.length} 条，当前显示第 {(page - 1) * pageSize + 1}-{Math.min(page * pageSize, sortedPrices.length)} 条</span><Pagination size="small" current={page} pageSize={pageSize} total={sortedPrices.length} sizeCanChange sizeOptions={[10, 20, 50, 100]} onChange={(nextPage, nextSize) => { setPageSize(nextSize); setPage(nextSize === pageSize ? nextPage : 1); }} onPageSizeChange={nextSize => { setPageSize(nextSize); setPage(1); }}/></div>
-      </>}
+      {rows.length === 0 ? <EmptyState text="当前筛选组合暂无线上单价数据"/> : <SourceTable key={filterKey} columns={priceColumns} data={sortedPrices} pagination={sourcePaginationProps(sortedPrices.length)} width={priceColumns.reduce((sum, column) => sum + (column.width || 150), 0)} onChange={(_pagination:any, sorter:any) => setPriceSort(stateFromSorter(sorter, { key: 'monthDeviation', order: 'descend' }))}/>}
       <Fold title="月趋势"><div className="analysis-chart-grid" data-testid="pricing-price-trends">
         <AnalysisChart title="月度目标偏差趋势" values={[...priceTrends(filters, 'price'), ...(monthlyTargets ? unavailableTrend(filters, ['月度目标', '月度偏差（%）']) : [])]} dashedSeries={['月度目标']} unit="人民币 / 计费单位"/>
         <div className="pricing-quarter-trend"><AnalysisChart title="季度目标偏差趋势" values={quarterlyTargets ? unavailableTrend(filters, ['季度目标', '季度偏差（%）']) : []} dashedSeries={['季度目标']} unit="人民币 / 计费单位"/><p className="plain-text">{quarterlyTargets ? '未提供有效季度目标，季度偏差不可计算；不绘制目标或偏差线。' : '未选择季度目标值，季度目标与偏差不展示。'}</p></div>
@@ -215,7 +211,7 @@ export default function PricingTab({ filters }: AnalysisProps) {
             <AnalysisChart key={`${metric}-${activeUnit}-${activeArea}-${activeRegion}`} title={selectedNode?.title || '公式指标月度趋势'} values={metricTrendValues} dashedSeries={['月度目标', '季度目标']} dottedSeries={['年度目标']} percent={selectedNode?.type === 'ratio'} unit={selectedNode?.unit || ''} height={270}/>
             <p className="plain-text">月度目标值、年度目标值均无有效数据，曲线不绘制；目标单元格显示“—”。公式卡年度偏差不是年度累计偏差。</p>
             {quarterlyTargets && <p className="plain-text">季度目标值无有效数据，季度曲线不绘制，季度目标与季度偏差显示“—”；不由月度单价或比率求和推定季度目标。</p>}
-            <div className="analysis-table"><Table rowKey="id" size="small" stripe border={{ wrapper: true }} columns={metricColumns} data={sortRows(monthlyFormulaRows, metricSort)} pagination={false} scroll={{ x: metricColumns.reduce((sum, column) => sum + (column.width || 150), 0) }} onChange={(_pagination, sorter) => setMetricSort(stateFromSorter(sorter, { key: 'deviation', order: 'descend' }))} noDataElement={<EmptyState text="当前全局筛选结果下暂无可展示的组合维度月度趋势明细"/>}/></div>
+            <SourceTable columns={metricColumns} data={sortRows(monthlyFormulaRows, metricSort)} pagination={sourcePaginationProps(monthlyFormulaRows.length)} width={metricColumns.reduce((sum, column) => sum + (column.width || 150), 0)} onChange={(_pagination:any, sorter:any) => setMetricSort(stateFromSorter(sorter, { key: 'deviation', order: 'descend' }))} noDataElement={<EmptyState text="当前全局筛选结果下暂无可展示的组合维度月度趋势明细" compact size={60}/>}/>
           </>}
         </div>
       </>}

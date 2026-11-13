@@ -1,8 +1,8 @@
 // References: none — shared existing prototype cost snapshot presentation for income and pricing; no business allocation is inferred.
 import React, { useState } from 'react';
-import { Table, Tooltip } from '@byted-babi/babi-design';
-import { AnalysisFilters, AnalysisRow, TOS, amount, areaNames, getRows, monthList, quantityFormat } from './analysisData';
-import { AnalysisChart, ChartValue, DataTable, EmptyState, ExactValue, Fold, Note, Section } from './analysisUI';
+import { Tooltip } from '@byted-babi/babi-design';
+import { AnalysisFilters, AnalysisRow, TOS, amount, areaNames, getRows, monthList, normalizeAnalysisFilters, quantityFormat } from './analysisData';
+import { AnalysisChart, ChartValue, DataTable, EmptyState, ExactValue, Fold, Note, Section, SourceTable, sourcePaginationProps } from './analysisUI';
 import './pricing.css';
 
 interface CostRow { id:string;unit:string;category:string;area:string;region?:string;capacity:number;unitLabel:string;cost:number;goods:Record<string,number>; }
@@ -47,16 +47,17 @@ function CostCategory({category,rows,filters,detailed}:{category:string;rows:Cos
  const composition=goods.map(name=>({id:name,product:name,item:name==='其他商品'?'其他资源计费项':`${name} · 纯资源成本`,amount:rows.reduce((total,row)=>total+(row.goods[name]||0),0)}));
  return <div className="pricing-cost-category">
   <div className="pricing-category-head"><span>{category==='计算'?'计算资源':category==='存储'?'存储资源':category}</span><small>{tos?'计费单元 × 大区':'计费单元 × 大区 × 售卖区域'}</small></div>
-  <div className="analysis-table"><Table rowKey="id" size="small" stripe border={{wrapper:true}} columns={columns} data={sorted} pagination={false} scroll={{x:tos?1170:1510,y:320}} onChange={(_pagination:any,sorter:any)=>setSort(sorter?.field&&sorter?.direction?{key:sorter.field,order:sorter.direction}:{key:'cost',order:'descend'})}/></div>
+  <SourceTable columns={columns} data={sorted} pagination={sourcePaginationProps(sorted.length)} width={tos?1170:1510} maxHeight={320} onChange={(_pagination:any,sorter:any)=>setSort(sorter?.field&&sorter?.direction?{key:sorter.field,order:sorter.direction}:{key:'cost',order:'descend'})}/>
   <div className="table-total pricing-total"><b>总计</b><span>物理容量 {unique(rows.map(row=>row.unitLabel)).length===1?`${quantityFormat(rows.reduce((total,row)=>total+row.capacity,0))} ${rows[0]?.unitLabel}`:'不同单位不汇总'}</span><strong>成本 {amount(sum)}</strong></div>
   <Fold title="查看成本商品计费项构成"><p className="plain-text">构成金额按原型快照示意比例展示，仅用于还原成本明细交互，不作为业务归因依据。</p><DataTable columns={[{title:'成本商品',dataIndex:'product',width:220},{title:'成本计费项',dataIndex:'item',width:300},{title:'金额',dataIndex:'amount',render:amount,sorter:(a:any,b:any)=>a.amount-b.amount}]} data={composition}/></Fold>
   <Fold title="月趋势"><div className="analysis-chart-grid"><AnalysisChart title="成本月趋势" values={trends(filters,category,'cost')} unit="人民币"/><AnalysisChart title="成本商品月趋势" values={trends(filters,category,'goods',detailed?'area':'overall')} unit="人民币"/>{detailed&&!tos&&<AnalysisChart title="计费单元 × 售卖区域 × 成本商品月趋势" values={trends(filters,category,'goods','region')} unit="人民币"/>}<AnalysisChart title="售卖量月趋势" values={trends(filters,category,'quantity')} unit={unique(rows.map(row=>row.unitLabel)).length===1?rows[0]?.unitLabel||'':'各组合计费单位'}/></div></Fold>
  </div>;
 }
 export default function CostAnalysis({filters,id='pricing-item-cost',detailed=false}:{filters:AnalysisFilters;id?:string;detailed?:boolean}) {
- const tos=filters.product===TOS,rows=costRows(getRows(filters),tos),categories=unique(rows.map(row=>row.category));
+ const safeFilters=normalizeAnalysisFilters(filters);
+ const tos=safeFilters.product===TOS,rows=costRows(getRows(safeFilters),tos),categories=unique(rows.map(row=>row.category));
  return <Section title="计费项成本" id={id} blue>
   {tos&&<Note tone="warning">对象存储 TOS 的成本源数据仅支持“计费单元 × 大区”，不按售卖区域拆分，也不按收入占比分摊。请移除“售卖区域”分析维度后查看，避免把大区成本误认为售卖区域成本。</Note>}
-  {rows.length===0?<EmptyState text="当前筛选无数据"/>:categories.map(category=><CostCategory key={`${filters.product}-${category}-${filters.month}`} category={category} rows={rows.filter(row=>row.category===category)} filters={filters} detailed={detailed}/>)}
+  {rows.length===0?<EmptyState text="当前筛选无数据"/>:categories.map(category=><CostCategory key={`${safeFilters.product}-${category}-${safeFilters.month}`} category={category} rows={rows.filter(row=>row.category===category)} filters={safeFilters} detailed={detailed}/>)}
  </Section>;
 }
