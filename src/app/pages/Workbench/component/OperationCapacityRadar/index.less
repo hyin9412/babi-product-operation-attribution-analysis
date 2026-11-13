@@ -1,0 +1,235 @@
+.loading {
+  width: 100%;
+  height: 100%;
+}
+
+.equal_container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dimension_card {
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  padding: 12px;
+  background: #fff;
+  border: 1px solid #eaedf1bf;
+  border-radius: 8px;
+}
+
+.dimension_order {
+  flex: 0 0 auto;
+  margin-right: 8px;
+  font-family: Menlo, monospace;
+  font-size: 14px;
+  line-height: 22px;
+  padding-top: 1px;
+  color: #737a87;
+}
+
+.dimension_content {
+  flex: 1;
+  min-width: 0;
+}
+
+.dimension_header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  height: 22px;
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+
+.dimension_title_group {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dimension_title {
+  min-width: 0;
+  max-width: 132px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 22px;
+  color: #0c0d0e;
+}
+
+.status_tag {
+  flex: 0 0 auto;
+  padding: 0 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 18px;
+}
+
+.status_qualified {
+  color: #168a45;
+  background: #e9f8ef;
+}
+
+.status_unqualified,
+.status_error {
+  color: #d7312a;
+  background: #ffecec;
+}
+
+.priority_tag {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  box-sizing: border-box;
+  padding: 0 6px;
+  border-radius: 8px 4px 8px 4px;
+  background: linear-gradient(71.57deg, #ff9878 -0.69%, #fa2967 101.16%);
+  font-size: 10px;
+  height: 18px;
+  line-height: 18px;
+  color: #fff;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.priority_tag_medium {
+  padding: 3px 5px;
+  background: linear-gradient(90deg, #fef5c4 0%, #f0c573 100%);
+  color: #733e0f;
+  line-height: 13px;
+}
+
+.handle_link {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  line-height: 20px;
+  color: #1664ff;
+  cursor: pointer;
+}
+
+.top_issue {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 12px;
+  line-height: 20px;
+  color: #737a87;
+}
+
+.top_issue_tooltip {
+  :global {
+    .arco-tooltip-content {
+      color: #0c0d0e;
+    }
+  }
+}
+
+.top_issue_label {
+  flex: 0 0 auto;
+}
+
+.top_issue_content {
+  flex: 1;
+  min-width: 0;
+}
+
+.dimension_desc {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  line-height: 20px;
+  color: #737a87;
+}
+
+.issue_ratio {
+  font-family: Roboto, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 16px;
+  color: #42464e;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.issue_ratio_popover {
+  // min-width: 160px;
+  // padding: 8px 12px;
+  font-family: 'PingFang SC', sans-serif;
+  font-size: 12px;
+  line-height: 20px;
+  color: #0c0d0e;
+  // background: #fff;
+  // border: 1px solid #dde2e9;
+  // border-radius: 4px;
+  // box-shadow:
+  //   0 15px 35px -2px #0000000d,
+  //   0 5px 15px 0 #0000000d;
+}
+
+.issue_ratio_popover_title {
+  color: #0c0d0e;
+}
+
+.issue_ratio_popover_list {
+  overflow: hidden;
+  padding-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.issue_ratio_popover_item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-left: 20px;
+  position: relative;
+
+  .issue_ratio_popover_item_prefix {
+    position: absolute;
+    left: 6px;
+    top: -19px;
+    width: 10px;
+    height: 30px;
+    border-left: 1px solid #eaedf1;
+    border-bottom: 1px solid #eaedf1;
+    border-radius: 0 0 0 4px;
+  }
+}
+
+.issue_ratio_popover_text {
+  color: #42464e;
+  white-space: nowrap;
+}
+
+.issue_ratio_popover_tag {
+  flex: 0 0 auto;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: #ffecec;
+  color: #d7312a;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+}
+
+.issue_ratio_popover_tag_qualified {
+  background: #e9f8ef;
+  color: #168a45;
+}

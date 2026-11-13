@@ -1,0 +1,86 @@
+.menuItem {
+  cursor: pointer;
+  font-weight: normal;
+  font-size: 13px;
+}
+
+.dropdownWrapper {
+  width: 240px;
+  padding: 0;
+  overflow: hidden;
+  max-height: inherit;
+
+  .userInfo {
+    display: flex;
+    padding: 8px 5px 0 10px;
+    height: 50px;
+    // border-bottom: 1px solid #E6E8EB;
+    margin: 0 0 8px 0;
+
+    > img {
+      margin-right: 10px;
+    }
+
+    p {
+      font-size: 12px;
+      margin: 0;
+      text-overflow: ellipsis;
+      display: block;
+      width: 165px;
+      overflow: hidden;
+      word-wrap: normal;
+    }
+  }
+
+  :global(.arco-dropdown-menu-selected) {
+    color: rgb(var(--primary-5));
+  }
+
+  :global(.arco-dropdown-menu-item) {
+    height: auto;
+  }
+
+  .switch {
+    :global(.arco-dropdown-menu-icon-suffix) {
+      display: none;
+    }
+  }
+
+  .quit,
+  .switch {
+    text-align: center;
+    border-top: 1px solid #e6e8eb;
+  }
+}
+
+.i18n {
+  g path {
+    fill: white;
+    fill-opacity: 0.84;
+  }
+}
+
+.keybind {
+  color: #999;
+}
+
+.permission {
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.roleTag {
+  padding: 0 5px;
+  height: 18px;
+  line-height: 18px;
+  background: linear-gradient(90deg, #fef5c4 0%, #f0c573 100%);
+  border: 0.5px solid;
+  border-left: none;
+  border-image-source: linear-gradient(257.63deg, #fbf4d7 1.03%, rgba(238, 203, 134, 0) 51.56%, #fefcf1 102.52%);
+  border-radius: 8px 4px 8px 0;
+  margin-left: 2px;
+  color: #733e0f;
+  font-weight: 600;
+  font-size: 10px;
+}

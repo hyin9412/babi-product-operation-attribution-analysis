@@ -1,0 +1,44 @@
+export const ANALYSIS_EMBED_PATH = '/finance/embed/analysis';
+
+export const normalizeRoutePath = (pathname = window.location.pathname) => pathname.replace(/\/+$/, '');
+
+export const isAnalysisEmbedRoute = (pathname = window.location.pathname) =>
+  normalizeRoutePath(pathname) === ANALYSIS_EMBED_PATH;
+
+export enum PageKeyEnum {
+  PRODUCT_COST = 'PRODUCT_COST',
+  PRODUCT_INCOME = 'PRODUCT_INCOME',
+  PRODUCT_MEASURE = 'PRODUCT_MEASURE',
+  PRODUCT_DIVISION = 'PRODUCT_DIVISION_NEW',
+  SECONDARY_DIVISION = 'SECONDARY_DIVISION',
+  SERVICE_TREE_COST = 'SERVICE_TREE_COST',
+  APP_COST = 'APP_COST',
+  APP_COST_NEW = 'APP_COST_NEW',
+  DEFAULT_TREE_NODE = 'DEFAULT_TREE_NODE',
+  HOMEPAGE = 'HOMEPAGE',
+  MONITOR_ALARM = 'MONITOR_ALARM',
+  MONITOR_ALARM_CONFIGURATION = 'MONITOR_ALARM_CONFIGURATION',
+  /** 财务管理-月结账单 */
+  MONTH_BILL = 'MONTH_BILL',
+  ACCOUNT_DETAIL = 'ACCOUNT_DETAIL',
+  HUMAN_VOLCANO = 'HUMAN_VOLCANO',
+  HUMAN_BUSINESS = 'HUMAN_BUSINESS',
+  /** APP管理-事件中心 */
+  APP_MANAGE_EVENT_CENTER = 'APP_MANAGE_EVENT_CENTER',
+  /**主体管理-APP */
+  SUBJECT_APP = 'SUBJECT_APP',
+  /**主体管理-ProductLine */
+  SUBJECT_PRODUCT_LINE = 'SUBJECT_PRODUCT_LINE',
+  /**主体管理-职能部门 */
+  SUBJECT_FUNCTIONAL_DEPARTMENT = 'SUBJECT_FUNCTIONAL_DEPARTMENT',
+  /**BABI账号管理-BABI账号管理 */
+  BABI_ACCOUNT = 'BABI_ACCOUNT',
+  /* 可视化分析 */
+  VISUALIZED_ANALYSIS = 'VISUALIZED_ANALYSIS',
+  /* 建议值管理 */
+  RECOMMENDED_VALUE_MANAGEMENT = 'RECOMMENDED_VALUE_MANAGEMENT',
+  // Finops - 成本团队
+  FINOPS_COST_TEAM = 'FINOPS_COST_TEAM',
+  /* Finops - 团队概览 */
+  FINOPS_TEAM_OVERVIEW = 'FINOPS_TEAM_OVERVIEW',
+}

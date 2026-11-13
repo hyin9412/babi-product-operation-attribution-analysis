@@ -1,0 +1,681 @@
+/* 工作台个人视图样式 */
+
+/* 主容器 */
+.container {
+  display: flex;
+  width: 100%;
+  gap: 16px;
+  padding-top: 16px;
+}
+
+/* 左侧内容 */
+.leftContent {
+  width: 70%;
+}
+
+/* 右侧内容 */
+.rightContent {
+  width: 30%;
+}
+
+/* 活动内容 */
+.activityContent {
+  border-radius: 8px;
+  box-shadow: 0px 2px 4px 0px #0000000d;
+  background-image: url('@src/static/workspace_activity_bg.png');
+  background-size: 100% 100%;
+}
+
+.budgetActivityList {
+  height: 100%;
+  overflow: hidden;
+  &::-webkit-scrollbar {
+    width: 0;
+  }
+}
+
+.budgetActivityListContent {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.budgetActivityListContainer {
+  height: calc(100% - 30px);
+  position: relative;
+}
+
+.pageIcon {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #eaedf1;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #fff;
+  box-sizing: border-box;
+  cursor: pointer;
+  &:hover {
+    border-color: #1664ff;
+  }
+}
+
+.prePageIcon {
+  top: -14px;
+}
+
+.nextPageIcon {
+  bottom: -14px;
+}
+
+.activityHeader {
+  display: flex;
+  align-items: center;
+  height: 68px;
+  padding: 20px 20px 16px;
+}
+
+.activityHeaderTitle {
+  font-size: 20px;
+  font-weight: 500;
+  color: #0c0d0e;
+  margin-right: 16px;
+  height: 28px;
+  line-height: 28px;
+}
+
+.activityColumns {
+  max-height: 640px;
+  display: flex;
+  gap: 16px;
+  border-radius: 8px;
+  border-width: 0px 2px 2px 2px;
+  box-sizing: border-box;
+  border-style: solid;
+  border-color: #e6eefb;
+  background-color: #fff;
+  padding: 16px 18px;
+}
+
+.activityColumn {
+  height: calc(100% - 30px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  &::-webkit-scrollbar {
+    width: 0;
+  }
+}
+
+.columnHeader {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  font-weight: 500;
+  font-size: 14px;
+  height: 22px;
+}
+
+.columnIcon {
+  margin-right: 8px;
+  font-size: 20px;
+  color: #86909c;
+}
+
+.activitySpin {
+  width: 100%;
+  height: 206px;
+  background-color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+}
+
+.activityItem {
+  padding: 12px 16px;
+  background-color: #fafbfc;
+  border-radius: 8px;
+  &:hover {
+    background-color: #fafbfc;
+  }
+}
+
+.activityTitle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 500;
+  font-size: 12px;
+  color: #42464e;
+  height: 20px;
+}
+
+.arrowIcon {
+  color: #737a87;
+  font-size: 14px;
+}
+
+.activityTitleDesc {
+  height: 22px;
+  font-weight: 500;
+  font-size: 14px;
+  color: #0c0d0e;
+  margin-bottom: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.activityDesc {
+  line-height: 20px;
+  color: #737a87;
+  font-size: 12px;
+}
+
+.activityRemainContainer {
+  margin-top: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.activityRemain {
+  height: 20px;
+  line-height: 20px;
+  color: #737a87;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.activityRemainTag {
+  height: 18px;
+  line-height: 18px;
+  padding: 0 6px;
+  font-size: 10px;
+  font-weight: 500;
+  color: #1664ff;
+  border-radius: 4px;
+  background-color: #ebf1ff;
+}
+
+.remainHighlight {
+  color: #bd7e00;
+  margin-left: 4px;
+}
+
+.cardContent {
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0px 2px 4px 0px #0000000d;
+}
+
+.budgetLink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  border: 1px solid #eaedf1;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+.budgetText {
+  color: #737a87;
+  font-size: 13px;
+  line-height: 22px;
+  margin-top: 12px;
+}
+
+/* 最近访问 */
+.recentVisitsTitle {
+  font-size: 16px;
+  font-weight: 500;
+  color: #0c0d0e;
+  height: 24px;
+  line-height: 24px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+}
+.recentVisits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.visitItem {
+  display: flex;
+  align-items: center;
+  width: calc(25% - 16px);
+  cursor: pointer;
+}
+
+.visitIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background-color: #f6f8fa;
+  border-radius: 3px;
+  font-size: 16px;
+  margin-right: 8px;
+  color: #5e6673;
+}
+
+.visitText {
+  width: calc(100% - 36px);
+  font-size: 14px;
+  color: #42464e;
+  text-align: center;
+  height: 22px;
+  line-height: 22px;
+}
+
+.recentVisitsEmpty {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 18px;
+}
+
+/* 我的订阅 */
+.subscriptions {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.subscriptionItem {
+  flex: 0 0 calc(50% - 8px); /* 关键：占50%宽度并减去间隙 */
+  box-sizing: border-box; /* 确保宽度包含padding和border */
+  padding: 16px;
+  background-color: #fafbfc;
+  border-radius: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  &:hover {
+    background-color: #fafbfc;
+  }
+}
+
+.subscriptionDataItem {
+  flex: 1;
+}
+
+.dataLabel {
+  color: #737a87;
+  font-size: 12px;
+  font-weight: 500;
+  height: 20px;
+  line-height: 20px;
+  margin-bottom: 2px;
+}
+
+.dataValue {
+  color: #0c0d0e;
+  font-size: 16px;
+  font-weight: 500;
+  height: 24px;
+  line-height: 24px;
+}
+
+/* 右侧卡片通用样式 */
+.viewMore {
+  display: flex;
+  align-items: center;
+  color: #737a87;
+  font-size: 13px;
+  cursor: pointer;
+  height: 22px;
+  line-height: 22px;
+  :hover {
+    color: #1664ff;
+    .viewMoreIcon {
+      color: #1664ff;
+    }
+  }
+}
+
+.viewMoreIcon {
+  font-size: 12px;
+}
+
+/* 通知列表 */
+.viewMoreHeader {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 16px;
+
+  .title {
+    font-size: 16px;
+    font-weight: 600;
+    height: 24px;
+    line-height: 24px;
+    color: #0c0d0e;
+  }
+}
+
+.notificationList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.notificationItem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  height: 28px;
+  justify-content: space-between;
+}
+
+.notificationType {
+  display: flex;
+  align-items: center;
+  margin-right: 8px;
+  min-width: 40px;
+}
+
+.hasIcon {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  color: #42464e;
+  font-size: 13px;
+  cursor: pointer;
+  min-width: 0;
+  &:hover {
+    color: #1664ff;
+    .divider {
+      border-left: 1px solid #1664ff;
+    }
+  }
+  .divider {
+    margin: 0 4px;
+    border-left: 1px solid #42464e;
+  }
+  &::before {
+    content: '';
+    display: inline-block;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background-color: #0057ff;
+    margin-right: 4px;
+  }
+}
+
+.typeText {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  color: #737a87;
+  font-size: 13px;
+  cursor: pointer;
+  min-width: 0;
+  &:hover {
+    color: #1664ff;
+    .divider {
+      border-left: 1px solid #1664ff;
+    }
+  }
+
+  .divider {
+    margin: 0 4px;
+    border-left: 1px solid #737a87;
+  }
+
+  &::before {
+    content: '';
+    display: inline-block;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    margin-right: 4px;
+  }
+}
+
+.notificationDate {
+  max-width: 100px;
+  font-size: 12px;
+  color: #86909c;
+  margin-left: 8px;
+}
+
+/* 报警列表 */
+.alarmContentHeader {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  height: 24px;
+  line-height: 24px;
+  font-weight: 500;
+  color: #0c0d0e;
+  margin-bottom: 16px;
+
+  .alarmContentHeaderTips {
+    font-size: 12px;
+    color: #737a87;
+  }
+}
+.alarmList {
+  display: flex;
+  gap: 16px;
+}
+
+.alarmItem {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  justify-content: space-between;
+  align-items: flex-start;
+  cursor: pointer;
+  &:hover {
+    .alarmTitle,
+    .alarmCount {
+      color: #1664ff;
+    }
+
+    .alarmArrow {
+      color: #1664ff !important;
+    }
+  }
+}
+
+.alarmHeader {
+  display: flex;
+  align-items: center;
+}
+
+.alarmTitle {
+  font-size: 12px;
+  height: 20px;
+  color: #737a87;
+  margin-right: 4px;
+}
+
+.alarmArrow {
+  font-size: 12px;
+  // Link 组件会为内部图标继承主蓝色，这里明确使用弱图标色；hover 时再提供蓝色交互反馈。
+  color: #737a87 !important;
+}
+
+.alarmCount {
+  font-size: 16px;
+  font-weight: 500;
+  color: #0c0d0e;
+}
+
+/* 审批列表 */
+.approvalContentHeader {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  height: 24px;
+  line-height: 24px;
+  font-weight: 500;
+  color: #0c0d0e;
+  margin-bottom: 16px;
+
+  .alarmContentHeaderTips {
+    font-size: 12px;
+    color: #737a87;
+  }
+}
+.approvalList {
+  display: flex;
+  gap: 16px;
+}
+
+.approvalItem {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  justify-content: space-between;
+  align-items: flex-start;
+  cursor: pointer;
+  &:hover {
+    .approvalTitle,
+    .approvalArrow,
+    .approvalCount {
+      color: #1664ff;
+    }
+  }
+}
+
+.approvalHeader {
+  display: flex;
+  align-items: center;
+}
+
+.approvalTitle {
+  font-size: 12px;
+  height: 20px;
+  color: #737a87;
+  margin-right: 4px;
+}
+
+.approvalArrow {
+  font-size: 12px;
+  color: #737a87;
+}
+
+.approvalCount {
+  font-size: 16px;
+  font-weight: 500;
+  color: #0c0d0e;
+}
+
+/* 角色列表 */
+.roleContentHeader {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  height: 24px;
+  line-height: 24px;
+  font-weight: 500;
+  color: #0c0d0e;
+  margin-bottom: 16px;
+}
+
+.roleList {
+  display: flex;
+  gap: 16px;
+}
+
+.roleItem {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  justify-content: space-between;
+  align-items: flex-start;
+  cursor: pointer;
+  &:hover {
+    .roleTitle,
+    .roleArrow,
+    .roleCount {
+      color: #1664ff;
+    }
+  }
+}
+
+.roleHeader {
+  display: flex;
+  align-items: center;
+}
+
+.roleTitle {
+  font-size: 12px;
+  height: 20px;
+  line-height: 20px;
+  color: #737a87;
+}
+
+.roleTag {
+  padding: 2.5px 5px;
+  background: linear-gradient(90deg, #fef5c4 0%, #f0c573 100%);
+  border: 0.5px solid;
+  border-left: none;
+  border-image-source: linear-gradient(257.63deg, #fbf4d7 1.03%, rgba(238, 203, 134, 0) 51.56%, #fefcf1 102.52%);
+  border-radius: 8px 4px 8px 0;
+  margin-left: 2px;
+  color: #733e0f;
+  font-weight: 600;
+  font-size: 10px;
+}
+
+.roleArrow {
+  font-size: 12px;
+  color: #737a87;
+  margin-left: 4px;
+}
+
+.roleCount {
+  font-size: 16px;
+  font-weight: 500;
+  color: #0c0d0e;
+}
+
+/* 帮助列表 */
+.helpList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.helpItem {
+  height: 28px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  &:hover {
+    .helpIcon,
+    .helpText {
+      color: #1664ff;
+    }
+  }
+}
+
+.helpIcon {
+  margin-right: 8px;
+  color: #86909c;
+  font-size: 16px;
+}
+
+.helpText {
+  width: 90%;
+  font-size: 13px;
+  color: #42464e;
+}

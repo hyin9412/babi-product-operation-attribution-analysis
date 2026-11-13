@@ -1,0 +1,249 @@
+.operation_capacity_page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.filter_box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid #eaedf1;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.page_title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1d2129;
+}
+
+.page_desc {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #86909c;
+}
+
+.operation_capacity_layout {
+  :global(#pageLayoutHeaderTitle) {
+    margin-right: 0 !important;
+    line-height: 26px;
+  }
+}
+
+.header_title_group {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  color: #0c0d0e;
+  font-family: 'PingFang SC', sans-serif;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 26px;
+}
+
+.header_back_icon {
+  font-size: 20px;
+  margin-right: 12px;
+  cursor: pointer;
+}
+
+.header_title_text {
+  flex: 0 0 auto;
+}
+
+.header_title_divider {
+  flex: 0 0 auto;
+  width: 1px;
+  height: 18px;
+  margin: 0 12px;
+  background: #eaedf1;
+}
+
+.header_resource_pill {
+  display: inline-flex;
+  align-items: center;
+  max-width: 260px;
+  min-width: 0;
+  padding: 5px 12px;
+  border-radius: 4px;
+  background: #f6f8fa;
+  color: #0c0d0e;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background: #eef3ff;
+  }
+
+  :global(svg) {
+    flex: 0 0 auto;
+  }
+}
+
+.header_resource_name {
+  display: inline-block;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: 8px;
+}
+
+.header_resource_option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 32px;
+  padding: 5px 12px;
+  border-radius: 4px;
+  font-family: 'PingFang SC', sans-serif;
+  line-height: 22px;
+}
+
+.header_resource_search {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 2px 1px 4px;
+  background: #fff;
+}
+
+.header_resource_dropdown_divider {
+  height: 1px;
+  margin: 4px -5px;
+  background: #eaedf1;
+}
+
+.header_resource_dropdown_menu {
+  overflow: visible;
+}
+
+.header_resource_option_active {
+  background: #f5f7fa;
+
+  .header_resource_option_name {
+    color: #1b5cff;
+    font-weight: 500;
+  }
+}
+
+.header_resource_option_name {
+  overflow: hidden;
+  margin-right: 24px;
+  color: #0c0d0e;
+  font-size: 13px;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.header_resource_option_count {
+  font-weight: 500;
+}
+
+.header_resource_option_text {
+  flex: 0 0 auto;
+  color: #737a87;
+  font-size: 12px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.header_update_time {
+  color: #737a87;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 20px;
+  white-space: nowrap;
+}
+
+.cost_income_trend_title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  color: #737a87;
+  font-size: 12px;
+  line-height: 20px;
+  letter-spacing: 0.04px;
+  white-space: nowrap;
+}
+
+.cost_income_trend_title_left {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  column-gap: 8px;
+  font-family: 'PingFang SC', sans-serif;
+  font-weight: 500;
+}
+
+.cost_income_trend_main_title {
+  flex-shrink: 0;
+  min-width: 105px;
+  color: #0c0d0e;
+  font-size: 13px;
+  line-height: 22px;
+}
+
+.cost_income_trend_tag_group {
+  display: inline-flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  align-content: center;
+  align-items: center;
+  column-gap: 4px;
+}
+
+.cost_income_trend_legend {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  column-gap: 4px;
+  font-family: 'Roboto', sans-serif;
+}
+
+.cost_income_trend_legend_item {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  column-gap: 2px;
+  padding-right: 4px;
+}
+
+.cost_income_trend_legend_icon {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 4px;
+}
+
+.cost_income_trend_legend_dash {
+  width: 10px;
+  height: 2px;
+  border-radius: 1px;
+  background: #737a87;
+}
+
+.cost_income_trend_legend_dot_group {
+  &:extend(.cost_income_trend_legend_icon);
+
+  justify-content: space-between;
+}
+
+.cost_income_trend_legend_dot {
+  width: 3px;
+  height: 2px;
+  border-radius: 1px;
+  background: #737a87;
+}

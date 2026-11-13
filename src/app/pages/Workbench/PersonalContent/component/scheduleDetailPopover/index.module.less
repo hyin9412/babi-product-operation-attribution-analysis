@@ -1,0 +1,115 @@
+.schedulePopover {
+  width: 325px;
+  padding: 0;
+  background: linear-gradient(180deg, #ebf1ff -10.59%, #ffffff 26.05%);
+  box-shadow: 0px 5px 15px 0px #0000000d, 0px 15px 35px -2px #0000000d;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.popoverHeader {
+  width: 100%;
+  margin-bottom: 24px;
+  color: #0c0d0e;
+}
+
+.popoverTitle {
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 4px;
+  line-height: 26px;
+}
+
+.popoverDate {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  color: #42464e;
+  height: 20px;
+  line-height: 20px;
+}
+
+.popoverDateIcon {
+  font-size: 14px;
+  margin-right: 8px;
+  color: #737a87;
+}
+
+.divider {
+  margin: 0 8px;
+  border-left: 1px solid #eaedf1;
+}
+
+.activityRemainTag {
+  height: 18px;
+  line-height: 18px;
+  padding: 0 6px;
+  font-size: 10px;
+  font-weight: 500;
+  color: #1664ff;
+  border-radius: 4px;
+  background-color: #ebf1ff;
+}
+
+.reasonContainer {
+  font-size: 14px;
+  color: #0c0d0e;
+  line-height: 20px;
+  margin-bottom: 16px;
+}
+
+.reasonItem {
+  position: relative;
+  padding-left: 12px;
+
+  &::before {
+    content: '';
+    display: inline-block;
+    width: 3.5px;
+    height: 3.5px;
+    border-radius: 50%;
+    background-color: #42464e;
+    margin-left: 2px;
+    position: absolute;
+    top: 9px;
+    left: 0;
+  }
+}
+
+.popoverContent {
+  max-height: 334px;
+  overflow-y: auto;
+  :global {
+    .editor-kit-container ul.r-list-number li::before,
+    .editor-kit-container ol.r-list-number li::before {
+      height: unset;
+    }
+  }
+}
+
+.popoverDescriptionTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: #42464e;
+  height: 22px;
+  line-height: 22px;
+  margin-bottom: 4px;
+}
+
+.popoverDescriptionTitleIcon {
+  margin-right: 8px;
+  color: #42464e;
+}
+
+.popoverDescription {
+  width: 100%;
+  font-size: 13px;
+  color: #0c0d0e;
+  line-height: 22px;
+  padding: 0 !important;
+}
+
+.popoverFooter {
+  margin-top: 24px;
+  text-align: right;
+}

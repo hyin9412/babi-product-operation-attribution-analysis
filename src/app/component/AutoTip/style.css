@@ -1,0 +1,8 @@
+::highlight(tip-highlight) {
+  color: rgb(var(--link-6));
+  text-decoration: rgb(var(--link-6)) underline dashed;
+}
+
+::highlight(keyword) {
+  text-decoration: underline dashed;
+}

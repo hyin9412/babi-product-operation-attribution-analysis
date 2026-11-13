@@ -1,0 +1,172 @@
+/* References: none — existing PRD prototype restyled with installed VE-O theme and finance design tokens; shell and data contracts unchanged. */
+html.analysis-scroll { height: auto; min-height: 100%; overflow: auto !important; }
+html.analysis-scroll body { height: auto !important; min-height: 100vh; overflow: visible !important; }
+.analysis-page {
+  background: var(--color-bg-1); color: var(--color-text-1);
+  --analysis-page-gutter: 32px;
+  padding: 16px var(--analysis-page-gutter) 32px; min-height: 100vh; margin: -15px;
+  font-size: 14px; line-height: 1.45;
+  font-family: 'BabiFinanceText', Roboto, 'PingFang SC', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, 'Microsoft YaHei', 'Source Han Sans SC', 'Noto Sans CJK SC', sans-serif;
+}
+.analysis-page * { box-sizing: border-box; }
+/* References: none — user-requested fixed title, tabs and global filters below the existing 48px platform navigation. */
+.analysis-sticky-header { position: sticky; top: 48px; z-index: 12; margin: -16px calc(-1 * var(--analysis-page-gutter)) 0; padding: 0 var(--analysis-page-gutter) 16px; background: var(--color-bg-1); }
+/* Page header: Figma byte-cloud page-header guideline, node 30:17524. */
+.analysis-page-header { display: flex; align-items: center; height: 66px; margin: 0 calc(-1 * var(--analysis-page-gutter)) 16px; padding: 0 var(--analysis-page-gutter); border-bottom: 1px solid var(--color-border-2); background: var(--color-bg-1); }
+.analysis-page-header h1 { flex-shrink: 0; display: flex; align-items: center; font-size: 18px; font-weight: 500; line-height: 26px; margin: 0; white-space: nowrap; }
+.analysis-page-header h1::after { content: ''; display: block; height: 18px; width: 1px; margin: 0 16px; background: var(--color-border-2); }
+.analysis-page h2 { font-size: 16px; line-height: 1.4; font-weight: 600; margin: 0; }
+.analysis-page h3 { font-size: 16px; font-weight: 600; color: var(--color-text-1); margin: 0 0 12px; }
+.analysis-page p { line-height: 1.5; }
+.analysis-page .analysis-tabs { flex: 1; min-width: 0; margin: 0; }
+.analysis-page .analysis-tabs .arco-tabs-header-title { height: 65px; padding-top: 0; padding-bottom: 0; display: inline-flex; align-items: center; font-size: 16px; line-height: 26px; }
+.analysis-page .analysis-tabs .arco-tabs-header-nav::before { display: none; }
+.analysis-page .analysis-tabs .arco-tabs-content { display: none; }
+/* References: none — user-requested 32px section gaps; the sticky header retains the 16px filter-to-first-section gap. */
+.analysis-page .analysis-section { display: flow-root; padding: 0; background: var(--color-bg-1); border: 0; border-radius: 0; margin: 0; scroll-margin-top: var(--analysis-sticky-offset, 360px); min-width: 0; }
+.analysis-page .analysis-section + .analysis-section { margin-top: 32px; }
+.analysis-page .analysis-section > :last-child { margin-bottom: 0; }
+.analysis-page .section-blue { background: var(--color-bg-1); }
+.analysis-page .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+.analysis-page .section-subtitle { color: var(--color-text-3); font-size: 12px; margin: -4px 0 16px; }
+/* References: toutiao-fe-vcloud-finance/apps/web/src/app/component/WrapperWithTitle/style.less — level-2 title shared by all analysis modules; global filters and data panels remain separate. */
+.analysis-page .analysis-section > .section-heading > h2 { position: relative; padding-left: 11px; font-size: 14px; font-weight: 500; }
+.analysis-page .analysis-section > .section-heading > h2::before { content: ''; position: absolute; left: 0; top: 50%; width: 3px; height: 12px; transform: translateY(-50%); background: #3370ff; border-radius: 0 2px 2px 0; }
+.analysis-page .filter-panel { position: relative; background: var(--color-bg-2); border: 1px solid var(--color-border-2); border-radius: 4px; padding: 12px 16px; margin-bottom: 0; max-height: calc(100vh - 146px); overflow: visible; }
+.analysis-page #pricing-metric-trend { scroll-margin-top: var(--analysis-sticky-offset, 360px); }
+.analysis-page .filter-heading { display: flex; justify-content: flex-start; align-items: center; gap: 4px; margin-bottom: 12px; }
+.analysis-page .filter-toggle { flex-shrink: 0; }
+.analysis-page .filter-toggle svg { width: 16px; height: 16px; color: var(--color-fill-3); }
+/* References: none — Figma 5325:124987 fixed-caliber outlined tags. */
+.analysis-page .filter-caliber { display: inline-flex; align-items: center; gap: 6px; margin-left: 12px; white-space: nowrap; }
+.analysis-page .filter-caliber-tag { height: 22px; padding: 0 5px; border: 1px solid #666e7c33; border-radius: 4px; background: transparent; color: #666e7c; font-size: 12px; font-weight: 500; line-height: 20px; letter-spacing: .04px; }
+.analysis-page .filter-caliber-tag:first-child { min-width: 130px; }
+.analysis-page .filter-caliber-tag:last-child { min-width: 49px; }
+.analysis-page .filter-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 12px; }
+.analysis-page .analysis-field { min-width: 0; }
+.analysis-page .analysis-field > label { display: block; color: var(--color-text-2); font-size: 14px; margin: 0 0 8px; }
+/* VE-O Form tokens: default label 13px / regular, text-2, vertical label gap 4px. */
+.analysis-page .filter-grid .analysis-field { display: flex; flex-direction: column; }
+.analysis-page .filter-grid .analysis-field > label { font-size: 13px; font-weight: 400; color: var(--color-text-2); line-height: 20px; margin-bottom: 4px; }
+.analysis-page .filter-grid .analysis-field > .arco-select { width: 100%; }
+.analysis-page .filter-query-slot { display: flex; align-items: flex-end; align-self: end; }
+.analysis-page .filter-query-slot:nth-child(4n + 1) { grid-column: 1 / -1; justify-content: flex-start; }
+/* References: none — Figma 5325:124983 / 5325:125306; existing labels and values are retained. */
+.analysis-page .filter-summary { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px; font-size: 12px; line-height: 20px; }
+.analysis-page .filter-summary-tag { display: inline-flex; align-items: center; max-width: 100%; min-height: 20px; height: auto; padding: 0 6px; border: 0; border-radius: 4px; background: #f1f3f5; font-size: 12px; font-weight: 500; line-height: 20px; letter-spacing: .04px; }
+.analysis-page .filter-summary-tag .arco-tag-content { white-space: normal; overflow-wrap: anywhere; line-height: 20px; }
+.analysis-page .filter-summary-label { color: #737a87; }
+.analysis-page .filter-summary-value { color: #42464e; }
+.analysis-page .filter-region-count { display: inline-flex; align-items: center; height: 18px; padding: 0; border: 0; border-bottom: 1px dashed #737a87; border-radius: 0; background: transparent; color: #42464e; font-size: 12px; font-weight: 500; line-height: 17px; letter-spacing: .04px; vertical-align: baseline; }
+.analysis-page .filter-summary .filter-region-count.arco-btn-text:hover, .analysis-page .filter-summary .filter-region-count.arco-btn-text:focus, .analysis-page .filter-summary .filter-region-count.arco-btn-text:active { background: transparent; color: #42464e; border-bottom: 1px dashed #737a87; }
+/* References: none — ByteTree Figma 7072:122364; compact 12px heading and medium-weight numbered content, preserving region text and placement. */
+.filter-region-popover .arco-popover-content { max-width: 280px; max-height: 300px; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; padding: 8px 12px; background: #fff; border: 1px solid #dde2e9; border-radius: 4px; color: #42464e; font-size: 12px; line-height: 20px; letter-spacing: .04px; white-space: normal; }
+.filter-region-popover .arco-popover-title { color: #42464e; font-size: 12px; font-weight: 400; line-height: 20px; letter-spacing: .04px; }
+.filter-region-popover .arco-popover-title + .arco-popover-inner-content { margin-top: 4px; }
+.filter-region-details { min-width: 0; color: #42464e; font-size: 12px; line-height: 20px; letter-spacing: .04px; white-space: normal; }
+/* Reserve marker space for two-digit ordinals so the scroll container cannot clip 10., 11., 12. */
+.filter-region-list { margin: 0; padding-left: 28px; list-style: decimal; font-weight: 500; }
+.filter-region-list li { margin: 0; padding: 0; line-height: 20px; overflow-wrap: anywhere; }
+.filter-region-empty { color: var(--color-text-3); }
+.analysis-page .filter-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; gap: 16px; }
+.analysis-page .filter-footer > span { font-size: 12px; color: var(--color-text-3); }
+.analysis-page .pending-warning { margin-top: 12px; }
+.analysis-page .conclusion-grid, .analysis-page .kpi-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 16px; }
+.analysis-page .conclusion-card { border: 1px solid var(--color-border-2); border-radius: 4px; background: var(--color-bg-2); padding: 16px; min-height: 140px; }
+.analysis-page .conclusion-card h3 { font-size: 14px; color: var(--color-text-2); margin-bottom: 12px; }
+.analysis-page .conclusion-card strong { font-size: 20px; font-weight: 600; display: block; line-height: 1.4; }
+.analysis-page .conclusion-card p { font-size: 12px; color: var(--color-text-3); margin: 8px 0 0; }
+.analysis-page .status-badge { border-radius: 4px; padding: 4px 8px; font-size: 12px; font-weight: 500; color: rgb(var(--warning-6)); background: var(--color-warning-light-1); }
+.analysis-page .analysis-note { margin: 12px 0 16px; }
+.analysis-page .analysis-two-col { display: grid; grid-template-columns: minmax(0,.82fr) minmax(0,1.45fr); gap: 16px; align-items: stretch; margin: 16px 0; }
+.analysis-page .analysis-two-col.equal { grid-template-columns: repeat(2,minmax(0,1fr)); }
+.analysis-page .analysis-chart { background: var(--color-bg-1); border: 1px solid var(--color-border-2); border-radius: 4px; padding: 16px; position: relative; min-width: 0; }
+.analysis-page .analysis-chart h3 { font-size: 14px; margin-bottom: 8px; }
+.analysis-page .chart-unit { display: block; font-size: 12px; color: var(--color-text-3); margin-bottom: 4px; }
+.analysis-page .chart-legend { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; min-height: 32px; }
+.analysis-page .chart-legend .arco-btn { font-size: 12px; color: var(--color-text-3); }
+.analysis-page .chart-legend i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 8px; }
+.analysis-page .legend-hidden { opacity: .35; }
+.analysis-page .analysis-table { overflow: hidden; min-width: 0; width: 100%; background: var(--color-bg-1); }
+.analysis-page .arco-table-th { color: var(--color-text-2); font-weight: 500; font-size: 13px; }
+.analysis-page .arco-table-td { font-size: 13px; color: var(--color-text-2); line-height: 1.4; }
+.analysis-page .arco-table-cell { white-space: normal; overflow-wrap: anywhere; }
+.analysis-page .arco-table-th .arco-table-cell { overflow-wrap: normal; }
+.analysis-page .quick-link { margin-top: 8px; }
+.analysis-page .analysis-empty { padding: 24px 16px; text-align: center; color: var(--color-text-3); }
+.analysis-page .analysis-fold { margin-top: 16px; overflow: hidden; border: 1px solid var(--color-border-2); border-radius: 4px; background: var(--color-bg-1); }
+.analysis-page .fold-button { justify-content: space-between; text-align: left; padding: 0 16px; display: flex; align-items: center; height: 40px; }
+.analysis-page .fold-button span { margin-left: auto; font-size: 12px; }
+.analysis-page .fold-content { padding: 16px; }
+.analysis-page .kpi-card { border: 1px solid var(--color-border-2); border-radius: 4px; padding: 16px; background: var(--color-bg-1); min-width: 0; }
+.analysis-page .kpi-label { color: var(--color-text-2); font-size: 14px; }
+.analysis-page .kpi-value { font-size: 28px; font-weight: 600; color: var(--color-text-1); margin: 16px 0 12px; line-height: 1.35; white-space: nowrap; }
+.analysis-page .comparison { font-size: 12px; color: var(--color-text-3); line-height: 1.5; }
+.analysis-page .kpi-targets { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border-top: 1px solid var(--color-border-2); margin-top: 16px; padding-top: 12px; }
+.analysis-page .kpi-target { background: var(--color-bg-3); border-radius: 4px; padding: 12px; font-size: 12px; color: var(--color-text-3); line-height: 1.5; }
+.analysis-page .kpi-target strong { display: block; color: var(--color-text-2); font-size: 14px; }
+.analysis-page .analysis-chart-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; margin-top: 16px; }
+.analysis-page .analysis-chart-grid.three { grid-template-columns: repeat(3,minmax(0,1fr)); }
+.analysis-page .analysis-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 16px; }
+.analysis-page .analysis-toolbar .arco-select { width: 276px; }
+/* References: none — Figma 5324:123773; scoped to shared analysis multi-select menus. */
+.analysis-multi-menu { display: flex; flex-direction: column; margin: -6px; }
+.analysis-multi-options { min-height: 0; padding: 5px 5px 4px; }
+.analysis-multi-menu .arco-checkbox-mask { width: 14px; height: 14px; }
+.analysis-multi-menu .arco-select-checkbox { display: flex; align-items: center; height: 32px; padding: 0 8px 0 12px; }
+.analysis-multi-menu .arco-select-option-wrapper .arco-select-option { padding: 5px 12px 5px 0; line-height: 22px; }
+.analysis-multi-footer { flex-shrink: 0; border-top: 1px solid #eaedf1; padding: 4px 5px 5px; }
+.analysis-multi-footer > .arco-checkbox { display: flex; align-items: center; width: 100%; min-height: 32px; box-sizing: border-box; padding: 5px 12px; border-radius: 4px; font-size: 13px; font-weight: 400; line-height: 22px; }
+.analysis-multi-footer > .arco-checkbox:hover { background: var(--color-bg-4); }
+.analysis-multi-menu .arco-checkbox-mask-wrapper { display: flex; align-items: center; top: 0; line-height: 1; }
+.analysis-multi-footer .arco-checkbox-text { margin-left: 8px; }
+.analysis-multi-footer .analysis-multi-total { color: var(--color-text-3); }
+.analysis-page .red-value { color: rgb(var(--danger-6)); }
+.analysis-page .green-value { color: rgb(var(--success-6)); }
+.analysis-page .muted-value { color: var(--color-text-3); }
+.analysis-page .numeric { font-variant-numeric: tabular-nums; }
+.analysis-page .version-strip { display: flex; flex-wrap: wrap; gap: 16px; background: var(--color-bg-3); border-radius: 4px; padding: 12px 16px; font-size: 12px; color: var(--color-text-3); margin: 16px 0; }
+.analysis-page .version-strip b { color: var(--color-text-2); font-weight: 500; }
+.analysis-page .formula-filter { display: grid; grid-template-columns: repeat(3,minmax(0,276px)); gap: 24px; margin-bottom: 16px; }
+.analysis-page .formula-row { display: flex; gap: 16px; overflow-x: auto; padding: 16px 0; }
+.analysis-page .formula-card { flex: 0 0 330px; border: 1px solid var(--color-border-3); border-radius: 4px; padding: 16px; background: var(--color-bg-1); }
+.analysis-page .formula-card.root { border-color: rgb(var(--primary-6)); max-width: 420px; }
+.analysis-page .formula-card h4 { font-size: 14px; font-weight: 600; line-height: 1.5; margin: 0 0 12px; overflow-wrap: anywhere; color: var(--color-text-1); }
+.analysis-page .formula-card p { font-size: 12px; color: var(--color-text-3); min-height: 48px; margin: 0 0 16px; }
+.analysis-page .formula-card .formula-value { font-size: 20px; font-weight: 600; color: var(--color-text-1); margin-bottom: 12px; }
+.analysis-page .formula-actions { display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 8px; }
+.analysis-page .formula-level-label { font-size: 12px; color: var(--color-text-3); border-top: 1px solid var(--color-border-2); padding: 16px 0 0; }
+.analysis-page .formula-target { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.analysis-page .formula-target > div { background: var(--color-bg-3); border-radius: 4px; padding: 12px; color: var(--color-text-3); font-size: 12px; }
+.analysis-page .formula-target strong { display: block; margin-top: 4px; color: var(--color-text-2); }
+.analysis-page .evidence-tags { display: flex; gap: 8px; margin: 12px 0; }
+.analysis-page .table-total { padding: 12px 16px; background: var(--color-bg-4); font-size: 13px; color: var(--color-text-2); }
+.analysis-page .section-loading { height: 220px; background: var(--color-bg-1); border-radius: 4px; display: flex; justify-content: center; align-items: center; }
+.analysis-page .overview-subtitle { color: var(--color-text-3); font-size: 14px; margin: 8px 0 16px; }
+.analysis-page .plain-text { color: var(--color-text-3); font-size: 12px; line-height: 1.5; }
+.analysis-page .subsection-title { margin: 24px 0 12px; }
+.analysis-page .badge-priority { font-size: 12px; display: inline-flex; padding: 4px 8px; border-radius: 4px; font-weight: 500; }
+.analysis-page .badge-priority.p0 { background: var(--color-danger-light-1); color: rgb(var(--danger-6)); }
+.analysis-page .badge-priority.p1 { background: var(--color-warning-light-1); color: rgb(var(--warning-6)); }
+.analysis-page .badge-priority.p2 { background: var(--color-primary-light-1); color: rgb(var(--primary-6)); }
+.analysis-evidence { font-size: 14px; color: var(--color-text-2); line-height: 1.5; }
+.analysis-evidence .analysis-note { margin: 16px 0; }
+.analysis-evidence .version-strip { display: flex; flex-wrap: wrap; gap: 16px; background: var(--color-bg-3); border-radius: 4px; padding: 12px 16px; font-size: 12px; color: var(--color-text-3); }
+.analysis-evidence .version-strip b { font-weight: 500; color: var(--color-text-2); }
+@media(max-width:1250px) {
+  .analysis-page { --analysis-page-gutter: 24px; }
+  .analysis-page .filter-grid { grid-template-columns: repeat(3,minmax(0,276px)); }
+  .analysis-page .filter-query-slot:nth-child(4n + 1) { grid-column: auto; justify-content: flex-start; }
+  .analysis-page .filter-query-slot:nth-child(3n + 1) { grid-column: 1 / -1; justify-content: flex-start; }
+  .analysis-page .conclusion-grid, .analysis-page .kpi-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .analysis-page .analysis-two-col { grid-template-columns: 1fr; }
+  .analysis-page .analysis-chart-grid.three { grid-template-columns: 1fr; }
+}
+@media(max-width:760px) {
+  .analysis-page { --analysis-page-gutter: 16px; padding-bottom: 16px; }
+  .analysis-page .filter-grid, .analysis-page .filter-grid.pricing-filters, .analysis-page .formula-filter { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .analysis-page .filter-query-slot:nth-child(3n + 1) { grid-column: auto; justify-content: flex-start; }
+  .analysis-page .filter-query-slot:nth-child(2n + 1) { grid-column: 1 / -1; justify-content: flex-start; }
+  .analysis-page .analysis-chart-grid, .analysis-page .analysis-two-col.equal { grid-template-columns: 1fr; }
+  .analysis-page .conclusion-grid, .analysis-page .kpi-grid { grid-template-columns: 1fr; }
+}

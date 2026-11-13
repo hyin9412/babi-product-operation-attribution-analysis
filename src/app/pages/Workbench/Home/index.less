@@ -1,0 +1,125 @@
+.workbench_wrapper {
+  background-color: #fafbfc;
+  margin: -15px;
+  padding: 20px 32px;
+  position: relative;
+  min-height: calc(100vh - 52px);
+
+  // 引导样式
+  :global {
+    .tod-guide-tip-footer-text {
+      color: #fff;
+    }
+    .tod-guide-tip-footer-btn-group {
+      button {
+        background-color: #fff;
+        color: #000;
+        border: 0;
+      }
+      .arco-btn-primary:not(.arco-btn-disabled):not(.arco-btn-loading):hover,
+      .arco-btn-outline:not(.arco-btn-disabled):not(.arco-btn-loading):hover {
+        background-color: #fff !important;
+        color: #86909c;
+      }
+    }
+  }
+}
+
+.workbench_header_bg {
+  height: 52px;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: #fff;
+}
+
+.workbench_tabs {
+  // 工作台 Tabs 位于带 32px 水平内边距的容器中，分割线需要延伸至内容区两侧边界。
+  :global(.arco-tabs-header-nav::before) {
+    left: -32px;
+    right: -32px;
+  }
+}
+
+.workbench_header {
+  margin-top: 4px;
+  margin-bottom: 20px;
+  position: relative;
+  &_title {
+    font-size: 20px;
+    font-weight: 500;
+    margin-bottom: 20px;
+    color: #114ab9;
+  }
+
+  &_container {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    column-gap: 16px;
+  }
+
+  & .workbench_schedule {
+    width: 100%;
+  }
+
+  & .workbench_backlog {
+    width: 100%;
+    height: unset;
+    background-color: #fff;
+    padding-bottom: 16px;
+  }
+}
+
+.workbench_header_main {
+  position: relative;
+  z-index: 2;
+}
+
+.tab_title {
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 10px;
+  > span {
+    font-size: 12px;
+    margin-left: 10px;
+    font-weight: normal;
+    color: #86909c;
+  }
+}
+
+.filter {
+  padding: 16px 0;
+}
+.content_wrapper {
+  display: flex;
+  > div:last-child {
+    width: 30%;
+  }
+  > div:first-child {
+    width: 70%;
+    margin-right: 16px;
+  }
+}
+.left_content {
+  padding: 20px;
+  border-radius: 8px;
+  background-color: #fff;
+  box-shadow: 0px 2px 4px 0px #0000000d;
+}
+
+.left_content_header {
+  display: flex;
+  height: 32px;
+  align-items: center;
+  margin-bottom: 16px;
+
+  .left_content_title {
+    font-family: PingFang SC;
+    font-weight: 500;
+    font-size: 20px;
+    line-height: 28px;
+    color: #0c0d0e;
+    margin-right: 16px;
+  }
+}

@@ -1,0 +1,15 @@
+/* References: none — V205 overview-only layout; shared section spacing, titles, charts and shell remain unchanged. */
+.analysis-page .overview-operating-charts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  align-items: stretch;
+  min-width: 0;
+}
+.analysis-page .overview-operating-summary {
+  margin-top: 16px;
+  min-width: 0;
+}
+@media (max-width: 760px) {
+  .analysis-page .overview-operating-charts { grid-template-columns: 1fr; }
+}

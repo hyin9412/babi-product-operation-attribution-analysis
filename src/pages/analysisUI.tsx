@@ -1,0 +1,44 @@
+// References: none — PRD screenshot aligned primitives shared by the three analysis tabs.
+import React, {useState} from 'react';
+import { Alert, Button, Checkbox, Popover, Select, Table, Empty, Tag, Tooltip } from '@byted-babi/babi-design';
+import { IconDown, IconUp, IconRight } from '@arco-design/iconbox-react-babi';
+import { VChart } from '@visactor/react-vchart';
+export const Section=({title,children,id,subtitle,extra,blue=false}:{title:string;children:React.ReactNode;id?:string;subtitle?:React.ReactNode;extra?:React.ReactNode;blue?:boolean})=><section id={id} className={`analysis-section ${blue?'section-blue':''}`}><div className="section-heading"><h2>{title}</h2>{extra}</div>{subtitle&&<p className="section-subtitle">{subtitle}</p>}{children}</section>;
+export const Note=({children,tone='info'}:{children:React.ReactNode;tone?:'info'|'warning'|'error'})=><Alert className="analysis-note" type={tone} content={children}/>;
+export const EmptyState=({text='当前筛选无数据'}:{text?:string})=><div className="analysis-empty"><Empty description={text}/></div>;
+export const QuickLink=({children,onClick,disabled=false}:{children:React.ReactNode;onClick:()=>void;disabled?:boolean})=><Button size="small" type="text" className="quick-link" disabled={disabled} onClick={onClick}>{children}<IconRight/></Button>;
+export const Field=({label,children}:{label:string;children:React.ReactNode})=><div className="analysis-field"><label>{label}</label>{children}</div>;
+export const SELECT_SEARCH_THRESHOLD = 10;
+export const getSelectPlaceholder = (searchable:boolean) => searchable ? '请输入' : '请选择';
+// References: none — keep the region popup in the same sticky coordinate space as its summary trigger.
+const getFilterPopupContainer = (node:HTMLElement) => node.closest('.analysis-sticky-header') || document.body;
+// References: none — Figma 5325:124983 / 5325:125306 summary and ByteTree 7072:122364 popup list styling; supplied region names and popup direction are unchanged.
+export function FilterSummary({items,regions}:{items:string[][];regions?:string[]}) {
+ return <div className="filter-summary">{items.map(([label,value])=><Tag key={label} size="small" bordered={false} className="filter-summary-tag" data-testid={label==='售卖区域'?'filter-region-summary':undefined}><span className="filter-summary-label">{label}：</span>{label==='售卖区域' && regions!==undefined ? <Popover className="filter-region-popover" style={{width:'max-content',maxWidth:280}} title={`共 ${regions.length} 个售卖区域`} trigger="hover" position="bl" getPopupContainer={getFilterPopupContainer} unmountOnExit content={<div className="filter-region-details" data-testid="filter-region-details">{regions.length ? <ol className="filter-region-list">{regions.map(region=><li key={region}>{region}</li>)}</ol> : <span className="filter-region-empty">当前未选择售卖区域</span>}</div>}><Button type="text" size="mini" className="filter-region-count" data-testid="filter-region-count">共 {regions.length} 个</Button></Popover> : <span className="filter-summary-value">{value}</span>}</Tag>)}</div>;
+}
+export function MultiFilter({value,options,onChange,disabled=false}:{value:string[]|null;options:string[];onChange:(value:string[])=>void;disabled?:boolean}) {
+ // References: none — Figma 5324:123773 menu presentation; existing option values and callbacks are unchanged.
+ const selected = value === null ? options : value;
+ const selectedCount = options.filter(option => selected.includes(option)).length;
+ const allSelected = options.length > 0 && selectedCount === options.length;
+ return <Select defaultActiveFirstOption={false} mode="multiple" animation={false} allowClear showSearch={options.length > SELECT_SEARCH_THRESHOLD} value={selected} options={options} placeholder={getSelectPlaceholder(options.length > SELECT_SEARCH_THRESHOLD)} maxTagCount={1} disabled={disabled} onChange={onChange} dropdownRender={menu=><div className="analysis-multi-menu"><div className="analysis-multi-options">{menu}</div><div className="analysis-multi-footer" onMouseDown={event=>event.preventDefault()}><Checkbox checked={allSelected} indeterminate={selectedCount > 0 && !allSelected} disabled={disabled || options.length === 0} onChange={checked=>onChange(checked ? options : [])}>全部<span className="analysis-multi-total">（共 {options.length} ）</span></Checkbox></div></div>}/>;
+}
+const uniqueColumns=(columns:any[],prefix='column'):any[]=>columns.map((column,index)=>({...column,key:`${prefix}-${index}`,children:column.children?uniqueColumns(column.children,`${prefix}-${index}`):undefined}));
+export const DataTable=({columns,data,width,pagination=false,maxHeight,summary}:{columns:any[];data:any[];width?:number;pagination?:any;maxHeight?:number;summary?:any})=><div className="analysis-table"><Table rowKey="id" size="small" border={{wrapper:true}} stripe columns={uniqueColumns(columns)} data={data} pagination={pagination} scroll={width||maxHeight?{x:width,y:maxHeight}:undefined} noDataElement={<EmptyState/>} summary={summary}/></div>;
+export function Fold({title,children,defaultOpen=false}:{title:string;children:React.ReactNode;defaultOpen?:boolean}) {const [open,setOpen]=useState(defaultOpen);return <div className="analysis-fold"><Button long type="text" className="fold-button" onClick={()=>setOpen(!open)}>{title}<span>{open?'收起':'展开'} {open?<IconUp/>:<IconDown/>}</span></Button>{open&&<div className="fold-content">{children}</div>}</div>;}
+export interface ChartValue {x:string;series:string;value:number|null;}
+// References: none — supplied Source Design categorical palette, Figma 289:209522.
+const CHART_PALETTE = ['#1664FF','#1AC6FF','#FF8A00','#3CC780','#7442D4','#FFC400','#304D77','#B48DEB','#009488','#FF7DDA'];
+const CHART_PALETTE_EXTENDED = ['#1664FF','#B2CFFF','#1AC6FF','#94EFFF','#FF8A00','#FFCE7A','#3CC780','#B9EDCD','#7442D4','#DDC5FA','#FFC400','#FAE878','#304D77','#8B959E','#B48DEB','#EFE3FF','#009488','#59BAA8','#FF7DDA','#FFCFEE'];
+export function AnalysisChart({title,values,type='line',height=250,unit='',percent=false,dashedSeries=[],dottedSeries=[]}:{title:string;values:ChartValue[];type?:'line'|'bar';height?:number;unit?:string;percent?:boolean;dashedSeries?:string[];dottedSeries?:string[]}) {
+ const [hidden,setHidden]=useState<string[]>([]); const series=Array.from(new Set(values.map(v=>v.series)));const filtered=values.filter(v=>v.value!==null&&!hidden.includes(v.series));
+ // Resolve against all series, not visible data: legend toggles never reassign colors.
+ // For more than 20 combinations, repeat the supplied extended palette without inventing new colors.
+ const palette=series.length<=10?CHART_PALETTE:CHART_PALETTE_EXTENDED;
+ const colors=series.map((_name,index)=>palette[index%palette.length]);
+ const spec:any={type,autoFit:true,padding:{top:12,right:20,bottom:10,left:10},data:[{id:'data',values:filtered}],xField:type==='bar'?['x','series']:'x',yField:'value',seriesField:'series',color:{type:'ordinal',domain:series,range:colors},animation:false,axes:[{orient:'left',type:'linear',min:0,zero:true,label:{style:{fontSize:12,fill:'#737a87'},formatMethod:(v:any)=>percent?`${Number(v).toFixed(0)}%`:Math.abs(Number(v))>=1e8?`${(Number(v)/1e8).toFixed(1)}亿`:Math.abs(Number(v))>=1e4?`${(Number(v)/1e4).toFixed(0)}万`:Number(v).toFixed(Math.abs(Number(v))<1?4:0)},grid:{style:{stroke:'#e9eef6',lineDash:[3,3]}},domainLine:{visible:false},tick:{visible:false}},{orient:'bottom',type:'band',label:{style:{fontSize:12,fill:'#737a87'}},domainLine:{style:{stroke:'#dce4ef'}},tick:{visible:false}}],tooltip:{visible:true,mark:{content:[{key:(datum:any)=>datum.series,value:(datum:any)=>`${Number(datum.value).toLocaleString('zh-CN',{maximumFractionDigits:10})}${percent?'%':unit}`}] }},line:{style:{lineWidth:2.3,lineDash:(datum:any)=>dottedSeries.includes(datum.series)?[2,3]:dashedSeries.includes(datum.series)?[6,4]:[0,0]}},point:{visible:true,style:{size:5}},bar:{style:{cornerRadius:[3,3,0,0]}},legends:[]};
+ // Explicit signed y-domain prevents losing negative profit or a negative change.
+ if(filtered.some(v=>(v.value||0)<0)) delete spec.axes[0].min;
+ return <div className="analysis-chart"><h3>{title}</h3>{unit&&<span className="chart-unit">单位：{unit}</span>}{values.some(v=>v.value!==null)?<div style={{height}}><VChart spec={spec}/></div>:<div style={{height}}><EmptyState text="暂无可用数据"/></div>}<div className="chart-legend">{series.map((name,i)=><Button key={name} size="mini" type="text" className={hidden.includes(name)?'legend-hidden':''} onClick={()=>setHidden(hidden.includes(name)?hidden.filter(s=>s!==name):[...hidden,name])}><i style={{background:colors[i%colors.length]}}/>{name}</Button>)}</div></div>;
+}
+export const ExactValue=({value,children}:{value:number|null;children:React.ReactNode})=><Tooltip content={value===null?'暂无可用数据':value.toLocaleString('zh-CN',{maximumFractionDigits:10})}><span>{children}</span></Tooltip>;
