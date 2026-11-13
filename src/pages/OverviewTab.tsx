@@ -118,8 +118,6 @@ export default function OverviewTab({filters,onDrill}:AnalysisProps) {
     return {id:unit,unit,rows:comparableGroup.length?comparableGroup:group,quantityChange:relativeChange(quantity,finiteTotal(prior,'quantity')),priceChange:relativeChange(price,weightedPrice(prior,'price')),capacityChange:relativeChange(capacity,finiteTotal(prior,'capacity')),salesRate:capacity&&quantity!==null?quantity/capacity*100:null,price,cumulativePrice:null};
   });
   const focusFor=(group:AnalysisRow[]):DrillFocus=>({units:Array.from(new Set(group.map(row=>row.unit))),areas:Array.from(new Set(group.map(row=>row.area))),regions:isTos?null:Array.from(new Set(group.map(row=>row.region)))});
-  const showTargetEvidence=()=>setEvidence({title:'数据完整性 · 有效目标版本缺失',object:filters.product,month:filters.month,indicator:'收入 / 成本 / 利润 / 成本利润率目标',value:'未提供有效目标值',rule:'目标仅使用状态为“有效”的版本；缺失或为零时，月度偏差、达成率和目标趋势均不可计算。',boundary:'当前目标表无有效版本。停止稳定价、年度价格偏差与调价结论；实际经营数据继续展示。'});
-  const showEfficiencyEvidence=(insight:UnitInsight)=>setEvidence({title:'效率 · 公式关系证据',object:`${filters.product} / ${insight.unit}`,month:filters.month,indicator:'综合售卖率',value:percent(insight.salesRate),rule:'综合售卖率 = 同粒度售卖量 ÷ 物理容量。单价公式中使用售卖率作为分母，其他条件不变时，售卖率降低会使测算单价提高。',boundary:insight.salesRate===null?'缺少同粒度物理容量，不能输出确定的效率归因。':'仅说明指标及公式关系；尚无经验证的归因分解结果，不输出贡献值或调价建议。'});
   const showPriceEvidence=(insight:UnitInsight)=>setEvidence({title:'数据完整性 · 年度价格判断被阻断',object:`${filters.product} / ${insight.unit}`,month:`2026-01 至 ${filters.month}`,indicator:'年度累计测算单价 / 年度目标单价',value:isTos?'年度累计加权数据未接入':'组合维度累计快照已接入；有效年度目标 —',rule:'年度累计测算单价应由后端按同年、同组合、同单位的售卖量加权。年度目标须为有效版本，并与模型、数据版本一致。',boundary:isTos?'不得用当前月价替代累计价，也不能依据 CN 成本推断海外利润。':'年度目标版本未生效，不能计算年度累计偏差或推导调价结论。'});
   const chartGroups=isTos?operatingGroups:splitRows(rows,row=>row.area).map(([area,group])=>{
     const total=totals(group);return {id:area,area,rows:group,...total};
@@ -130,7 +128,7 @@ export default function OverviewTab({filters,onDrill}:AnalysisProps) {
     {x:isTos?group.id:(areaNames[group.area||'']||group.area||group.id),series:'利润',value:group.profit},
   ]);
   const incomeColumns:any[]=[
-    ...(isTos?[{title:'计费单元',dataIndex:'unit',width:115,render:(v:string)=><strong>{v}</strong>}]:[
+    ...(isTos?[{title:'计费单元',dataIndex:'unit',width:115}]:[
       {title:'大区',dataIndex:'area',width:90,render:(v:string)=>areaNames[v]||v},
       {title:'售卖区域',dataIndex:'region',width:116},
     ]),
@@ -140,19 +138,18 @@ export default function OverviewTab({filters,onDrill}:AnalysisProps) {
     {title:'成本利润率',dataIndex:'rate',width:105,render:percent},
     {title:isTos?'下钻方向':'解读',dataIndex:'id',width:250,render:(_:string,group:OperatingGroup)=><div>
       <span>{group.cost===null?'当前范围成本不可比，仅查看收入。':(group.profit||0)<0?'当前范围亏损；需核验计费项成本与公式。':'实际经营盈利，目标差距待有效版本补齐。'}</span>
-      <br/><QuickLink onClick={()=>onDrill('income','product-income-expense',focusFor(group.rows))}>查看商品收支</QuickLink>
+      <br/><QuickLink onClick={()=>onDrill('income','product-income-expense',focusFor(group.rows))}>商品收支</QuickLink>
     </div>},
   ];
   const formulaColumns:any[]=[
-    {title:'计费单元',dataIndex:'unit',width:126,render:(v:string)=><strong>{v}</strong>},
+    {title:'计费单元',dataIndex:'unit',width:126},
     {title:'售卖量环比',dataIndex:'quantityChange',width:100,render:changeText},
     {title:'单价环比',dataIndex:'priceChange',width:95,render:changeText},
     {title:'容量环比',dataIndex:'capacityChange',width:95,render:changeText},
     {title:'售卖率',dataIndex:'salesRate',width:85,render:percent},
     {title:'归因判断',dataIndex:'id',width:280,render:(_:string,insight:UnitInsight)=><div>
       <span>{insight.salesRate===null?'同粒度物理容量缺失，原因待确认。':'售卖量和物理容量可比；目标版本未生效，归因原因待确认。'}</span>
-      <div className="evidence-tags"><Button size="mini" type="text" onClick={()=>showTargetEvidence()}>数据完整性</Button>{filters.product===BYTEGRAPH&&insight.unit==='bytegraph.cpu'&&<Button size="mini" type="text" onClick={()=>showEfficiencyEvidence(insight)}>效率 · 证据</Button>}</div>
-      <QuickLink disabled={!supported} onClick={()=>onDrill('pricing','pricing-item-formula',focusFor(insight.rows))}>{supported?'查看计费项公式':'暂无定价公式'}</QuickLink>
+      <QuickLink disabled={!supported} onClick={()=>onDrill('pricing','pricing-item-formula',focusFor(insight.rows))}>{supported?'计费项公式':'暂无定价公式'}</QuickLink>
     </div>},
   ];
   // References: none — V205 combined overview detail; financial and attribution values share each unit's actual scope, never an index-based join.
@@ -161,28 +158,28 @@ export default function OverviewTab({filters,onDrill}:AnalysisProps) {
     return {...insight,income:total.income,cost:costAvailable?total.cost:null,profit:costAvailable?total.profit:null,rate:costAvailable?total.rate:null};
   });
   const operatingSummaryColumns:any[]=[
-    {title:'对象',dataIndex:'unit',width:140,render:(value:string)=><strong>{value}</strong>},
+    {title:'对象',dataIndex:'unit',width:140},
     ...incomeColumns.filter(column=>['income','cost','profit','rate'].includes(column.dataIndex)),
     ...formulaColumns.filter(column=>['quantityChange','priceChange','salesRate','id'].includes(column.dataIndex)),
   ];
   const yearlyColumns:any[]=[
-    {title:'对象',dataIndex:'unit',width:135,render:(v:string)=><strong>{v}</strong>},
+    {title:'对象',dataIndex:'unit',width:135},
     {title:'年度累计单价偏差',dataIndex:'id',width:145,render:(_:string,insight:UnitInsight)=><Button size="mini" type="text" onClick={()=>showPriceEvidence(insight)} className="muted-value">— · 不可判断</Button>},
     {title:'月趋势判断',dataIndex:'id',width:190,render:()=>isTos?'年度累计加权数据未接入':'目标版本未生效，趋势待补'},
     {title:'建议动作',dataIndex:'id',width:280,render:(_:string,insight:UnitInsight)=><div>
       <span>{isTos?'先接入同口径售卖量加权累计数据，补齐有效目标。':'核验目标状态及模型版本，暂不输出稳定价或调价建议。'}</span><br/>
-      <QuickLink disabled={!supported} onClick={()=>onDrill('pricing','pricing-item-income',focusFor(insight.rows))}>查看计费项收入</QuickLink>
+      <QuickLink disabled={!supported} onClick={()=>onDrill('pricing','pricing-item-income',focusFor(insight.rows))}>计费项收入</QuickLink>
     </div>},
   ];
   // References: none — actions are evidence-backed review entry points, not execution workflows.
   const actions:ActionRow[]=rows.length?[
     ...negativeAreas.map(area=>{
       const areaRows=comparableRows.filter(row=>row.area===area),result=totals(areaRows);
-      return {id:`loss-${area}`,priority:'P1' as const,scope:`${isTos?'TOS':'ByteGraph'} / ${area.toUpperCase()}`,object:Array.from(new Set(areaRows.map(row=>row.unit))).join('、'),basis:`当前月利润 ${amount(result.profit)}，成本利润率 ${percent(result.rate)}；负利润仅说明经营结果，原因待确认。`,action:'拆分成本商品，核验同粒度公式指标与资源成本，暂不直接调价。',link:'查看计费项成本',tab:'pricing' as const,anchor:'pricing-item-cost',focus:focusFor(areaRows)};
+      return {id:`loss-${area}`,priority:'P1' as const,scope:`${isTos?'TOS':'ByteGraph'} / ${area.toUpperCase()}`,object:Array.from(new Set(areaRows.map(row=>row.unit))).join('、'),basis:`当前月利润 ${amount(result.profit)}，成本利润率 ${percent(result.rate)}；负利润仅说明经营结果，原因待确认。`,action:'拆分成本商品，核验同粒度公式指标与资源成本，暂不直接调价。',link:'计费项成本',tab:'pricing' as const,anchor:'pricing-item-cost',focus:focusFor(areaRows)};
     }),
-    {id:'target-version',priority:'P1',scope:filters.product,object:'有效目标版本与年度累计价格',basis:'当前目标表没有“有效”记录；月度偏差、年度目标占比及年度累计价格偏差不可判断。',action:'核验目标状态、适用账期与模型版本；补齐前停止调价与 True Up 结论。',link:'查看计费项收入',tab:'pricing',anchor:'pricing-item-income',focus:focusFor(rows)},
-    ...(isTos&&rows.some(row=>row.area!=='cn')?[{id:'tos-overseas',priority:'P2' as const,scope:'TOS / 海外',object:'当前所选海外计费单元',basis:'当前成本源仅支持“计费单元 × 大区”的 CN 范围；海外成本缺失，不能推断利润。',action:'作为收入变化单独跟踪，不用 CN 成本推断海外利润。',link:'查看计费项收支',tab:'income' as const,anchor:'charge-income-expense',focus:focusFor(rows.filter(row=>row.area!=='cn'))}]:[]),
-    {id:'formula-review',priority:'P2',scope:filters.product,object:insights.map(insight=>insight.unit).join('、'),basis:'已展示售卖量、测算单价及物理容量变化；现阶段尚无经验证的归因贡献值。',action:'沿计费项、单位成本与售卖率核验公式关系，保留证据后再评审。',link:supported?'查看计费项公式':'暂无定价公式',tab:'pricing',anchor:'pricing-item-formula',focus:focusFor(rows)},
+    {id:'target-version',priority:'P1',scope:filters.product,object:'有效目标版本与年度累计价格',basis:'当前目标表没有“有效”记录；月度偏差、年度目标占比及年度累计价格偏差不可判断。',action:'核验目标状态、适用账期与模型版本；补齐前停止调价与 True Up 结论。',link:'计费项收入',tab:'pricing',anchor:'pricing-item-income',focus:focusFor(rows)},
+    ...(isTos&&rows.some(row=>row.area!=='cn')?[{id:'tos-overseas',priority:'P2' as const,scope:'TOS / 海外',object:'当前所选海外计费单元',basis:'当前成本源仅支持“计费单元 × 大区”的 CN 范围；海外成本缺失，不能推断利润。',action:'作为收入变化单独跟踪，不用 CN 成本推断海外利润。',link:'计费项收支',tab:'income' as const,anchor:'charge-income-expense',focus:focusFor(rows.filter(row=>row.area!=='cn'))}]:[]),
+    {id:'formula-review',priority:'P2',scope:filters.product,object:insights.map(insight=>insight.unit).join('、'),basis:'已展示售卖量、测算单价及物理容量变化；现阶段尚无经验证的归因贡献值。',action:'沿计费项、单位成本与售卖率核验公式关系，保留证据后再评审。',link:supported?'计费项公式':'暂无定价公式',tab:'pricing',anchor:'pricing-item-formula',focus:focusFor(rows)},
   ]:[];
   const actionColumns:any[]=[
     {title:'优先级',dataIndex:'priority',width:85,render:(v:string)=><span className={`badge-priority ${v.toLowerCase()}`}>{v}</span>},

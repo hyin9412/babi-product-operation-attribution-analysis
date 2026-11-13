@@ -173,7 +173,33 @@ export function MultiFilter({value,options,onChange,disabled=false}:{value:strin
  const allSelected = options.length > 0 && selectedCount === options.length;
  return <Select defaultActiveFirstOption={false} mode="multiple" animation={false} allowClear showSearch={options.length > SELECT_SEARCH_THRESHOLD} value={selected} options={options} placeholder={getSelectPlaceholder(options.length > SELECT_SEARCH_THRESHOLD)} maxTagCount={1} disabled={disabled} onChange={onChange} dropdownRender={menu=><div className="analysis-multi-menu"><div className="analysis-multi-options">{menu}</div><div className="analysis-multi-footer" onMouseDown={event=>event.preventDefault()}><Checkbox checked={allSelected} indeterminate={selectedCount > 0 && !allSelected} disabled={disabled || options.length === 0} onChange={checked=>onChange(checked ? options : [])}>全部<span className="analysis-multi-total">（共 {options.length} ）</span></Checkbox></div></div>}/>;
 }
-const uniqueColumns=(columns:any[],prefix='column'):any[]=>columns.map((column,index)=>({...column,key:`${prefix}-${index}`,children:column.children?uniqueColumns(column.children,`${prefix}-${index}`):undefined}));
+const textFromNode=(node:any):string=>{
+ if(node===null||node===undefined||typeof node==='boolean')return '';
+ if(typeof node==='string'||typeof node==='number')return String(node);
+ if(Array.isArray(node))return node.map(textFromNode).join('');
+ if(React.isValidElement(node))return textFromNode((node.props as any)?.children);
+ return '';
+};
+const comparableNumericTitle=/收入|成本|利润|利润率|售卖率|环比|同比|占比|比例|比率|目标|偏差|实际值|累计|金额|数量|物理容量|容量|售卖量|单价|价格|费用|达成率|差异/;
+const nonComparableTitle=/对象|计费单元|大区|售卖区域|商品\s*\/\s*范围|成本商品|范围|下钻|解读|判断|建议|动作|依据|计费项|单位（|售卖量单位|单价单位|计费方式|账期月份|月份|优先级|定位/;
+const nonComparableField=/^(id|unit|area|region|product|item|scope|object|basis|action|month|unitLabel|priority)$/i;
+const columnField=(column:any)=>column.dataIndex??column.field??column.key;
+const hasNumericData=(column:any,data:any[])=>{
+ const field=columnField(column);
+ if(typeof field!=='string'||nonComparableField.test(field))return false;
+ return data.some(row=>typeof row?.[field]==='number'&&Number.isFinite(row[field]));
+};
+const isComparableNumericColumn=(column:any,data:any[])=>{
+ const title=textFromNode(column.title);
+ const field=String(columnField(column)??'');
+ if(nonComparableField.test(field)||nonComparableTitle.test(title))return false;
+ return hasNumericData(column,data)||comparableNumericTitle.test(title);
+};
+const uniqueColumns=(columns:any[],data:any[]=[],prefix='column'):any[]=>columns.map((column,index)=>{
+ const children=column.children?uniqueColumns(column.children,data,`${prefix}-${index}`):undefined;
+ const shouldAlignRight=!children&&column.align===undefined&&isComparableNumericColumn(column,data);
+ return {...column,key:`${prefix}-${index}`,children,align:shouldAlignRight?'right':column.align};
+});
 export const TABLE_PAGE_SIZE_OPTIONS = [10,20,50,100];
 export const sourcePaginationProps=(total:number,overrides:any={})=>({
  total,
@@ -197,7 +223,7 @@ export const SourceTable=({columns,data,width,pagination,maxHeight,noDataElement
  const safeCurrent=Math.min(current,maxPage);
  const pageData=data.slice((safeCurrent-1)*safePageSize,safeCurrent*safePageSize);
  return <div className={`analysis-table source-analysis-table ${className}`.trim()}>
-  <SourceBaseTable rowKey="id" border={{wrapper:true}} stripe columns={uniqueColumns(columns)} dataSource={pageData} pagination={false} scroll={width||maxHeight?{x:width,y:maxHeight}:undefined} noDataElement={noDataElement||<EmptyState compact size={60}/>} onChange={onChange} footer={footer} {...rest}/>
+  <SourceBaseTable rowKey="id" border={{wrapper:true}} columns={uniqueColumns(columns,data)} dataSource={pageData} pagination={false} scroll={width||maxHeight?{x:width,y:maxHeight}:undefined} noDataElement={noDataElement||<EmptyState compact size={60}/>} onChange={onChange} footer={footer} {...rest}/>
   <div className="source-table-pagination"><Pagination {...resolvedPagination} current={safeCurrent} pageSize={safePageSize} onChange={(nextPage:number,nextSize:number)=>{setPageSize(nextSize||safePageSize);setCurrent(nextSize&&nextSize!==safePageSize?1:nextPage);}} onPageSizeChange={(nextSize:number)=>{setPageSize(nextSize);setCurrent(1);}}/></div>
  </div>;
 };
