@@ -42,8 +42,8 @@
   min-width: 0;
 }
 /* References: none — keep the category identifiable without a duplicate capsule, using existing section text tokens. */
-.analysis-page .income-category-title { color: var(--color-text-1); font-size: 14px; font-weight: 500; }
-/* References: none — appended blue-bar cost sections retain the confirmed 32px section spacing. */
+.analysis-page .income-category-title { color: var(--color-text-1); font-size: 14px; font-weight: 500; line-height: 22px; }
+/* References: none — appended cost sections retain the confirmed 32px section spacing. */
 .analysis-page .income-category-card > .analysis-section { margin-top: 32px; }
 .analysis-page .income-unit-select { width: 276px; }
 .analysis-page .income-table-hint {
@@ -119,8 +119,9 @@
 }
 .analysis-page .income-product-trends .analysis-chart > h3 {
   font-size: 14px;
-  line-height: 1.45;
+  line-height: 22px;
   font-weight: 500;
+  color: var(--color-text-1);
   margin-bottom: 12px;
 }
 .analysis-page .income-tab .kpi-targets:has(> .kpi-target:only-child) { grid-template-columns: 1fr; }

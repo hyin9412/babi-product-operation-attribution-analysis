@@ -99,6 +99,69 @@
         border-radius: 8px;
       }
 
+      .doc-layout {
+        display: grid;
+        grid-template-columns: 240px minmax(0, 1fr);
+        gap: 24px;
+        align-items: start;
+        margin-top: 28px;
+      }
+
+      .doc-nav {
+        position: sticky;
+        top: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 8px;
+        background: var(--panel);
+        border: 1px solid var(--border-2);
+        border-radius: 8px;
+      }
+
+      .doc-anchor {
+        width: 100%;
+        min-height: 36px;
+        padding: 7px 10px;
+        border: 0;
+        border-radius: 4px;
+        background: transparent;
+        color: var(--text-2);
+        cursor: pointer;
+        font: inherit;
+        font-size: 13px;
+        line-height: 22px;
+        text-align: left;
+      }
+
+      .doc-anchor:hover {
+        background: #f6f8fa;
+        color: var(--text-1);
+      }
+
+      .doc-anchor.active {
+        background: #f0f6ff;
+        color: #1664ff;
+        font-weight: 500;
+      }
+
+      .doc-content {
+        min-width: 0;
+      }
+
+      .doc-panel {
+        display: none;
+      }
+
+      .doc-panel.active {
+        display: block;
+      }
+
+      .doc-panel > .section:first-child,
+      .doc-panel > h3:first-child {
+        margin-top: 0;
+      }
+
       .scenario-tabs {
         display: flex;
         flex-wrap: wrap;
@@ -148,6 +211,32 @@
       .tag-blue {
         color: #1664ff;
         background: #f0f6ff;
+      }
+
+      .priority-sample {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        color: #020814;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 20px;
+        letter-spacing: .003em;
+      }
+
+      .priority-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 16px;
+        height: 16px;
+        flex: 0 0 16px;
+      }
+
+      .priority-icon svg {
+        display: block;
+        width: 16px;
+        height: 16px;
       }
 
       .conclusion-grid {
@@ -390,6 +479,15 @@
           padding-top: 24px;
         }
 
+        .doc-layout {
+          grid-template-columns: 1fr;
+          gap: 16px;
+        }
+
+        .doc-nav {
+          position: static;
+        }
+
         .section {
           padding: 16px;
         }
@@ -416,6 +514,14 @@
         </p>
       </header>
 
+      <div class="doc-layout">
+        <aside class="doc-nav" aria-label="交互说明导航">
+          <button class="doc-anchor active" type="button" data-doc-panel="conclusion">商品经营结论卡片与状态 Tag</button>
+          <button class="doc-anchor" type="button" data-doc-panel="table">表格</button>
+        </aside>
+
+        <div class="doc-content">
+          <section class="doc-panel active" id="doc-panel-conclusion" data-doc-panel-content="conclusion">
       <section class="section" aria-labelledby="preview-title">
         <div class="scenario-tabs" role="tablist" aria-label="场景切换">
           <button class="scenario-button active" type="button" data-scenario="targetMissing">月度目标缺失</button>
@@ -555,6 +661,43 @@
           </tr>
         </tbody>
       </table>
+          </section>
+
+          <section class="doc-panel" id="doc-panel-table" data-doc-panel-content="table">
+      <h3>表格优先级列</h3>
+      <table class="spec-table">
+        <thead>
+          <tr>
+            <th>示例</th>
+            <th>IconBox 映射</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="priority-sample"><span class="priority-icon"><svg class="force-icon force-icon-P0" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#guide-icon-p0-clip)" stroke="color(display-p3 .7412 .1608 .1373)" stroke-width="1.5" stroke-linecap="round"><path d="M3.73926 7.08361L7.99139 4.57251 12.2603 7.08361M3.73926 10.9901L7.99139 8.479 12.2603 10.9901"/></g><defs><clipPath id="guide-icon-p0-clip"><path fill="#fff" transform="translate(2 2)" d="M0 0H12V12H0z"/></clipPath></defs></svg></span>P0</span></td>
+            <td>表格 P0 使用 IconBox P0</td>
+          </tr>
+          <tr>
+            <td><span class="priority-sample"><span class="priority-icon"><svg class="force-icon force-icon-P3" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3.73926 9.25548L7.99139 6.74438L12.2603 9.25548" stroke="color(display-p3 .6 .4 0)" stroke-width="1.5" stroke-linecap="round"/></svg></span>P1</span></td>
+            <td>表格 P1 使用 IconBox P3</td>
+          </tr>
+          <tr>
+            <td><span class="priority-sample"><span class="priority-icon"><svg class="force-icon force-icon-P4" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3.73926 6.04663L7.99139 6.04673 12.2603 6.04663M3.73926 9.95312L7.99139 9.95348 12.2603 9.95312" stroke="color(display-p3 .6 .4 0)" stroke-width="1.5" stroke-linecap="round"/></svg></span>P2</span></td>
+            <td>表格 P2 使用 IconBox P4</td>
+          </tr>
+          <tr>
+            <td><span class="priority-sample"><span class="priority-icon"><svg class="force-icon force-icon-P5" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3.73926 6.74452L7.99139 9.25562L12.2603 6.74452" stroke="color(display-p3 .1373 .4392 .251)" stroke-width="1.5" stroke-linecap="round"/></svg></span>P3</span></td>
+            <td>表格 P3 使用 IconBox P5</td>
+          </tr>
+          <tr>
+            <td><span class="priority-sample"><span class="priority-icon"><svg class="force-icon force-icon-P1" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12.2607 8.91639L8.00861 11.4275 3.73975 8.91639M12.2607 5.0099L8.00861 7.521 3.73975 5.0099" stroke="color(display-p3 .1373 .4392 .251)" stroke-width="1.5" stroke-linecap="round"/></svg></span>P4</span></td>
+            <td>表格 P4 使用 IconBox P1</td>
+          </tr>
+        </tbody>
+      </table>
+          </section>
+        </div>
+      </div>
     </main>
 
     <script>
@@ -609,6 +752,8 @@
       const grid = document.querySelector("#card-grid");
       const tag = document.querySelector("#status-tag");
       const buttons = Array.from(document.querySelectorAll(".scenario-button"));
+      const docAnchors = Array.from(document.querySelectorAll(".doc-anchor"));
+      const docPanels = Array.from(document.querySelectorAll(".doc-panel"));
 
       function renderCard(card) {
         const fields = card.fields?.length
@@ -644,7 +789,7 @@
         document.querySelectorAll(".semantic-card-fields").forEach((group) => {
           const fields = Array.from(group.querySelectorAll(".semantic-card-field"));
           if (!fields.length) return;
-          fields.forEach((field) => {
+          fields.forEach((field, index) => {
             field.style.width = "";
             field.style.maxWidth = "";
             field.style.flexBasis = "";
@@ -749,6 +894,23 @@
       buttons.forEach(button => {
         button.addEventListener("click", () => renderScenario(button.dataset.scenario));
       });
+
+      function switchDocPanel(panelName) {
+        docAnchors.forEach(anchor => anchor.classList.toggle("active", anchor.dataset.docPanel === panelName));
+        docPanels.forEach(panel => panel.classList.toggle("active", panel.dataset.docPanelContent === panelName));
+        history.replaceState(null, "", `#${panelName}`);
+        allocateFieldWidths();
+        bindOverflowTitles();
+      }
+
+      docAnchors.forEach(anchor => {
+        anchor.addEventListener("click", () => switchDocPanel(anchor.dataset.docPanel));
+      });
+
+      const initialPanel = location.hash.replace("#", "");
+      if (initialPanel && docPanels.some(panel => panel.dataset.docPanelContent === initialPanel)) {
+        switchDocPanel(initialPanel);
+      }
 
       renderScenario("targetMissing");
     </script>

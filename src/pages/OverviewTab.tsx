@@ -1,6 +1,7 @@
 // References: none — newly built from PRD section 3 and its four overview screenshots.
 import React, {useMemo, useState} from 'react';
 import {Button, Drawer, Descriptions, Tag} from '@byted-babi/babi-design';
+import {IconP0, IconP1, IconP3, IconP4, IconP5} from '@arco-design/iconbox-react-ve-o-design';
 import {
   AnalysisProps, AnalysisRow, DrillFocus, TOS, BYTEGRAPH,
   getRows, totals, areaNames, amount, percent, monthList,
@@ -39,9 +40,10 @@ interface Evidence {
   rule: string;
   boundary: string;
 }
+type PriorityLevel = 'P0' | 'P1' | 'P2' | 'P3' | 'P4';
 interface ActionRow {
   id: string;
-  priority: 'P0' | 'P1' | 'P2';
+  priority: PriorityLevel;
   scope: string;
   object: string;
   basis: string;
@@ -51,6 +53,18 @@ interface ActionRow {
   anchor: string;
   focus: DrillFocus;
 }
+const priorityIconMap:Record<PriorityLevel, React.ComponentType<{width?:number;height?:number;className?:string}>>={
+  P0:IconP0,
+  P1:IconP3,
+  P2:IconP4,
+  P3:IconP5,
+  P4:IconP1,
+};
+const PriorityIcon=({level}:{level:PriorityLevel})=>{
+  const Icon=priorityIconMap[level];
+  return <span className="priority-icon" aria-hidden="true"><Icon width={16} height={16}/></span>;
+};
+const PriorityCell=({value}:{value:PriorityLevel})=><span className="priority-cell"><PriorityIcon level={value}/><span>{value}</span></span>;
 const finiteTotal = (rows:AnalysisRow[], key:'quantity'|'capacity') => {
   const values=rows.map(row=>row[key]).filter((v):v is number=>v!==null&&Number.isFinite(v));
   return values.length ? values.reduce((sum,v)=>sum+v,0) : null;
@@ -182,7 +196,7 @@ export default function OverviewTab({filters,onDrill}:AnalysisProps) {
     {id:'formula-review',priority:'P2',scope:filters.product,object:insights.map(insight=>insight.unit).join('、'),basis:'已展示售卖量、测算单价及物理容量变化；现阶段尚无经验证的归因贡献值。',action:'沿计费项、单位成本与售卖率核验公式关系，保留证据后再评审。',link:supported?'计费项公式':'暂无定价公式',tab:'pricing',anchor:'pricing-item-formula',focus:focusFor(rows)},
   ]:[];
   const actionColumns:any[]=[
-    {title:'优先级',dataIndex:'priority',width:85,render:(v:string)=><span className={`badge-priority ${v.toLowerCase()}`}>{v}</span>},
+    {title:'优先级',dataIndex:'priority',width:85,render:(v:PriorityLevel)=><PriorityCell value={v}/>},
     {title:'商品 / 范围',dataIndex:'scope',width:185},
     {title:'下钻对象',dataIndex:'object',width:235},
     {title:'定位依据',dataIndex:'basis',width:370},
@@ -228,9 +242,9 @@ export default function OverviewTab({filters,onDrill}:AnalysisProps) {
       </div>
       <div className="overview-operating-summary" data-testid="overview-operating-summary">{operatingSummary.length?<DataTable columns={operatingSummaryColumns} data={operatingSummary} width={1285} maxHeight={340}/>:<EmptyState/>}</div>
       {/* References: none — retain the complete region and attribution details, including their existing drill and evidence entry points. */}
-      <h3 className="subsection-title">1.1 收支分析</h3>
+      <h3 className="subsection-title">收支分析</h3>
       {operatingGroups.length?<DataTable columns={incomeColumns} data={operatingGroups} width={isTos?845:950} maxHeight={340}/>:<EmptyState text={rows.length?'当前范围暂无可比成本，仅支持查看收入':'当前筛选无数据'}/>}
-      <h3 className="subsection-title">1.2 公式归因</h3>
+      <h3 className="subsection-title">公式归因</h3>
       {insights.length?<DataTable columns={formulaColumns} data={insights} width={875}/>:<EmptyState/>}
     </Section>
     <Section title="年度累计价差" id="overview-yearly" subtitle="年度累计测算单价显示，TOS Request 的负偏差最需要优先治理；Storage / StorageEC 当前作为 P1 观察。">

@@ -10,9 +10,15 @@
   margin-top: 16px;
   min-width: 0;
 }
-.analysis-page .overview-section-summary,
-.analysis-page #overview-yearly .section-subtitle {
+.analysis-page .overview-section-summary {
   margin: -8px 0 16px;
+  color: var(--color-text-2);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 22px;
+}
+.analysis-page #overview-yearly .section-subtitle {
+  margin: 0 0 12px;
   color: var(--color-text-2);
   font-size: 13px;
   font-weight: 400;
