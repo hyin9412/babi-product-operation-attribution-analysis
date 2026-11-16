@@ -1,4 +1,29 @@
 /* References: none — cost-pricing refinements follow the project VE-O design tokens. */
+.analysis-page .pricing-deviation-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+.analysis-page .pricing-deviation-info {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-3);
+  cursor: help;
+}
+.analysis-page .pricing-deviation-info:hover,
+.analysis-page .pricing-deviation-info:focus-visible {
+  color: rgb(var(--primary-6));
+}
+.pricing-deviation-formula {
+  max-width: 420px;
+  white-space: normal;
+  line-height: 22px;
+}
 .analysis-page .pricing-source {
   display: inline-flex;
   align-items: center;
@@ -16,8 +41,7 @@
 .analysis-page :is(#pricing-item-cost, [id^="income-item-cost"]) > .section-heading { margin-bottom: 12px; }
 .analysis-page .pricing-cost-category {
   background: var(--color-bg-1);
-  border-top: 1px solid var(--color-border-2);
-  padding-top: 15px;
+  padding-top: 16px;
   margin-top: 16px;
 }
 .analysis-page .analysis-section > .section-heading + .pricing-cost-category { margin-top: 0; }
@@ -61,7 +85,6 @@
   overflow: hidden;
 }
 .analysis-page .pricing-formula-heading {
-  border-bottom: 1px solid var(--color-border-2);
   padding-bottom: 12px;
   margin-bottom: 16px;
 }
@@ -80,7 +103,6 @@
 .analysis-page .pricing-formula-branch {
   margin-left: 16px;
   padding-left: 16px;
-  border-left: 1px dashed var(--color-border-3);
 }
 .analysis-page .pricing-formula-branch .formula-row { gap: 16px; }
 .analysis-page .pricing-unit-pill {
@@ -107,25 +129,38 @@
   margin-top: 12px;
 }
 .analysis-page .pricing-metric-panel {
-  border-top: 1px solid var(--color-border-2);
   background: var(--color-bg-1);
-  padding-top: 15px;
+  padding-top: 16px;
   margin-top: 16px;
   scroll-margin-top: 250px;
 }
 .analysis-page .pricing-metric-panel .analysis-toolbar { flex-wrap: wrap; }
 .analysis-page .pricing-metric-panel h3 { font-size: 14px; font-weight: 500; line-height: 22px; color: var(--color-text-1); margin: 0; }
-.analysis-page .pricing-trend-chips {
+.analysis-page .pricing-trend-controls {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 16px;
+  align-items: center;
+  gap: 12px;
   margin-bottom: 16px;
 }
-.analysis-page .pricing-trend-chips > span {
-  display: inline-block;
-  color: var(--color-text-3);
-  font-size: 12px;
-  line-height: 1.5;
+.analysis-page .pricing-trend-controls > .arco-select-wrapper {
+  width: auto;
+  max-width: 100%;
+}
+.analysis-page .pricing-trend-controls > .pricing-time-range-select {
+  width: 235px;
+}
+.analysis-page .pricing-trend-controls > .pricing-scope-select {
+  width: 300px;
+}
+.analysis-page .pricing-trend-controls > .pricing-metric-select {
+  width: 300px;
+}
+.analysis-page .pricing-pipeline-tabs .arco-tabs-content {
+  display: none;
+}
+.analysis-page .pricing-pipeline-tabs .arco-tabs-header {
+  margin: 0;
 }
 /* References: none — V205 additions only; existing filters, section gaps and chart palette remain unchanged. */
 .analysis-page .pricing-nowrap { white-space: nowrap; overflow-wrap: normal; }
@@ -137,8 +172,6 @@
 .analysis-page .pricing-quarter-trend > .plain-text { margin: 8px 0 0; }
 .analysis-page .formula-target.formula-target-quarter { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .analysis-page .formula-target > div { min-width: 0; overflow-wrap: anywhere; }
-.analysis-page .pricing-trend-switches { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; margin-bottom: 16px; }
-.analysis-page .pricing-trend-switch-group { display: inline-flex; gap: 4px; }
 .pricing-evidence {
   font-size: 14px;
   color: var(--color-text-2);

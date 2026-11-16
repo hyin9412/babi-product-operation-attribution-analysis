@@ -7,7 +7,7 @@
     "dev": "vite --host 0.0.0.0"
   },
   "dependencies": {
-    "@arco-design/iconbox-react-babi": "0.0.151",
+    "@arco-design/iconbox-react-babi": "0.0.157",
     "@arco-design/iconbox-react-ve-o-design": "^1.1.38",
     "@arco-design/theme-ve-o-design": "^1.8.8",
     "@arco-design/web-react": "^2.66.10",

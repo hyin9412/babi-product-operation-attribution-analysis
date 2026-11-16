@@ -2,7 +2,8 @@
 .analysis-page .overview-operating-charts {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  column-gap: 16px;
+  row-gap: 16px;
   align-items: stretch;
   min-width: 0;
 }

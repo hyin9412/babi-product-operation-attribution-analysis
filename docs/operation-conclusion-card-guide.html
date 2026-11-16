@@ -510,7 +510,7 @@
       <header>
         <h1>商品经营结论卡片与状态 Tag 交互说明</h1>
         <p class="subtitle">
-          本页用于给前端实现对齐：标题旁状态 Tag、四张结论卡片、语义颜色映射、不同数据情况下的展示规则。
+          本页用于给前端实现对齐：商品经营结论卡片与状态 Tag、表格、图表的展示与交互规则。
         </p>
       </header>
 
@@ -518,6 +518,7 @@
         <aside class="doc-nav" aria-label="交互说明导航">
           <button class="doc-anchor active" type="button" data-doc-panel="conclusion">商品经营结论卡片与状态 Tag</button>
           <button class="doc-anchor" type="button" data-doc-panel="table">表格</button>
+          <button class="doc-anchor" type="button" data-doc-panel="chart">图表</button>
         </aside>
 
         <div class="doc-content">
@@ -695,6 +696,122 @@
           </tr>
         </tbody>
       </table>
+      <h3>商品概览表格固定列</h3>
+      <table class="spec-table">
+        <thead>
+          <tr>
+            <th>表格</th>
+            <th>固定列</th>
+            <th>生效规则</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>经营现状分析</td><td>对象，固定在左侧</td><td>仅表格需要横向滚动时生效</td></tr>
+          <tr><td>收支分析</td><td>计费单元，固定在左侧</td><td>仅表格需要横向滚动时生效</td></tr>
+          <tr><td>公式归因</td><td>计费单元，固定在左侧</td><td>仅表格需要横向滚动时生效</td></tr>
+          <tr><td>年度累计价差</td><td>对象，固定在左侧</td><td>仅表格需要横向滚动时生效</td></tr>
+          <tr><td>处理动作</td><td>管理动作，固定在右侧</td><td>仅表格需要横向滚动时生效</td></tr>
+        </tbody>
+      </table>
+      <h3>收支分析合并表头分割线</h3>
+      <table class="spec-table">
+        <thead><tr><th>场景</th><th>分割线规则</th><th>规范来源</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>多个双层指标表头</td>
+            <td>每个一级指标组左侧增加 1px 纵向分割线，一级表头下方增加 1px 横向分割线；二级表头仅每组首列延续左侧分割线，组内其他子列不增加纵线；最后一组右侧使用表格外框。</td>
+            <td>Figma Babi 组件 222:21126，颜色 #EAEDF1</td>
+          </tr>
+        </tbody>
+      </table>
+      <h3>表格总计行</h3>
+      <table class="spec-table">
+        <thead><tr><th>场景</th><th>位置与滚动</th><th>合并规则</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>存在总计信息的表格</td>
+            <td>总计行放在表头下第一行并固定为 40px 高（39px 内容＋1px 底边）；纵向滚动时与表头固定；横向滚动时与表头、表体同步且不单独展示滚动条，固定列规则保持一致；禁止总计容器使用负 margin-bottom，描边不得形成双线或遮挡第一条数据。</td>
+            <td>维度列合并展示“总计”；连续且无可汇总信息的列合并展示“—”或明确的不汇总原因；可汇总数值逐列展示并右对齐；表体与总计行单元格统一使用常规字重，不加粗。</td>
+          </tr>
+        </tbody>
+      </table>
+          </section>
+          <section class="doc-panel" id="doc-panel-chart" data-doc-panel-content="chart">
+            <h3>图表样式 Playground</h3>
+            <p style="margin-bottom: 12px; color: var(--text-2);">左侧调整间距、配色、坐标轴、图形和 tooltip，右侧即时查看真实 VChart 图表。沿用已保存的间距初始值；调整仅作用于预览。<a href="./chart-spacing-playground.html" target="_blank" rel="noopener">在新窗口打开</a></p>
+            <iframe title="图表样式 Playground" src="./chart-spacing-playground.html" loading="lazy" style="width: 100%; height: 1100px; border: 1px solid var(--border-2); border-radius: 8px;"></iframe>
+            <h3>图表样式配置来源</h3>
+            <p style="margin-bottom: 12px; color: var(--text-2);">折线图常态默认不展示数据点，hover 时展示 10 × 10px 圆点和竖向辅助线；辅助线默认颜色 #C9CDD4、实线、1px。柱状图不使用折线辅助线，hover 保留原有矩形背景色块。相关参数分别在“数据点”和“折线图 · Hover 辅助线”分组配置。</p>
+            <p style="margin-bottom: 12px; color: var(--text-2);">总结信息与更多信息仅定义样式，默认均不展示；实际文案、标签内容及数量由应用场景提供，Playground 使用通用示例。该区域距标题默认 8px；在“标题补充”分组分别开关。按 Figma 5341:150584，总结为 13px / 22px，两行间距 4px；更多信息采用 12px / 20px、4px 圆角、左右内边距 6px 的灰底标签。总结、更多信息、标题和单位合并为标题区域整体，到绘图区的间距保持固定。</p>
+            <p style="margin-bottom: 12px; color: var(--text-2);">图例与 Tooltip 的标记均可独立选择方块或虚线，默认方块，两处方块圆角固定为 1.54px。图例在“图例外观”中配置，Tooltip 在“Tooltip 面板”中配置；虚线宽度可分别调整，标记沿用对应系列配色。</p>
+            <p style="margin-bottom: 12px; color: var(--text-2);">Tooltip 的“金额自动缩写”默认开启：金额绝对值达到 1 万时按万展示，达到 1 亿时按亿展示，统一保留 2 位小数并保留负号；不足 1 万保持原数值。该规则应用于归因分析页所有人民币、CNY 或元类图表，百分比、计费单位数量等非金额图表不缩写。</p>
+            <p style="margin-bottom: 12px; color: var(--text-2);">图例默认左对齐，每页最多展示 2 行；可配置左对齐、居中或右对齐，以及每页最多行数。超出时在右侧显示上下翻页按钮和页码。调整宽度、间距或系列数会自动重新分页，翻页保留系列筛选状态与配色。</p>
+            <p style="margin-bottom: 12px; color: var(--text-2);">图例交互的“背景与宽度”分组统一配置悬停背景颜色、高度、圆角和宽度模式。默认宽度随色块＋文字自适应，背景左右内边距各 4px；超过自适应最大宽度时省略文字。后方“仅展示”图标独立计算尺寸和间距。</p>
+            <p style="margin-bottom: 12px; color: var(--text-2);">标题与单位作为一个整体：内部保留“标题 → 单位”间距，外部统一设置“标题与单位整体 → 绘图区”间距。隐藏单位时，整体仅剩标题，外部间距保持不变。</p>
+            <p style="margin-bottom: 12px; color: var(--text-2);">绘图区支持固定高度或按卡片剩余空间自适应。自适应模式使用整体卡片高度，扣除上下边框、内边距、标题、可选单位、图例实际高度及对应间距；图例换行和单位隐藏会自动重新分配绘图区高度。</p>
+            <table class="spec-table">
+              <thead><tr><th>模块</th><th>已纳入 Playground 的配置</th><th>来源</th></tr></thead>
+              <tbody>
+                <tr><td>卡片、标题、单位</td><td>内边距、边框、圆角、背景、字号、行高、字重、颜色及模块间距</td><td>页面公共 CSS；间距初始值使用已保存配置</td></tr>
+                <tr><td>系列配色</td><td>普通 10 色、扩展 20 色；支持 3 / 10 / 20 系列预览</td><td>AnalysisChart 的 CHART_PALETTE / CHART_PALETTE_EXTENDED；超过 20 系列重复扩展色板</td></tr>
+                <tr><td>X / Y 轴</td><td>标签显示、字号、颜色、字重、不透明度、标签间距；轴线、刻度线、网格线的显示、颜色、宽度与线型</td><td>公共 VChart spec + VChart 1.13.10 的 commonAxis、axisX、axisY、axisBand、axisLinear 默认主题</td></tr>
+                <tr><td>折线与数据点</td><td>线宽、不透明度、实线 / 虚线 / 点线、虚线长度与间隔、端点与连接形状；数据点显示、尺寸、形状、描边</td><td>公共 spec + VChart 默认 mark / line 主题。业务中虚线为 [6,4]、点线为 [2,3]，按系列传入；Playground 统一应用于示例系列</td></tr>
+                <tr><td>柱形</td><td>圆角与填充不透明度</td><td>当前业务采用 VChart 默认直角柱形，圆角初始为 0</td></tr>
+                <tr><td>图例</td><td>默认双操作：排除 / 恢复与仅展示。交互样式可调：文字行高、字重、省略宽度、圆角、悬停与聚焦；操作图标尺寸、线宽、间距、颜色、背景与显示方式；操作提示字号、行高、内边距、边框、圆角、偏移与阴影。选中交互参数自动预览对应状态</td><td>Figma 5339:149359 图例交互规范与当前实现的 CSS；20px 操作图标、4px 间距、提示 8px / 12px 内边距，默认双操作共存</td></tr>
+                <tr><td>Tooltip</td><td>显示、金额万 / 亿自动缩写、数值单位、背景、四边内边距、边框、圆角、行间距、鼠标偏移、阴影、色块；标题 / 字段名 / 数值的字号、行高、颜色、字重和间距</td><td>业务显式设置 visible 和内容格式；外观来自 VChart 1.13.10 默认 tooltip 主题（14px / 150% 行高在 Playground 中换算为 21px）</td></tr>
+              </tbody>
+            </table>
+            <p style="margin-top: 12px; color: var(--text-2);">Tooltip 可直接 hover 图表查看；选中左侧 tooltip 配置时，自动固定真实 tooltip 供调整。未使用的样式通过对应示例显式预览，未新增业务数据逻辑。</p>
+            <h3>图表空态</h3>
+            <p style="margin-bottom: 12px; color: var(--text-2);">Playground 顶部勾选“图表空态预览”即可查看统一空态。保留标题、单位及尺寸配置，隐藏图例与 Tooltip；关闭后恢复原图例筛选和分页状态。自适应模式将隐藏图例后释放的空间分配给空态绘图区。</p>
+            <table class="spec-table">
+              <thead>
+                <tr>
+                  <th>项目</th>
+                  <th>展示与交互规则</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>触发条件</td>
+                  <td>图表数据为空，或所有数据点的 value 均为 null。</td>
+                </tr>
+                <tr>
+                  <td>保留内容</td>
+                  <td>保留图表卡片、标题与已配置的单位信息；单位信息字号为 12px。</td>
+                </tr>
+                <tr>
+                  <td>空态图标</td>
+                  <td>使用 IconBox 的 <span class="code">IconEmptyChart</span>，尺寸为 80 × 80px。</td>
+                </tr>
+                <tr>
+                  <td>空态文案</td>
+                  <td>暂无可用数据。字号为 13px，行高为 22px，使用次要文本色。</td>
+                </tr>
+                <tr>
+                  <td>位置与间距</td>
+                  <td>图标与文案整体在绘图区水平、垂直居中，图标与文案间距为 8px。</td>
+                </tr>
+                <tr>
+                  <td>绘图区高度</td>
+                  <td>保持图表配置的高度，默认 250px，不因空态收缩。</td>
+                </tr>
+                <tr>
+                  <td>图表元素</td>
+                  <td>空态不渲染 VChart、坐标轴、数据图形、图例或 tooltip。</td>
+                </tr>
+                <tr>
+                  <td>边界情况</td>
+                  <td>数值为 0 时正常绘图；仅部分数据点为 null 时，过滤这些点后绘制其余数据。手动隐藏全部图例不触发数据空态。</td>
+                </tr>
+              </tbody>
+            </table>
+            <h3>组件使用</h3>
+            <div class="rule-card">
+              <strong>复用统一图表空态</strong>
+              <p>AnalysisChart 自动判断是否存在非 null 数据；无数据时在绘图区展示：</p>
+              <code class="code">&lt;EmptyState text="暂无可用数据" kind="chart" size={80}/&gt;</code>
+            </div>
           </section>
         </div>
       </div>

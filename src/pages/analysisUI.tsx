@@ -2,8 +2,11 @@
 import React, {useState} from 'react';
 import { Alert, Button, Checkbox, Pagination, Popover, Select, Tag, Tooltip } from '@byted-babi/babi-design';
 import TableBlock from '@byted-babi/babi-design/es/TableBlock';
+import { Table as ArcoTable } from '@arco-design/web-react';
 import { IconDown, IconUp, IconRight, IconPageEmpty, IconEmptyChart, IconNoContent, IconQueryFailed } from '@arco-design/iconbox-react-babi';
+import { IconDown as FilterIconDown, IconRight as FilterIconRight } from '@arco-design/iconbox-react-ve-o-design';
 import { VChart } from '@visactor/react-vchart';
+import { percent } from './analysisData';
 export const Section=({title,children,id,subtitle,extra,blue=false}:{title:React.ReactNode;children:React.ReactNode;id?:string;subtitle?:React.ReactNode;extra?:React.ReactNode;blue?:boolean})=><section id={id} className={`analysis-section ${blue?'section-blue':''}`}><div className="section-heading"><h2>{title}</h2>{extra}</div>{subtitle&&<p className="section-subtitle">{subtitle}</p>}{children}</section>;
 export const Note=({children,tone='info'}:{children:React.ReactNode;tone?:'info'|'warning'|'error'})=><Alert className="analysis-note" type={tone} content={children}/>;
 export type SemanticCardTone = 'red' | 'blue' | 'green' | 'yellow' | 'neutral';
@@ -48,7 +51,7 @@ const SemanticTruncatedText=({children,className='',as='span',styleWidth}:{child
 };
 const MIN_SEMANTIC_FIELD_WIDTH=36;
 const MIN_SEMANTIC_FIELD_VALUE_WIDTH=16;
-const SemanticCardFields=({fields}:{fields:SemanticCardNoteField[]})=>{
+export const SemanticCardFields=({fields,className=''}:{fields:SemanticCardNoteField[];className?:string})=>{
  const groupRef=React.useRef<HTMLDivElement|null>(null);
  const fieldRefs=React.useRef<(HTMLDivElement|null)[]>([]);
  const [widths,setWidths]=useState<{field:number|null;label:number|null;value:number|null}[]>([]);
@@ -114,7 +117,7 @@ const SemanticCardFields=({fields}:{fields:SemanticCardNoteField[]})=>{
    window.removeEventListener('resize',calculate);
   };
  },[fields]);
- return <div className="semantic-card-fields" ref={groupRef}>{fields.map((field,index)=>{
+ return <div className={`semantic-card-fields ${className}`.trim()} ref={groupRef}>{fields.map((field,index)=>{
   const fieldWidth=widths[index]?.field;
   const fieldStyle=fieldWidth===null||fieldWidth===undefined?{flexShrink:1+index*1000}:{flexBasis:fieldWidth,maxWidth:fieldWidth,flexShrink:1+index*1000};
   return <div className="semantic-card-field" key={index} ref={element=>{fieldRefs.current[index]=element;}} style={fieldStyle}><SemanticTruncatedText className="semantic-card-field-label" styleWidth={widths[index]?.label}>{field.label}</SemanticTruncatedText><SemanticTruncatedText as="strong" styleWidth={widths[index]?.value}>{field.value}</SemanticTruncatedText></div>;
@@ -166,12 +169,12 @@ const getFilterPopupContainer = (node:HTMLElement) => node.closest('.analysis-st
 export function FilterSummary({items,regions}:{items:string[][];regions?:string[]}) {
  return <div className="filter-summary">{items.map(([label,value])=>{const isRegionLabel=label.endsWith('售卖区域');return <Tag key={label} size="small" bordered={false} className="filter-summary-tag" data-testid={isRegionLabel?'filter-region-summary':undefined}><span className="filter-summary-label">{label}：</span>{isRegionLabel && regions!==undefined ? <Popover className="filter-region-popover" style={{width:'max-content',maxWidth:280}} title={`共 ${regions.length} 个${label}`} trigger="hover" position="bl" getPopupContainer={getFilterPopupContainer} unmountOnExit content={<div className="filter-region-details" data-testid="filter-region-details">{regions.length ? <ol className="filter-region-list">{regions.map(region=><li key={region}>{region}</li>)}</ol> : <span className="filter-region-empty">当前未选择{label}</span>}</div>}><Button type="text" size="mini" className="filter-region-count" data-testid="filter-region-count">共 {regions.length} 个</Button></Popover> : <span className="filter-summary-value">{value}</span>}</Tag>;})}</div>;
 }
-export function MultiFilter({value,options,onChange,disabled=false}:{value:string[]|null;options:string[];onChange:(value:string[])=>void;disabled?:boolean}) {
+export function MultiFilter({value,options,onChange,disabled=false,addBefore,size='default'}:{value:string[]|null;options:string[];onChange:(value:string[])=>void;disabled?:boolean;addBefore?:React.ReactNode;size?:'mini'|'small'|'default'|'large'}) {
  // References: none — Figma 5324:123773 menu presentation; existing option values and callbacks are unchanged.
  const selected = value === null ? options : value;
  const selectedCount = options.filter(option => selected.includes(option)).length;
  const allSelected = options.length > 0 && selectedCount === options.length;
- return <Select defaultActiveFirstOption={false} mode="multiple" animation={false} allowClear showSearch={options.length > SELECT_SEARCH_THRESHOLD} value={selected} options={options} placeholder={getSelectPlaceholder(options.length > SELECT_SEARCH_THRESHOLD)} maxTagCount={1} disabled={disabled} onChange={onChange} dropdownRender={menu=><div className="analysis-multi-menu"><div className="analysis-multi-options">{menu}</div><div className="analysis-multi-footer" onMouseDown={event=>event.preventDefault()}><Checkbox checked={allSelected} indeterminate={selectedCount > 0 && !allSelected} disabled={disabled || options.length === 0} onChange={checked=>onChange(checked ? options : [])}>全部<span className="analysis-multi-total">（共 {options.length} ）</span></Checkbox></div></div>}/>;
+ return <Select addBefore={addBefore} size={size} defaultActiveFirstOption={false} mode="multiple" animation={false} allowClear showSearch={options.length > SELECT_SEARCH_THRESHOLD} value={selected} options={options} placeholder={getSelectPlaceholder(options.length > SELECT_SEARCH_THRESHOLD)} maxTagCount={1} disabled={disabled} onChange={onChange} dropdownRender={menu=><div className="analysis-multi-menu"><div className="analysis-multi-options">{menu}</div><div className="analysis-multi-footer" onMouseDown={event=>event.preventDefault()}><Checkbox checked={allSelected} indeterminate={selectedCount > 0 && !allSelected} disabled={disabled || options.length === 0} onChange={checked=>onChange(checked ? options : [])}>全部<span className="analysis-multi-total">（共 {options.length} ）</span></Checkbox></div></div>}/>;
 }
 const textFromNode=(node:any):string=>{
  if(node===null||node===undefined||typeof node==='boolean')return '';
@@ -195,10 +198,11 @@ const isComparableNumericColumn=(column:any,data:any[])=>{
  if(nonComparableField.test(field)||nonComparableTitle.test(title))return false;
  return hasNumericData(column,data)||comparableNumericTitle.test(title);
 };
-const uniqueColumns=(columns:any[],data:any[]=[],prefix='column'):any[]=>columns.map((column,index)=>{
- const children=column.children?uniqueColumns(column.children,data,`${prefix}-${index}`):undefined;
+const uniqueColumns=(columns:any[],data:any[]=[],prefix='column',enableResponsiveFixed=false):any[]=>columns.map((column,index)=>{
+ const {responsiveFixed,...columnProps}=column;
+ const children=column.children?uniqueColumns(column.children,data,`${prefix}-${index}`,enableResponsiveFixed):undefined;
  const shouldAlignRight=!children&&column.align===undefined&&isComparableNumericColumn(column,data);
- return {...column,key:`${prefix}-${index}`,children,align:shouldAlignRight?'right':column.align};
+ return {...columnProps,key:`${prefix}-${index}`,children,align:shouldAlignRight?'right':column.align,fixed:responsiveFixed?(enableResponsiveFixed?responsiveFixed:undefined):column.fixed};
 });
 export const TABLE_PAGE_SIZE_OPTIONS = [10,20,50,100];
 export const sourcePaginationProps=(total:number,overrides:any={})=>({
@@ -213,36 +217,165 @@ export const sourcePaginationProps=(total:number,overrides:any={})=>({
 });
 const resolveTablePagination=(pagination:any,total:number)=>pagination&&pagination!==true?sourcePaginationProps(total,pagination):sourcePaginationProps(total);
 const SourceBaseTable=TableBlock.Table;
+export const SourceTableSummary=ArcoTable.Summary;
 export const SourceTable=({columns,data,width,pagination,maxHeight,noDataElement,onChange,footer,className='',...rest}:{columns:any[];data:any[];width?:number;pagination?:any;maxHeight?:number;noDataElement?:React.ReactNode;onChange?:any;footer?:any;className?:string;[key:string]:any})=>{
  const resolvedPagination=resolveTablePagination(pagination,data.length);
  const [current,setCurrent]=React.useState(resolvedPagination.current||1);
  const [pageSize,setPageSize]=React.useState(resolvedPagination.pageSize||resolvedPagination.defaultPageSize||10);
+ const tableRef=React.useRef<HTMLDivElement|null>(null);
+ const [enableResponsiveFixed,setEnableResponsiveFixed]=React.useState(false);
+ // #region debug-point A:summary-row-overlap
+ React.useEffect(()=>{
+  if(!location.href.includes('debugSummary='))return;
+  const root=tableRef.current;if(!root)return;
+  let last='',frame=0;
+  const capture=()=>{
+   const foot=root.querySelector<HTMLElement>('div.arco-table-tfoot'),body=root.querySelector<HTMLElement>('.arco-table-body');if(!foot||!body)return;
+   const f=foot.getBoundingClientRect(),b=body.getBoundingClientRect(),s=getComputedStyle(foot);
+   const data={height:f.height,overlap:f.bottom-b.top,inlineMargin:foot.style.marginBottom,margin:s.marginBottom,overflowY:s.overflowY,clientHeight:foot.clientHeight,offsetHeight:foot.offsetHeight,scrollHeight:foot.scrollHeight,cellBorders:Array.from(foot.querySelectorAll('td')).map(td=>getComputedStyle(td).borderBottom)};
+   const signature=JSON.stringify(data);if(signature===last)return;last=signature;
+   fetch('http://127.0.0.1:7777/event',{method:'POST',body:JSON.stringify({sessionId:'summary-row-overlap',runId:location.href.includes('debugSummary=post')?'post-fix':'pre-fix',hypothesisId:'A/C',location:'analysisUI.tsx:SourceTable',msg:'[DEBUG] Summary geometry and scrollbar compensation',data,ts:Date.now()})}).catch(()=>{});
+  };
+  const observer=new MutationObserver(()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(capture);});
+  observer.observe(root,{subtree:true,attributes:true,childList:true});capture();
+  return ()=>{observer.disconnect();cancelAnimationFrame(frame);};
+ },[]);
+ // #endregion
  React.useEffect(()=>{setCurrent(1);},[data.length]);
+ React.useLayoutEffect(()=>{
+  const element=tableRef.current;
+  if(!element||!width){
+   setEnableResponsiveFixed(false);
+   return;
+  }
+  const update=()=>{
+   const next=width>element.clientWidth+1;
+   setEnableResponsiveFixed(current=>current===next?current:next);
+  };
+  update();
+  const Observer=typeof ResizeObserver==='undefined'?null:ResizeObserver;
+  const observer=Observer?new Observer(update):null;
+  observer?.observe(element);
+  window.addEventListener('resize',update);
+  return ()=>{
+   observer?.disconnect();
+   window.removeEventListener('resize',update);
+  };
+ },[width]);
  const safePageSize=pageSize||10;
  const maxPage=Math.max(1,Math.ceil(data.length/safePageSize));
  const safeCurrent=Math.min(current,maxPage);
  const pageData=data.slice((safeCurrent-1)*safePageSize,safeCurrent*safePageSize);
- return <div className={`analysis-table source-analysis-table ${className}`.trim()}>
-  <SourceBaseTable rowKey="id" border={{wrapper:true}} columns={uniqueColumns(columns,data)} dataSource={pageData} pagination={false} scroll={width||maxHeight?{x:width,y:maxHeight}:undefined} noDataElement={noDataElement||<EmptyState compact size={60}/>} onChange={onChange} footer={footer} {...rest}/>
+ return <div ref={tableRef} className={`analysis-table source-analysis-table ${className}`.trim()} data-horizontal-overflow={enableResponsiveFixed?'true':'false'}>
+  <SourceBaseTable rowKey="id" border={{wrapper:true}} columns={uniqueColumns(columns,data,'column',enableResponsiveFixed)} dataSource={pageData} pagination={false} scroll={width||maxHeight?{x:width,y:maxHeight}:undefined} noDataElement={noDataElement||<EmptyState compact size={60}/>} onChange={onChange} footer={footer} {...rest}/>
   <div className="source-table-pagination"><Pagination {...resolvedPagination} current={safeCurrent} pageSize={safePageSize} onChange={(nextPage:number,nextSize:number)=>{setPageSize(nextSize||safePageSize);setCurrent(nextSize&&nextSize!==safePageSize?1:nextPage);}} onPageSizeChange={(nextSize:number)=>{setPageSize(nextSize);setCurrent(1);}}/></div>
  </div>;
 };
 export const DataTable=SourceTable;
-export function Fold({title,children,defaultOpen=false}:{title:string;children:React.ReactNode;defaultOpen?:boolean}) {const [open,setOpen]=useState(defaultOpen);return <div className="analysis-fold"><Button long type="text" className="fold-button" onClick={()=>setOpen(!open)}>{title}<span>{open?'收起':'展开'} {open?<IconUp/>:<IconDown/>}</span></Button>{open&&<div className="fold-content">{children}</div>}</div>;}
+// Directional values share the existing theme tokens; absolute values keep their own business semantics.
+export const TrendValue=({value,children}:{value:number|null|undefined;children:React.ReactNode})=>{
+ const comparable=typeof value==='number'&&Number.isFinite(value);
+ const className=comparable&&value>0?'red-value':comparable&&value<0?'green-value':undefined;
+ return <span className={className}>{children}</span>;
+};
+export const trendPercent=(value:number|null|undefined)=><TrendValue value={value}>{percent(value)}</TrendValue>;
+export function Fold({title,children,defaultOpen=false,appearance='default'}:{title:string;children:React.ReactNode;defaultOpen?:boolean;appearance?:'default'|'filter'}) {
+ const [open,setOpen]=useState(defaultOpen);
+ if(appearance==='filter') return <div className={`analysis-fold analysis-fold-filter${open?'':' analysis-fold-collapsed'}`}>
+  <div className="filter-heading">
+   <Popover content={open?'收起':'展开'} trigger="hover" position="top" unmountOnExit>
+    <span className="filter-toggle-popover-trigger"><span role="button" tabIndex={0} className="analysis-fold-toggle" aria-label={`${open?'收起':'展开'}${title}`} aria-expanded={open} title={`${open?'收起':'展开'}${title}`} onClick={()=>setOpen(!open)} onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();setOpen(!open);}}}>{open?<FilterIconDown width="16" height="16"/>:<FilterIconRight width="16" height="16"/>}</span></span>
+   </Popover>
+   <h2 style={{fontSize:'14px'}}>{title}</h2>
+  </div>
+  {open&&<div className="fold-content">{children}</div>}
+ </div>;
+ return <div className="analysis-fold"><Button long type="text" className="fold-button" onClick={()=>setOpen(!open)}>{title}<span>{open?'收起':'展开'} {open?<IconUp/>:<IconDown/>}</span></Button>{open&&<div className="fold-content">{children}</div>}</div>;
+}
 export interface ChartValue {x:string;series:string;value:number|null;}
+export interface ChartAnnotationPoint {x:string;series:string;value:number;}
 // References: none — supplied Source Design categorical palette, Figma 289:209522.
 const CHART_PALETTE = ['#1664FF','#1AC6FF','#FF8A00','#3CC780','#7442D4','#FFC400','#304D77','#B48DEB','#009488','#FF7DDA'];
 const CHART_PALETTE_EXTENDED = ['#1664FF','#B2CFFF','#1AC6FF','#94EFFF','#FF8A00','#FFCE7A','#3CC780','#B9EDCD','#7442D4','#DDC5FA','#FFC400','#FAE878','#304D77','#8B959E','#B48DEB','#EFE3FF','#009488','#59BAA8','#FF7DDA','#FFCFEE'];
-export function AnalysisChart({title,values,type='line',height=250,unit='',percent=false,dashedSeries=[],dottedSeries=[]}:{title:string;values:ChartValue[];type?:'line'|'bar';height?:number;unit?:string;percent?:boolean;dashedSeries?:string[];dottedSeries?:string[]}) {
+const CHART_CARD_HEIGHT=352;
+const CHART_LEGEND_MAX_ROWS=2;
+const CHART_TOOLTIP_MARKER_RADIUS=1.54;
+const tooltipSquarePath=(size:number)=>{
+ const radius=Math.min(CHART_TOOLTIP_MARKER_RADIUS,size/2),edge=size-radius;
+ return `M${radius},0H${edge}A${radius},${radius} 0 0 1 ${size},${radius}V${edge}A${radius},${radius} 0 0 1 ${edge},${size}H${radius}A${radius},${radius} 0 0 1 0,${edge}V${radius}A${radius},${radius} 0 0 1 ${radius},0Z`;
+};
+const CHART_DASHED_MARKER_PATH='M-0.5,-0.0625H-0.3V0.0625H-0.5Z M-0.1,-0.0625H0.1V0.0625H-0.1Z M0.3,-0.0625H0.5V0.0625H0.3Z';
+const LegendIsolateIcon=()=> <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><g stroke="currentColor" strokeWidth="1.33" strokeLinecap="round" strokeLinejoin="round"><circle cx="10" cy="10" r="5"/><path d="M10 13.25V15M13 10H15M5 10H6.75M10 6.75V5"/></g></svg>;
+function ChartLegend({series,colors,dashedSeries,hidden,setHidden,exclude,isolate}:{series:string[];colors:string[];dashedSeries:string[];hidden:string[];setHidden:React.Dispatch<React.SetStateAction<string[]>>;exclude:boolean;isolate:boolean}) {
+ const rootRef=React.useRef<HTMLDivElement|null>(null),listRef=React.useRef<HTMLDivElement|null>(null);
+ const widthsRef=React.useRef<number[]>([]);
+ const [pages,setPages]=useState<number[][]>([]);
+ const [page,setPage]=useState(0);
+ const paginate=React.useCallback(()=>{
+  const root=rootRef.current,list=listRef.current;
+  if(!root||!list)return;
+  const items=Array.from(list.querySelectorAll<HTMLElement>('.legend-item'));
+  items.forEach(item=>{item.hidden=false;});
+  const measured=items.map((item,index)=>item.offsetWidth||widthsRef.current[index]||80);
+  widthsRef.current=measured;
+  const pack=(available:number)=>{
+   const rows:number[][]=[];let row:number[]=[];let used=0;
+   measured.forEach((width,index)=>{const next=width+(row.length?4:0);if(row.length&&used+next>available){rows.push(row);row=[];used=0;}row.push(index);used+=width+(row.length>1?4:0);});
+   if(row.length)rows.push(row);
+   return rows;
+  };
+  let rows=pack(root.clientWidth);
+  if(rows.length>CHART_LEGEND_MAX_ROWS)rows=pack(Math.max(80,root.clientWidth-36));
+  const next:number[][]=[];
+  for(let index=0;index<rows.length;index+=CHART_LEGEND_MAX_ROWS)next.push(rows.slice(index,index+CHART_LEGEND_MAX_ROWS).flat());
+  setPages(next);setPage(current=>Math.min(current,Math.max(0,next.length-1)));
+ },[series.length,isolate]);
+ React.useLayoutEffect(()=>{setPage(0);paginate();},[paginate,series.join('|')]);
+ React.useEffect(()=>{const root=rootRef.current;if(!root)return;const observer=new ResizeObserver(paginate);observer.observe(root);return()=>observer.disconnect();},[paginate]);
+ const visible=new Set(pages[page]||series.map((_name,index)=>index));
+ return <div className="chart-legend" ref={rootRef}>
+  <div className="legend-list" ref={listRef}>{series.map((name,index)=><div key={name} className="legend-item" hidden={!visible.has(index)}>
+   <Tooltip content={`${name}：${exclude?(hidden.includes(name)?'点击恢复展示':'点击排除展示'):'图例'}`}>
+    <button type="button" className={`legend-toggle${hidden.includes(name)?' legend-hidden':''}`} aria-label={`${hidden.includes(name)?'恢复':'排除'}${name}`} aria-pressed={!hidden.includes(name)} disabled={!exclude} onClick={()=>setHidden(current=>current.includes(name)?current.filter(item=>item!==name):[...current,name])}><i className={dashedSeries.includes(name)?'legend-marker-dash':undefined} style={{background:dashedSeries.includes(name)?`repeating-linear-gradient(to right, ${colors[index]} 0%, ${colors[index]} 20%, transparent 20%, transparent 40%)`:colors[index]}} aria-hidden="true"/><span className="legend-label">{name}</span></button>
+   </Tooltip>
+   {isolate&&<Tooltip content="点击仅展示该指标"><button type="button" className="legend-isolate" aria-label={`仅展示${name}`} onClick={()=>setHidden(series.filter(item=>item!==name))}><LegendIsolateIcon/></button></Tooltip>}
+  </div>)}</div>
+  {pages.length>1&&<div className="legend-pager" aria-label="图例翻页"><button type="button" aria-label="上一页图例" disabled={page===0} onClick={()=>setPage(current=>Math.max(0,current-1))}>⌃</button><span>{page+1}/{pages.length}</span><button type="button" aria-label="下一页图例" disabled={page===pages.length-1} onClick={()=>setPage(current=>Math.min(pages.length-1,current+1))}>⌄</button></div>}
+ </div>;
+}
+export function AnalysisChart({title,values,type='line',unit='',percent=false,dashedSeries=[],dottedSeries=[],seriesColorIndexes={},legendExclude=true,legendIsolate=true,summary,moreInfo,annotationPoint}:{title:string;values:ChartValue[];type?:'line'|'bar';height?:number;unit?:string;percent?:boolean;dashedSeries?:string[];dottedSeries?:string[];seriesColorIndexes?:Record<string,number>;legendExclude?:boolean;legendIsolate?:boolean;summary?:React.ReactNode;moreInfo?:React.ReactNode[];annotationPoint?:ChartAnnotationPoint|null}) {
  const [hidden,setHidden]=useState<string[]>([]); const series=Array.from(new Set(values.map(v=>v.series)));const filtered=values.filter(v=>v.value!==null&&!hidden.includes(v.series));
+ React.useEffect(()=>setHidden(current=>current.filter(name=>series.includes(name))),[series.join('|')]);
  // Resolve against all series, not visible data: legend toggles never reassign colors.
  // For more than 20 combinations, repeat the supplied extended palette without inventing new colors.
  const palette=series.length<=10?CHART_PALETTE:CHART_PALETTE_EXTENDED;
- const colors=series.map((_name,index)=>palette[index%palette.length]);
- const spec:any={type,autoFit:true,padding:{top:12,right:20,bottom:10,left:10},data:[{id:'data',values:filtered}],xField:type==='bar'?['x','series']:'x',yField:'value',seriesField:'series',color:{type:'ordinal',domain:series,range:colors},animation:false,axes:[{orient:'left',type:'linear',min:0,zero:true,label:{style:{fontSize:12,fill:'#737a87'},formatMethod:(v:any)=>percent?`${Number(v).toFixed(0)}%`:Math.abs(Number(v))>=1e8?`${(Number(v)/1e8).toFixed(1)}亿`:Math.abs(Number(v))>=1e4?`${(Number(v)/1e4).toFixed(0)}万`:Number(v).toFixed(Math.abs(Number(v))<1?4:0)},grid:{style:{stroke:'#e9eef6',lineDash:[3,3]}},domainLine:{visible:false},tick:{visible:false}},{orient:'bottom',type:'band',label:{style:{fontSize:12,fill:'#737a87'}},domainLine:{style:{stroke:'#dce4ef'}},tick:{visible:false}}],tooltip:{visible:true,mark:{content:[{key:(datum:any)=>datum.series,value:(datum:any)=>`${Number(datum.value).toLocaleString('zh-CN',{maximumFractionDigits:10})}${percent?'%':unit}`}] }},line:{style:{lineWidth:2.3,lineDash:(datum:any)=>dottedSeries.includes(datum.series)?[2,3]:dashedSeries.includes(datum.series)?[6,4]:[0,0]}},point:{visible:true,style:{size:5}},legends:[]};
+ const colors=series.map((name,index)=>palette[(seriesColorIndexes[name]??index)%palette.length]);
+ const colorBySeries=new Map(series.map((name,index)=>[name,colors[index]]));
+ const isAnnotationPoint=(datum:any)=>!!annotationPoint&&datum.x===annotationPoint.x&&datum.series===annotationPoint.series&&Number(datum.value)===annotationPoint.value;
+ const markerPath=tooltipSquarePath(8);
+ const abbreviateAmount=!percent&&(unit.includes('人民币')||/\bCNY\b/i.test(unit)||/(^|[/\s])(元|万元|亿元)($|[/\s])/.test(unit));
+ const formatTooltipValue=(value:any)=>{
+  const numeric=Number(value);
+  if(abbreviateAmount&&Math.abs(numeric)>=1e8)return `${(numeric/1e8).toFixed(2)}亿`;
+  if(abbreviateAmount&&Math.abs(numeric)>=1e4)return `${(numeric/1e4).toFixed(2)}万`;
+  return numeric.toLocaleString('zh-CN',{maximumFractionDigits:10});
+ };
+ const tooltipContent={shapeType:(datum:any)=>dashedSeries.includes(datum.series)?CHART_DASHED_MARKER_PATH:markerPath,shapeSize:(datum:any)=>dashedSeries.includes(datum.series)?10:8,shapeHollow:false,shapeLineWidth:0,key:(datum:any)=>datum.series,value:(datum:any)=>formatTooltipValue(datum.value)};
+ const updateTooltipPeakTag=(tooltipElement:HTMLElement,actualTooltip:any)=>{
+  tooltipElement.querySelectorAll('.analysis-tooltip-peak-tag').forEach(tag=>tag.remove());
+  const keyRows=tooltipElement.querySelectorAll('.vchart-tooltip-key-column .vchart-tooltip-key');
+  actualTooltip.content?.forEach((entry:any,index:number)=>{
+   if(!isAnnotationPoint(entry.datum))return;
+   const tag=document.createElement('span');
+   tag.className='analysis-tooltip-peak-tag';
+   tag.textContent='峰值';
+   keyRows[index]?.appendChild(tag);
+  });
+ };
+ const spec:any={type,autoFit:true,padding:{top:0,right:0,bottom:0,left:0},data:[{id:'data',values:filtered}],xField:type==='bar'?['x','series']:'x',yField:'value',seriesField:'series',activePoint:type==='line',color:{type:'ordinal',domain:series,range:colors},animation:false,axes:[{orient:'left',type:'linear',min:0,zero:true,label:{space:6,style:{fontSize:10,fill:'#737a87',fontWeight:'normal',fillOpacity:1},formatMethod:(v:any)=>percent?`${Number(v).toFixed(0)}%`:Math.abs(Number(v))>=1e8?`${(Number(v)/1e8).toFixed(1)}亿`:Math.abs(Number(v))>=1e4?`${(Number(v)/1e4).toFixed(0)}万`:Number(v).toFixed(Math.abs(Number(v))<1?4:0)},grid:{visible:true,style:{stroke:'#e9eef6',lineWidth:1,strokeOpacity:1,lineDash:[2,2]}},domainLine:{visible:false},tick:{visible:false}},{orient:'bottom',type:'band',label:{space:6,style:{fontSize:10,fill:'#737a87',fontWeight:'normal',fillOpacity:1}},grid:{visible:false},domainLine:{visible:true,style:{stroke:'#dce4ef',lineWidth:1,strokeOpacity:1}},tick:{visible:false}}],crosshair:{trigger:'hover',triggerOff:'hover',followTooltip:false,xField:type==='line'?{visible:true,line:{type:'line',style:{stroke:'#C9CDD4',lineWidth:1,lineDash:[]}},label:{visible:false}}:{visible:true,line:{type:'rect'},label:{visible:false}},yField:{visible:false}},tooltip:{visible:true,renderMode:'html',className:'analysis-chart-tooltip',offset:{x:10,y:10},updateElement:updateTooltipPeakTag,mark:{content:[tooltipContent]},dimension:{content:[tooltipContent]},style:{panel:{backgroundColor:'#fff',padding:{top:8,right:12,bottom:8,left:12},border:{color:'#fff',width:0,radius:4},shadow:{x:0,y:4,blur:12,spread:0,color:'rgba(33,37,44,.1)'}},spaceRow:2,shape:{size:8,spacing:6},titleLabel:{fontSize:12,lineHeight:20,fontColor:'#808893',fontWeight:'normal',spacing:0},keyLabel:{fontSize:12,lineHeight:20,fontColor:'#808893',fontWeight:'normal',spacing:26},valueLabel:{fontSize:12,lineHeight:20,fontColor:'#555960',fontWeight:'bold',spacing:0}}},line:{style:{lineWidth:2,strokeOpacity:1,lineCap:'round',lineJoin:'round',lineDash:(datum:any)=>dottedSeries.includes(datum.series)?[2,3]:dashedSeries.includes(datum.series)?[6,6]:[0,0]}},point:{visible:type==='line'&&!!annotationPoint,style:{size:(datum:any)=>isAnnotationPoint(datum)?8:0,symbolType:'circle',fill:(datum:any)=>isAnnotationPoint(datum)?'#E8002A':colorBySeries.get(datum.series)||CHART_PALETTE[0],fillOpacity:1,stroke:(datum:any)=>isAnnotationPoint(datum)?'#E8002A':'#fff',lineWidth:(datum:any)=>isAnnotationPoint(datum)?0:1},state:{dimension_hover:{visible:true,size:(datum:any)=>isAnnotationPoint(datum)?8:10,symbolType:'circle',fillOpacity:1,stroke:(datum:any)=>isAnnotationPoint(datum)?'#E8002A':'#fff',lineWidth:(datum:any)=>isAnnotationPoint(datum)?0:1}}},bar:{style:{cornerRadius:0,fillOpacity:1}},legends:[]};
  // Explicit signed y-domain prevents losing negative profit or a negative change.
  if(filtered.some(v=>(v.value||0)<0)) delete spec.axes[0].min;
  const hasChartData=values.some(v=>v.value!==null);
- return <div className="analysis-chart"><h3>{title}</h3>{unit&&<span className="chart-unit">单位：{unit}</span>}{hasChartData?<div style={{height}}><VChart spec={spec}/></div>:<div className="analysis-chart-empty-slot" style={{height}}><EmptyState text="暂无可用数据" kind="chart" size={80}/></div>}{hasChartData&&<div className="chart-legend">{series.map((name,i)=><Button key={name} size="mini" type="text" className={hidden.includes(name)?'legend-hidden':''} onClick={()=>setHidden(hidden.includes(name)?hidden.filter(s=>s!==name):[...hidden,name])}><i style={{background:colors[i%colors.length]}}/>{name}</Button>)}</div>}</div>;
+ return <div className="analysis-chart" style={{height:CHART_CARD_HEIGHT}}><div className="chart-heading"><h3>{title}</h3>{(summary||moreInfo?.length)?<div className="chart-heading-info">{summary&&<p className="chart-summary">{summary}</p>}{!!moreInfo?.length&&<div className="chart-more-info">{moreInfo.map((item,index)=><span key={index}>{item}</span>)}</div>}</div>:null}{unit&&<span className="chart-unit">单位：{unit}</span>}</div>{hasChartData?<div className="analysis-chart-slot" role="img" aria-label={`${title}趋势图`}><VChart spec={spec}/></div>:<div className="analysis-chart-slot analysis-chart-empty-slot"><EmptyState text="暂无可用数据" kind="chart" size={80}/></div>}{hasChartData&&<ChartLegend series={series} colors={colors} dashedSeries={dashedSeries} hidden={hidden} setHidden={setHidden} exclude={legendExclude} isolate={legendIsolate}/>}</div>;
 }
 export const ExactValue=({value,children}:{value:number|null;children:React.ReactNode})=><Tooltip content={value===null?'暂无可用数据':value.toLocaleString('zh-CN',{maximumFractionDigits:10})}><span>{children}</span></Tooltip>;

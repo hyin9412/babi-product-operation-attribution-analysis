@@ -1,7 +1,235 @@
-/* References: none — income-specific layout aligned with the existing VE-O theme and prototype design rules. */
-.analysis-page .income-change {
-  margin-left: 8px;
+/* References: Figma 5342:152910 / 5344:153055 — complex income metric card and zero-change state. */
+.analysis-page .income-metric-grid {
+  align-items: stretch;
+}
+.analysis-page .income-metric-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  height: 100%;
+  padding: 16px;
+  overflow: hidden;
+  border: 1px solid #eaedf1;
+  border-radius: 6px;
+  background: #fff;
+  color: #0c0d0e;
+}
+.analysis-page .income-metric-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.analysis-page .income-metric-title {
+  margin: 0;
+  overflow: hidden;
+  color: #0c0d0e;
+  font-family: 'PingFang SC', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 22px;
+  letter-spacing: .003em;
+  text-overflow: ellipsis;
   white-space: nowrap;
+}
+.analysis-page .income-metric-primary {
+  display: flex;
+  align-items: flex-end;
+  min-width: 0;
+  height: 33px;
+  overflow: hidden;
+  font-family: Roboto, 'PingFang SC', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, sans-serif;
+  font-weight: 600;
+  line-height: 33px;
+  white-space: nowrap;
+}
+.analysis-page .income-metric-number {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 28px;
+  text-overflow: ellipsis;
+}
+.analysis-page .income-metric-scale {
+  flex: 0 0 auto;
+  font-size: 24px;
+}
+.analysis-page .income-metric-unit {
+  flex: 0 0 auto;
+  padding: 0 0 2px 4px;
+  color: #737a87;
+  font-family: 'PingFang SC', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 20px;
+}
+.analysis-page .income-metric-comparisons {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.analysis-page .income-metric-fields {
+  height: 20px;
+  color: #737a87;
+  font-family: 'PingFang SC', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 20px;
+}
+.analysis-page .income-metric-fields .semantic-card-field {
+  color: #737a87;
+}
+.analysis-page .income-metric-fields .semantic-card-field-label {
+  color: #737a87;
+}
+.analysis-page .income-metric-fields .semantic-card-field strong {
+  color: #737a87;
+  font-family: Inter, 'PingFang SC', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 20px;
+}
+.analysis-page .income-metric-comparison-row,
+.analysis-page .income-metric-target-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  height: 20px;
+  color: #737a87;
+  font-family: 'PingFang SC', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 20px;
+  white-space: nowrap;
+}
+.analysis-page .income-metric-reference,
+.analysis-page .income-metric-delta,
+.analysis-page .income-metric-target-item {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+}
+.analysis-page .income-metric-reference {
+  flex: 0 1 auto;
+}
+.analysis-page .income-metric-delta {
+  flex: 0 1 auto;
+  gap: 2px;
+}
+.analysis-page .income-metric-reference > span,
+.analysis-page .income-metric-delta > span:first-child,
+.analysis-page .income-metric-target-item > span:first-child {
+  flex: 0 0 auto;
+}
+.analysis-page .income-metric-reference strong,
+.analysis-page .income-metric-target-item strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #737a87;
+  font-family: Inter, 'PingFang SC', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 20px;
+  text-overflow: ellipsis;
+}
+.analysis-page .income-metric-row-divider {
+  flex: 0 0 1px;
+  width: 1px;
+  height: 12px;
+  background: #eaedf1;
+}
+.analysis-page .income-metric-change {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  overflow: hidden;
+  font-family: Inter, 'PingFang SC', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.analysis-page .income-metric-change svg {
+  flex: 0 0 auto;
+  width: 9px;
+  height: 11px;
+}
+.analysis-page .income-metric-change.is-positive,
+.analysis-page .income-metric-target-value.is-positive {
+  color: #ee3f38;
+}
+.analysis-page .income-metric-change.is-negative,
+.analysis-page .income-metric-target-value.is-negative {
+  color: #00a32b;
+}
+.analysis-page .income-metric-change.is-missing {
+  color: #737a87;
+}
+.analysis-page .income-metric-change.is-zero {
+  gap: 4px;
+  color: #c7ccd6;
+  font-family: 'PingFang SC', sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 18px;
+}
+.analysis-page .income-metric-change.is-zero i {
+  display: block;
+  flex: 0 0 6px;
+  width: 6px;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg,#dadada 0%,#c2c2c2 50%,#dadada 100%);
+}
+.analysis-page .income-metric-targets {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 6px 8px;
+  overflow: hidden;
+  background: #fafbfc;
+}
+.analysis-page .income-metric-target-item {
+  flex: 0 1 auto;
+}
+.analysis-page .income-metric-target-value {
+  min-width: 0;
+  overflow: hidden;
+  color: #737a87;
+  font-family: Inter, 'PingFang SC', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 20px;
+  text-overflow: ellipsis;
+}
+.analysis-page .income-metric-target-value.is-zero {
+  color: #c7ccd6;
+}
+.analysis-page .income-metric-formula-value {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  border-bottom: 1px dashed #737a87;
+  color: inherit;
+  line-height: 17px;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+  white-space: nowrap;
+  cursor: help;
+}
+.income-metric-formula-popover .arco-popover-content {
+  max-width: 320px;
+  padding: 8px 12px;
+  color: #42464e;
+  font-size: 12px;
+  line-height: 20px;
+  white-space: normal;
 }
 .analysis-page .income-target-notice {
   margin-top: 16px;
@@ -19,12 +247,15 @@
   color: var(--color-text-2);
   white-space: nowrap;
 }
-.analysis-page .income-category-filter .arco-select { width: 276px; }
+.analysis-page .income-category-filter .arco-select-wrapper { width: 276px; }
+.analysis-page .income-category-filter .arco-select { width: auto; }
 .analysis-page .income-category-card {
   margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid var(--color-border-2);
+  padding: 16px;
   min-width: 0;
+  border: 1px solid var(--color-border-2);
+  border-radius: 8px;
+  background: var(--color-bg-1);
 }
 .analysis-page .income-category-heading {
   display: flex;
@@ -32,20 +263,84 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 12px 16px;
-  margin-bottom: 16px;
+  min-height: 24px;
+  margin-bottom: 14px;
 }
 .analysis-page .income-category-controls {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 16px;
   min-width: 0;
 }
-/* References: none — keep the category identifiable without a duplicate capsule, using existing section text tokens. */
 .analysis-page .income-category-title { color: var(--color-text-1); font-size: 14px; font-weight: 500; line-height: 22px; }
-/* References: none — appended cost sections retain the confirmed 32px section spacing. */
-.analysis-page .income-category-card > .analysis-section { margin-top: 32px; }
+.analysis-page .income-category-heading-divider {
+  width: 1px;
+  height: 8px;
+  background: var(--color-border-2);
+}
+.analysis-page .income-category-dashed-divider {
+  border-top: 1px dashed var(--color-text-4);
+}
+.analysis-page .income-category-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 16px;
+}
+.analysis-page .income-category-subsection {
+  min-width: 0;
+}
+.analysis-page .income-category-subtitle {
+  margin: 0 0 12px;
+  color: var(--color-text-2);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 22px;
+}
+.analysis-page .income-category-card .analysis-fold-filter .filter-heading > h2 {
+  color: var(--color-text-2);
+  font-size: 13px !important;
+  font-weight: 500;
+  line-height: 22px;
+}
+.analysis-page .income-cost-breakdown-list {
+  margin-top: 0;
+}
+.analysis-page .income-cost-breakdown {
+  margin-top: 0;
+  padding-top: 0;
+}
+.analysis-page .income-cost-trend-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
 .analysis-page .income-unit-select { width: 276px; }
+.analysis-page .income-unit-select .arco-select-size-mini.arco-select-multiple .arco-select-view {
+  height: 24px;
+  min-height: 24px;
+  overflow: hidden;
+}
+.analysis-page .income-unit-select .arco-input-tag-view {
+  height: 22px;
+  min-height: 22px;
+}
+.analysis-page .income-unit-select .arco-input-tag-inner {
+  flex-wrap: nowrap;
+  min-width: 0;
+  height: 22px;
+}
+.analysis-page .income-unit-select .arco-input-tag-tag {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+.analysis-page .income-unit-select .arco-input-tag-input {
+  flex: 0 0 4px;
+  min-width: 4px;
+}
+.analysis-page .income-formula-link {
+  padding-right: 0;
+  padding-left: 0;
+}
 .analysis-page .income-table-hint {
   font-size: 12px;
   line-height: 1.5;
@@ -53,34 +348,8 @@
   white-space: nowrap;
 }
 .analysis-page .income-detail-table { width: 100%; min-width: 0; }
-.analysis-page .income-source-summary {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  min-width: 100%;
-  overflow-x: auto;
-  color: var(--color-text-2);
-  font-size: 13px;
-  line-height: 22px;
-}
-.analysis-page .income-source-summary > span {
-  flex: 0 0 auto;
-  font-weight: 600;
-}
-.analysis-page .income-source-summary > div {
-  display: flex;
-  flex: 1 0 auto;
-  justify-content: flex-end;
-  gap: 20px;
-  min-width: 0;
-}
-.analysis-page .income-source-summary strong {
-  white-space: nowrap;
-  font-weight: 600;
-}
-.analysis-page .income-summary-dimension { font-weight: 600; }
 .analysis-page .income-actual {
-  font-weight: 500;
+  font-weight: 400;
   font-variant-numeric: tabular-nums;
   color: var(--color-text-1);
 }
@@ -124,17 +393,14 @@
   color: var(--color-text-1);
   margin-bottom: 12px;
 }
-.analysis-page .income-tab .kpi-targets:has(> .kpi-target:only-child) { grid-template-columns: 1fr; }
-.analysis-page .income-tab .kpi-target div { margin-top: 4px; }
-.analysis-page .income-tab .kpi-target strong { font-variant-numeric: tabular-nums; }
-.analysis-page .income-tab .kpi-value { font-size: clamp(24px, 2vw, 28px); }
 @media (max-width: 1250px) {
   .analysis-page .income-category-heading { align-items: flex-start; }
   .analysis-page .income-category-filter { flex-wrap: wrap; }
 }
 @media (max-width: 760px) {
   .analysis-page .income-category-filter > div { flex-wrap: wrap; width: 100%; }
-  .analysis-page .income-category-filter .arco-select { width: 100%; }
+  .analysis-page .income-category-filter .arco-select-wrapper { width: 100%; }
   .analysis-page .income-unit-select { width: 100%; }
+  .analysis-page .income-category-heading-divider { display: none; }
   .analysis-page .income-table-hint { white-space: normal; }
 }
