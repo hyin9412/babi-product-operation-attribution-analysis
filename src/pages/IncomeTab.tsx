@@ -230,7 +230,6 @@ export default function IncomeTab({filters,onDrill}:AnalysisProps) {
   const yearToDate=scopeTotal(monthList(filters.month).flatMap(month=>getRows(filters,month)));
   return <div className="income-tab">
     <Section title="商品收支" id="product-income-expense" blue>
-      <Note>收入、成本、利润的年度目标为全年总值；成本利润率直接对比目标利润率。</Note>
       {filters.product===TOS&&<Note tone="warning">对象存储 TOS 的成本仅支持“计费单元 × 大区”。海外当前只能查看收入，不使用 CN 成本推断海外利润。</Note>}
       {!rows.length?<EmptyState/>:<><div className="kpi-grid income-metric-grid">{metrics.map(metric=>{
         const key=metric.key,change=difference(current[key],previous?.[key]??null,key==='rate');
@@ -243,8 +242,9 @@ export default function IncomeTab({filters,onDrill}:AnalysisProps) {
           monthOverMonth={change}
           lastYearValue="-"
           yearOverYear={null}
-          changeUnit={key==='rate'?'pp':'%'}
+          changeUnit={key==='rate'?'PP':'%'}
           selectedTargets={filters.targets}
+          targetSummary={target}
           monthlyTarget={valueText(key,target.monthlyTarget)}
           monthlyDeviation={target.monthlyDeviation}
           quarterlyTarget={valueText(key,target.quarterlyTarget)}

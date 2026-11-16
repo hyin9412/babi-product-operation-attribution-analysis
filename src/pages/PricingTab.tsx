@@ -1,9 +1,9 @@
 // References: none — PRD cost-pricing behavior retained; standard Pagination and Alert follow project design rules.
 import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, Button, Drawer, Popover, Select, Tabs, Tooltip } from '@byted-babi/babi-design';
+import { Alert, Button, DatePicker, Drawer, Popover, Select, Tabs, Tooltip } from '@byted-babi/babi-design';
 import { IconInfoCircle } from '@arco-design/iconbox-react-ve-o-design';
 import { AnalysisFilters, AnalysisProps, AnalysisRow, BYTEGRAPH, TOS, amount, areaNames, getRows, metricDeviation, monthList, percent, priceFormat, prototypeTargetValue, quantityFormat, snapshot } from './analysisData';
-import { AnalysisChart, ChartValue, EmptyState, ExactValue, Fold, Note, Section, SELECT_SEARCH_THRESHOLD, SourceTable, getSelectPlaceholder, sourcePaginationProps, trendPercent } from './analysisUI';
+import { AnalysisChart, ChartValue, EmptyState, Fold, Note, Section, SELECT_SEARCH_THRESHOLD, SourceTable, getSelectPlaceholder, sourcePaginationProps, trendPercent } from './analysisUI';
 import './pricing.css';
 
 type Order = 'ascend' | 'descend';
@@ -34,9 +34,6 @@ const priceDeviationHeader = (title:string, formula:string) => <span className="
 </span>;
 
 interface PriceRow extends AnalysisRow { monthTarget: number|null; monthDeviation: number|null; quarterTarget: number|null; quarterDeviation: number|null; annualTarget: number|null; annualDeviation: number|null; }
-function priceTrends(filters: AnalysisFilters, key: 'price' | 'cumulativePrice' | 'quantity'): ChartValue[] {
-  return monthList(filters.month).flatMap(month => getRows(filters, month).map(row => ({ x: month.slice(5) + '月', series: combination(row), value: key === 'price' ? normalizedPrice(row) : row[key] })));
-}
 function targetPrice(row:AnalysisRow,cadence:'month'|'quarter'|'annual') {
   const source=cadence==='annual'?row.cumulativePrice:normalizedPrice(row);
   return prototypeTargetValue(source,row,`${cadence}-price-target`,cadence==='annual'?.95:.94,cadence==='annual'?1.07:1.06);
@@ -98,10 +95,18 @@ function formulaTarget(node:FormulaNode,row:AnalysisRow,cadence:'month'|'quarter
 }
 const formatFormulaTarget=(node:FormulaNode,value:number|null)=>formatNode({...node,value});
 const formulaDeviation=(node:FormulaNode,target:number|null)=>metricDeviation(node.value,target,node.type==='ratio'?'rate':'price');
+const supportsMetricTrend = (node: FormulaNode) => node.id !== 'quantity' && node.id !== 'requestCount';
+// Reference page: ByteGraph supports additive metrics; TOS supports every non-ratio metric.
+const supportsDailyAverage = (node: FormulaNode | undefined, isTos: boolean) =>
+  !!node && (isTos ? node.type !== 'ratio' : node.type === 'amount' || node.type === 'quantity');
+const daysInMonth = (month: string) => {
+  const [year, number] = month.split('-').map(Number);
+  return new Date(year, number, 0).getDate();
+};
 function FormulaCard({ node, row, expanded, toggle, onTrend, targets, root = false }: { node: FormulaNode; row:AnalysisRow; expanded: Set<string>; toggle: (id: string) => void; onTrend: (id: string) => void; targets: string[]; root?: boolean }) {
   const monthlyTarget=formulaTarget(node,row,'month'),quarterlyTarget=formulaTarget(node,row,'quarter'),annualTarget=formulaTarget(node,row,'annual');
   return <div className={`formula-card ${root ? 'root' : ''}`} aria-label={node.title}>
-    <div className="formula-actions">{node.children && <Button size="mini" onClick={() => toggle(node.id)}>{expanded.has(node.id) ? '收起' : '展开公式'}</Button>}<Button size="mini" onClick={() => onTrend(node.id)}>月趋势</Button></div>
+    <div className="formula-actions">{node.children && <Button size="mini" onClick={() => toggle(node.id)}>{expanded.has(node.id) ? '收起' : '展开公式'}</Button>}{supportsMetricTrend(node) && <Button size="mini" onClick={() => onTrend(node.id)}>月趋势</Button>}</div>
     <p>{node.formula}</p>
     <div className="formula-value numeric"><span className="pricing-unit-pill">{node.unit}</span> {formatNode(node)}</div>
     {targets.length > 0 && <div className={`formula-target ${targets.includes('季度目标值') ? 'formula-target-quarter' : ''}`}>
@@ -132,6 +137,7 @@ export default function PricingTab({ filters }: AnalysisProps) {
   const [evidence, setEvidence] = useState(false);
   const [timeGrain, setTimeGrain] = useState<'month' | 'day'>('month');
   const [aggregation, setAggregation] = useState<'total' | 'dailyAverage'>('total');
+  const [trendMonthRange, setTrendMonthRange] = useState<string[]>([`${filters.month.slice(0, 4)}-01`, filters.month]);
   const monthlyTargets = filters.targets.includes('月度目标值');
   const quarterlyTargets = filters.targets.includes('季度目标值');
   const annualTargets = filters.targets.includes('年度目标值');
@@ -143,24 +149,54 @@ export default function PricingTab({ filters }: AnalysisProps) {
   const activeRegion = availableRegions.includes(formulaRegion) ? formulaRegion : availableRegions[0] || '';
   const formulaRow = rows.find(row => row.unit === activeUnit && row.area === activeArea && row.region === activeRegion);
   const tree = formulaRow ? isTos ? tosTree(formulaRow) : filters.product === BYTEGRAPH && activeUnit === 'bytegraph.cpu' ? cpuTree(formulaRow) : null : null;
-  const nodes = tree ? flattenTree(tree) : [];
+  const nodes = tree ? flattenTree(tree).filter(supportsMetricTrend) : [];
   const selectedNode = nodes.find(node => node.id === metric) || nodes[0];
-  const monthlyFormulaRows = monthList(filters.month).flatMap(month => {
+  const canUseDailyAverage = supportsDailyAverage(selectedNode, isTos);
+  const dailyAverage = timeGrain === 'month' && canUseDailyAverage && aggregation === 'dailyAverage';
+  useEffect(() => {
+    setTrendMonthRange([`${filters.month.slice(0, 4)}-01`, filters.month]);
+  }, [filterKey]);
+  useEffect(() => {
+    if (!canUseDailyAverage || timeGrain !== 'month') setAggregation('total');
+  }, [canUseDailyAverage, selectedNode?.id, timeGrain]);
+  const monthlyFormulaRows = unique(snapshot.map(row => row.month)).sort().filter(month =>
+    trendMonthRange.length !== 2 || (month >= trendMonthRange[0] && month <= trendMonthRange[1])
+  ).flatMap(month => {
     const row = getRows(filters, month).find(item => item.unit === activeUnit && item.area === activeArea && (isTos || item.region === activeRegion));
     if (!row || (!isTos && activeUnit !== 'bytegraph.cpu')) return [];
     const monthTree = isTos ? tosTree(row) : cpuTree(row);
-    const node = flattenTree(monthTree).find(item => item.id === metric) || monthTree;
+    const node = flattenTree(monthTree).filter(supportsMetricTrend).find(item => item.id === selectedNode?.id) || monthTree;
     const actual=node.value===null?null:node.type==='ratio'?node.value*100:node.value;
     const monthlyTarget=formulaTarget(node,row,'month'),quarterTarget=formulaTarget(node,row,'quarter'),annualTarget=formulaTarget(node,row,'annual');
     const normalizedTarget=(value:number|null)=>value===null?null:node.type==='ratio'?value*100:value;
     const annualActual=actual===null?null:['amount','quantity'].includes(node.type)?actual*Number(month.slice(-2)):actual;
     const normalizedAnnualTarget=annualTarget===null?null:['amount','quantity'].includes(node.type)?normalizedTarget(annualTarget)!*12:normalizedTarget(annualTarget);
     return [{ id: `${row.id}-${metric}`, month, unit: row.unit, area: row.area, region: isTos ? '' : row.region, unitLabel: node.unit, actual, target: normalizedTarget(monthlyTarget), deviation: metricDeviation(actual,normalizedTarget(monthlyTarget),node.type==='ratio'?'rate':'price'), quarterTarget: normalizedTarget(quarterTarget), quarterDeviation: metricDeviation(actual,normalizedTarget(quarterTarget),node.type==='ratio'?'rate':'price'), annualActual, annualTarget: normalizedAnnualTarget, annualDeviation: metricDeviation(annualActual,normalizedAnnualTarget,node.type==='ratio'?'rate':'price') }];
+  }).map(row => {
+    if (!dailyAverage) return row;
+    const divide = (value: number | null) => value === null ? null : value / daysInMonth(row.month);
+    return {
+      ...row,
+      actual: divide(row.actual),
+      target: divide(row.target),
+      quarterTarget: divide(row.quarterTarget),
+      annualActual: divide(row.annualActual),
+      annualTarget: divide(row.annualTarget),
+    };
   });
   const metricSeries = ['实际值', ...(monthlyTargets ? ['月度目标'] : []), ...(quarterlyTargets ? ['季度目标'] : []), ...(annualTargets ? ['年度目标'] : [])];
-  const metricTrendValues: ChartValue[] = monthlyFormulaRows.flatMap(row => metricSeries.map(series => ({ x: row.month.slice(5) + '月', series, value: series === '实际值' ? row.actual : null })));
-  const metricUnavailable = timeGrain === 'day' || aggregation === 'dailyAverage';
-  const metricUnavailableText = timeGrain === 'day' ? '按天粒度暂未接入，暂无可展示的日趋势与明细；请切换“按月”查看。' : '月日均聚合口径暂未接入：分母、支持指标及单位换算尚未核验，不将单价、比率或数量统一除以自然日。请切换“月总计”查看。';
+  const metricTrendValues: ChartValue[] = monthlyFormulaRows.flatMap(row => metricSeries.map(series => ({
+    x: row.month.slice(5) + '月',
+    series,
+    value: series === '实际值' ? row.actual : series === '月度目标' ? row.target : series === '季度目标' ? row.quarterTarget : row.annualTarget,
+  })));
+  const metricDeviationTrends = [
+    { selected: monthlyTargets, title: '月度目标偏差趋势', field: 'deviation' as const },
+    { selected: quarterlyTargets, title: '季度目标偏差趋势', field: 'quarterDeviation' as const },
+    { selected: annualTargets, title: '年度目标偏差趋势', field: 'annualDeviation' as const },
+  ].filter(trend => trend.selected);
+  const metricUnavailable = timeGrain === 'day';
+  const metricUnavailableText = '按天粒度暂未接入，暂无可展示的日趋势与明细；请切换“按月”查看。';
   useEffect(() => { setPriceSort({ key: 'monthDeviation', order: 'descend' }); setExpanded(new Set()); setMetric('root'); setTimeGrain('month'); setAggregation('total'); }, [filterKey]);
   useEffect(() => { setExpanded(new Set()); setMetric('root'); setMetricSort({ key: 'deviation', order: 'descend' }); }, [activeUnit, activeArea, activeRegion]);
   useEffect(() => { setMetricSort({ key: 'deviation', order: 'descend' }); }, [metric]);
@@ -176,8 +212,6 @@ export default function PricingTab({ filters }: AnalysisProps) {
     { title: '计费单元', dataIndex: 'unit', width: 170, fixed: 'left' },
     { title: '大区', dataIndex: 'area', width: 80, fixed: 'left', render: (value: string) => <Tooltip content={areaNames[value]}>{value}</Tooltip> },
     { title: '售卖区域', dataIndex: 'region', width: 160, fixed: 'left' },
-    { title: '售卖量', dataIndex: 'quantity', width: 140, ...sortColumn('quantity', priceSort), render: (value: number) => <ExactValue value={value}>{quantityFormat(value)}</ExactValue> },
-    { title: '售卖量单位', dataIndex: 'unitLabel', width: 115 },
     { title: '月度测算单价', dataIndex: 'price', width: 165, ...sortColumn('price', priceSort), render: (value: number | null, row: AnalysisRow) => <Tooltip content={value === null ? '当前组合没有可用的月度测算单价' : row.product === TOS && row.unit !== 'Request' && row.region === 'cn-north-3' ? 'Storage / StorageEC，cn-north-3：原始测算单价 × 1.073741824；价格表及月趋势使用同一单位换算' : '原型测算单价快照'}><span className="numeric">{priceFormat(value)}</span></Tooltip> },
     { title: '单价单位（币种/单位）', width: 170, className: 'pricing-price-unit', render: (_: any, row: AnalysisRow) => <span className={`pricing-nowrap pricing-price-unit-text ${isTos ? 'pricing-price-unit-tos' : ''}`}>{currencyUnit(row)}</span> },
     ...(monthlyTargets ? [
@@ -201,7 +235,7 @@ export default function PricingTab({ filters }: AnalysisProps) {
     { title: '大区', dataIndex: 'area', width: 80, fixed: 'left' },
     { title: '售卖区域', dataIndex: 'region', width: 150, fixed: 'left' },
     { title: '单位', dataIndex: 'unitLabel', width: 140 },
-    { title: '月度实际值', dataIndex: 'actual', width: 160, ...sortColumn('actual', metricSort), render: (value: number | null) => <span className="numeric">{selectedNode?.type === 'ratio' ? percent(value) : selectedNode?.type === 'amount' ? amount(value) : selectedNode?.type === 'quantity' ? quantityFormat(value) : priceFormat(value)}</span> },
+    { title: dailyAverage ? '月日均实际值' : '月度实际值', dataIndex: 'actual', width: 160, ...sortColumn('actual', metricSort), render: (value: number | null) => <span className="numeric">{selectedNode?.type === 'ratio' ? percent(value) : selectedNode?.type === 'amount' ? amount(value) : selectedNode?.type === 'quantity' ? quantityFormat(value) : priceFormat(value)}</span> },
     ...(monthlyTargets ? [
         { title: '月度目标值', dataIndex: 'target', width: 150, ...sortColumn('target', metricSort), render: (value:number|null) => selectedNode?.type==='ratio'?percent(value):selectedNode?.type==='amount'?amount(value):selectedNode?.type==='quantity'?quantityFormat(value):priceFormat(value) },
         { title: '月度偏差幅度', dataIndex: 'deviation', width: 150, ...sortColumn('deviation', metricSort), render: trendPercent },
@@ -220,12 +254,11 @@ export default function PricingTab({ filters }: AnalysisProps) {
   return <>
     <Section title="单价目标差距" id="pricing-item-income">
       {rows.length === 0 ? <EmptyState text="当前筛选组合暂无线上单价数据"/> : <SourceTable key={filterKey} columns={priceColumns} data={sortedPrices} pagination={sourcePaginationProps(sortedPrices.length)} width={priceColumns.reduce((sum, column) => sum + (column.width || 150), 0)} onChange={(_pagination:any, sorter:any) => setPriceSort(stateFromSorter(sorter, { key: 'monthDeviation', order: 'descend' }))}/>}
-      <Fold title="月趋势" appearance="filter"><div className="analysis-chart-grid" data-testid="pricing-price-trends">
-        <AnalysisChart title="月度目标偏差趋势" values={monthlyTargets?priceComparisonTrends(filters,'month'):priceTrends(filters,'price')} unit="人民币 / 计费单位"/>
-        <div className="pricing-quarter-trend"><AnalysisChart title="季度目标偏差趋势" values={quarterlyTargets?priceComparisonTrends(filters,'quarter'):priceTrends(filters,'price')} unit="人民币 / 计费单位"/><p className="plain-text">{quarterlyTargets ? '展示各组合月度测算单价与对应季度基准目标。' : '未选择季度目标值，仅展示月度测算单价。'}</p></div>
-        <AnalysisChart title="年度累计单价与偏差趋势" values={annualTargets?priceComparisonTrends(filters,'annual'):priceTrends(filters,'cumulativePrice')} unit="人民币 / 计费单位"/>
-        <AnalysisChart title="售卖量趋势" values={priceTrends(filters, 'quantity')} unit="计费单位"/>
-      </div><p className="plain-text">各组合分别展示，按图例点击显隐；不同计费单位不汇总。</p></Fold>
+      {(monthlyTargets || quarterlyTargets || annualTargets) && <Fold title="月趋势" appearance="filter"><div className="analysis-chart-grid" data-testid="pricing-price-trends">
+        {monthlyTargets && <AnalysisChart title="月度目标偏差趋势" values={priceComparisonTrends(filters,'month')} unit="人民币 / 计费单位"/>}
+        {quarterlyTargets && <div className="pricing-quarter-trend"><AnalysisChart title="季度目标偏差趋势" values={priceComparisonTrends(filters,'quarter')} unit="人民币 / 计费单位"/><p className="plain-text">展示各组合月度测算单价与对应季度基准目标。</p></div>}
+        {annualTargets && <AnalysisChart title="年度累计单价与偏差趋势" values={priceComparisonTrends(filters,'annual')} unit="人民币 / 计费单位"/>}
+      </div><p className="plain-text">各组合分别展示，按图例点击显隐；不同计费单位不汇总。</p></Fold>}
     </Section>
     <Section title="计费项定价公式" id="pricing-item-formula">
       <div className="formula-filter">
@@ -234,19 +267,26 @@ export default function PricingTab({ filters }: AnalysisProps) {
         <Select addBefore="售卖区域" defaultActiveFirstOption={false} showSearch={!isTos && availableRegions.length > SELECT_SEARCH_THRESHOLD} disabled={isTos} value={isTos ? undefined : activeRegion || undefined} options={availableRegions} placeholder={getSelectPlaceholder(!isTos && availableRegions.length > SELECT_SEARCH_THRESHOLD)} onChange={setFormulaRegion}/>
       </div>
       {!tree ? <EmptyState text={rows.length === 0 ? '当前公式链路筛选组合暂无可用于公式归因的指标数据' : '当前计费单元暂无已接入的定价公式链路，不使用 CPU 公式替代'}/> : <>
-        {!isTos && <Note>公式按文档 CPU 链路还原，系数来自截图示例，规模值和原型目标随共享快照联动；不作为线上核价或调价结果。</Note>}
         <div className="pricing-formula-container"><div className="pricing-formula-heading"><h3>指标公式</h3><small>{tree.title}</small></div><div className="formula-row"><FormulaCard node={tree} row={formulaRow!} root expanded={expanded} toggle={toggle} onTrend={showTrend} targets={filters.targets}/></div><FormulaBranch node={tree} row={formulaRow!} level={1} expanded={expanded} toggle={toggle} onTrend={showTrend} targets={filters.targets}/></div>
         <div id="pricing-metric-trend" className="pricing-metric-panel"><div className="analysis-toolbar"><h3>指标趋势</h3></div>
           <div className="pricing-trend-controls">
-            <Select addBefore="时间范围" className="pricing-time-range-select" disabled value={`2026-01 至 ${filters.month}`} options={[`2026-01 至 ${filters.month}`]} aria-label="时间范围"/>
             <Select addBefore={isTos ? '收入计费单元&大区' : '收入计费单元&大区&收入售卖区域'} className="pricing-scope-select" disabled value={isTos ? `${activeUnit} / ${activeArea}` : `${activeUnit} / ${activeArea} / ${activeRegion}`} options={[isTos ? `${activeUnit} / ${activeArea}` : `${activeUnit} / ${activeArea} / ${activeRegion}`]} aria-label="当前指标分析范围"/>
+            <div className="pricing-month-range"><DatePicker.RangePicker mode="month" format="YYYY-MM" value={trendMonthRange} onChange={setTrendMonthRange} allowClear={false} placeholder={['开始月份', '结束月份']} aria-label="指标趋势月份范围"/></div>
             <Select addBefore="指标" className="pricing-metric-select" defaultActiveFirstOption={false} showSearch={nodes.length > SELECT_SEARCH_THRESHOLD} placeholder={getSelectPlaceholder(nodes.length > SELECT_SEARCH_THRESHOLD)} value={selectedNode?.id} options={nodes.map(node => ({ value: node.id, label: node.title }))} onChange={setMetric}/>
             <div role="group" aria-label="趋势时间粒度"><Tabs className="pricing-pipeline-tabs" type="capsule" size="default" activeTab={timeGrain} onChange={key => setTimeGrain(key as 'month' | 'day')}><Tabs.TabPane key="month" title="按月"/><Tabs.TabPane key="day" title="按日"/></Tabs></div>
-            <div role="group" aria-label="趋势聚合口径"><Tabs className="pricing-pipeline-tabs" type="capsule" size="default" activeTab={aggregation} onChange={key => setAggregation(key as 'total' | 'dailyAverage')}><Tabs.TabPane key="total" title="月总计"/><Tabs.TabPane key="dailyAverage" title="月日均"/></Tabs></div>
+            {timeGrain === 'month' && canUseDailyAverage && <div role="group" aria-label="趋势聚合口径"><Tabs className="pricing-pipeline-tabs" type="capsule" size="default" activeTab={aggregation} onChange={key => setAggregation(key as 'total' | 'dailyAverage')}><Tabs.TabPane key="total" title="月总计"/><Tabs.TabPane key="dailyAverage" title="月日均"/></Tabs></div>}
           </div>
-          {metricUnavailable ? <div data-testid="pricing-metric-unavailable"><Note tone="warning">{metricUnavailableText}</Note><EmptyState text={timeGrain === 'day' ? '暂无按日数据' : '暂无已核验的月日均数据'}/></div> : <>
+          {metricUnavailable ? <div data-testid="pricing-metric-unavailable"><Note tone="warning">{metricUnavailableText}</Note><EmptyState text="暂无按日数据"/></div> : <>
             <AnalysisChart key={`${metric}-${activeUnit}-${activeArea}-${activeRegion}`} title={selectedNode?.title || '公式指标月度趋势'} values={metricTrendValues} dashedSeries={['月度目标', '季度目标']} dottedSeries={['年度目标']} percent={selectedNode?.type === 'ratio'} unit={selectedNode?.unit || ''} height={270}/>
-            <p className="plain-text">月度、季度和年度目标来自原型目标版本 V1；单价和比率目标不进行跨月求和。</p>
+            {metricDeviationTrends.length > 0 && <div className="analysis-chart-grid" data-testid="pricing-metric-deviation-trends">
+              {metricDeviationTrends.map(trend => <AnalysisChart
+                key={`${selectedNode?.id}-${activeUnit}-${activeArea}-${activeRegion}-${trend.field}`}
+                title={trend.title}
+                values={monthlyFormulaRows.map(row => ({ x: row.month.slice(5) + '月', series: selectedNode?.title || '公式指标', value: row[trend.field] }))}
+                percent
+                height={270}
+              />)}
+            </div>}
             <SourceTable columns={metricColumns} data={sortRows(monthlyFormulaRows, metricSort)} pagination={sourcePaginationProps(monthlyFormulaRows.length)} width={metricColumns.reduce((sum, column) => sum + (column.width || 150), 0)} onChange={(_pagination:any, sorter:any) => setMetricSort(stateFromSorter(sorter, { key: 'deviation', order: 'descend' }))} noDataElement={<EmptyState text="当前全局筛选结果下暂无可展示的组合维度月度趋势明细" compact size={60}/>}/>
           </>}
         </div>

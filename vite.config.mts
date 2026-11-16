@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
+import { checklistStatuses, designChecklist } from './src/pages/designChecklistData';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const r = (...segments: string[]) => path.resolve(dirname, ...segments);
@@ -25,8 +26,51 @@ const legacyLessModuleQuery = (): Plugin => ({
   },
 });
 
+const checklistPersistence = (): Plugin => ({
+  name: 'design-checklist-persistence',
+  configureServer(server) {
+    server.middlewares.use('/__design-checklist/status', (req, res) => {
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      if (req.method !== 'POST') {
+        res.statusCode = 405;
+        res.end(JSON.stringify({ error: '仅支持保存状态请求。' }));
+        return;
+      }
+      if (req.headers.origin && ![`http://${req.headers.host}`, `https://${req.headers.host}`].includes(req.headers.origin)) {
+        res.statusCode = 403;
+        res.end(JSON.stringify({ error: '请从当前开发站点保存。' }));
+        return;
+      }
+      let body = '';
+      req.on('data', chunk => {
+        body += chunk;
+        if (body.length > 4096) req.destroy();
+      });
+      req.on('end', () => {
+        try {
+          const { id, status } = JSON.parse(body);
+          if (!designChecklist.some(item => item.id === id) || !checklistStatuses.includes(status)) {
+            res.statusCode = 400;
+            res.end(JSON.stringify({ error: '条目或状态无效。' }));
+            return;
+          }
+          const file = r('src/pages/designChecklistStatuses.json');
+          const statuses = JSON.parse(fs.readFileSync(file, 'utf8'));
+          statuses[id] = status;
+          fs.writeFileSync(`${file}.tmp`, `${JSON.stringify(statuses, null, 2)}\n`, 'utf8');
+          fs.renameSync(`${file}.tmp`, file);
+          res.end(JSON.stringify({ saved: true }));
+        } catch {
+          res.statusCode = 500;
+          res.end(JSON.stringify({ error: '无法写入仓库状态文件，请检查文件权限。' }));
+        }
+      });
+    });
+  },
+});
+
 export default defineConfig({
-  plugins: [legacyLessModuleQuery(), react()],
+  plugins: [legacyLessModuleQuery(), react(), checklistPersistence()],
   css: {
     preprocessorOptions: {
       less: {

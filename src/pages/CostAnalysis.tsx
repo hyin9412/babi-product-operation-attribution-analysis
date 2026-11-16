@@ -19,7 +19,7 @@ function costRows(rows:AnalysisRow[],isTos:boolean):CostRow[] {
  });
  return Array.from(groups.values()).map(row=>{const names=isTos?tosGoods:byteGoods,weights=isTos?[.76,.19,.05]:[.583,.235,.152,.03];return {...row,goods:Object.fromEntries(names.map((name,i)=>[name,row.cost*weights[i]]))};});
 }
-function trends(filters:AnalysisFilters,category:string,kind:'cost'|'goods'|'quantity',grouping:'overall'|'area'|'region'='overall'):ChartValue[] {
+function trends(filters:AnalysisFilters,category:string,kind:'cost'|'goods',grouping:'overall'|'area'|'region'='overall'):ChartValue[] {
  const tos=filters.product===TOS;
  return monthList(filters.month).flatMap(month=>{
   const original=getRows({...filters,regions:tos?null:filters.regions},month).filter(row=>row.category===category),rows=costRows(original,tos),x=month.slice(5)+'月';
@@ -28,10 +28,6 @@ function trends(filters:AnalysisFilters,category:string,kind:'cost'|'goods'|'qua
    if(grouping==='overall')return names.map(series=>({x,series,value:rows.reduce((sum,row)=>sum+(row.goods[series]||0),0)}));
    const groups=new Map<string,number>();
    rows.forEach(row=>names.forEach(name=>{const series=`${row.unit} / ${grouping==='region'?row.region:row.area} / ${name}`;groups.set(series,(groups.get(series)||0)+(row.goods[name]||0));}));
-   return Array.from(groups,([series,value])=>({x,series,value}));
-  }
-  if(kind==='quantity'){
-   const groups=new Map<string,number>();original.forEach(row=>{const series=`${row.unit} / ${row.area}${tos?'':'/'+row.region}`;groups.set(series,(groups.get(series)||0)+row.quantity);});
    return Array.from(groups,([series,value])=>({x,series,value}));
   }
   return rows.map(row=>({x,series:`${row.unit} / ${row.area}${tos?'':'/'+row.region}`,value:row.cost}));
@@ -89,7 +85,7 @@ function CostCategory({category,rows,filters,detailed,showChartInsights,embedded
   {!embeddedIncome&&<Fold title="查看成本商品计费项构成"><p className="plain-text">构成金额按原型快照示意比例展示，仅用于还原成本明细交互，不作为业务归因依据。</p><DataTable columns={[{title:'成本商品',dataIndex:'product',width:220},{title:'成本计费项',dataIndex:'item',width:300},{title:'金额',dataIndex:'amount',render:amount,sorter:(a:any,b:any)=>a.amount-b.amount}]} data={composition}/></Fold>}
   <Fold title="月趋势" appearance="filter"><div className={`analysis-chart-grid ${embeddedIncome?'income-cost-trend-grid':''}`}>{embeddedIncome
    ?trendChart(incomeTrendTitle,trends(filters,category,'goods',tos?'area':'region'),'人民币')
-   :<>{trendChart('成本月趋势',trends(filters,category,'cost'),'人民币')}{trendChart('成本商品月趋势',trends(filters,category,'goods',detailed?'area':'overall'),'人民币')}{detailed&&!tos&&trendChart('计费单元 × 售卖区域 × 成本商品月趋势',trends(filters,category,'goods','region'),'人民币')}{trendChart('售卖量月趋势',trends(filters,category,'quantity'),unique(rows.map(row=>row.unitLabel)).length===1?rows[0]?.unitLabel||'':'各组合计费单位')}</>}</div></Fold>
+   :<>{trendChart('成本月趋势',trends(filters,category,'cost'),'人民币')}{trendChart('成本商品月趋势',trends(filters,category,'goods',detailed?'area':'overall'),'人民币')}{detailed&&!tos&&trendChart('计费单元 × 售卖区域 × 成本商品月趋势',trends(filters,category,'goods','region'),'人民币')}</>}</div></Fold>
  </div>;
 }
 export default function CostAnalysis({filters,id='pricing-item-cost',detailed=false,showChartInsights=false,embeddedIncome=false}:{filters:AnalysisFilters;id?:string;detailed?:boolean;showChartInsights?:boolean;embeddedIncome?:boolean}) {

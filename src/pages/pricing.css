@@ -147,8 +147,15 @@
   width: auto;
   max-width: 100%;
 }
-.analysis-page .pricing-trend-controls > .pricing-time-range-select {
-  width: 235px;
+.analysis-page .pricing-month-range {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+}
+.analysis-page .pricing-month-range .arco-picker {
+  width: 260px;
+  max-width: 100%;
 }
 .analysis-page .pricing-trend-controls > .pricing-scope-select {
   width: 300px;

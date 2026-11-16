@@ -160,11 +160,13 @@
   height: 11px;
 }
 .analysis-page .income-metric-change.is-positive,
-.analysis-page .income-metric-target-value.is-positive {
+.analysis-page .income-metric-target-value.is-positive,
+.analysis-page .income-metric-formula-value:has(.income-metric-target-value.is-positive) {
   color: #ee3f38;
 }
 .analysis-page .income-metric-change.is-negative,
-.analysis-page .income-metric-target-value.is-negative {
+.analysis-page .income-metric-target-value.is-negative,
+.analysis-page .income-metric-formula-value:has(.income-metric-target-value.is-negative) {
   color: #00a32b;
 }
 .analysis-page .income-metric-change.is-missing {
@@ -188,6 +190,7 @@
 }
 .analysis-page .income-metric-targets {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 4px;
   min-width: 0;
@@ -208,14 +211,15 @@
   line-height: 20px;
   text-overflow: ellipsis;
 }
-.analysis-page .income-metric-target-value.is-zero {
+.analysis-page .income-metric-target-value.is-zero,
+.analysis-page .income-metric-formula-value:has(.income-metric-target-value.is-zero) {
   color: #c7ccd6;
 }
 .analysis-page .income-metric-formula-value {
   display: inline-block;
   max-width: 100%;
   overflow: hidden;
-  border-bottom: 1px dashed #737a87;
+  border-bottom: 1px dashed currentColor;
   color: inherit;
   line-height: 17px;
   text-overflow: ellipsis;
@@ -223,13 +227,23 @@
   white-space: nowrap;
   cursor: help;
 }
+.income-metric-formula-popover {
+  width: 320px;
+  max-width: calc(100vw - 32px);
+}
 .income-metric-formula-popover .arco-popover-content {
-  max-width: 320px;
+  box-sizing: border-box;
+  width: 320px;
+  max-width: calc(100vw - 32px);
+  height: auto;
   padding: 8px 12px;
   color: #42464e;
   font-size: 12px;
   line-height: 20px;
   white-space: normal;
+}
+.income-metric-formula-details {
+  overflow-wrap: anywhere;
 }
 .analysis-page .income-target-notice {
   margin-top: 16px;

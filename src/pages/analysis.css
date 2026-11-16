@@ -94,14 +94,14 @@ html.analysis-scroll body { height: auto !important; min-height: 100vh; overflow
 .analysis-page .filter-toggle-popover-trigger { display: inline-flex; flex-shrink: 0; }
 .analysis-page .filter-toggle { flex-shrink: 0; }
 .analysis-page .filter-toggle svg { width: 16px; height: 16px; color: var(--color-fill-3); }
+.analysis-page .filter-toggle:hover svg { color: rgb(var(--primary-5)); }
 /* References: none — Figma 5325:124987 fixed-caliber outlined tags. */
 .analysis-page .filter-caliber { display: inline-flex; align-items: center; gap: 6px; margin-left: 12px; white-space: nowrap; }
-.analysis-page .filter-caliber-tag { height: 22px; padding: 0 5px; border: 1px solid #666e7c33; border-radius: 4px; background: transparent; color: #666e7c; font-size: 12px; font-weight: 500; line-height: 20px; letter-spacing: .04px; }
-.analysis-page .filter-caliber-tag:first-child { min-width: 130px; }
-.analysis-page .filter-caliber-tag:last-child { min-width: 49px; }
+.analysis-page .filter-caliber-tag { min-width: 49px; height: 22px; padding: 0 5px; border: 1px solid #666e7c33; border-radius: 4px; background: transparent; color: #666e7c; font-size: 12px; font-weight: 500; line-height: 20px; letter-spacing: .04px; }
 .analysis-page .filter-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 12px; }
 .analysis-page .analysis-field { min-width: 0; }
 .analysis-page .analysis-field > label { display: block; color: var(--color-text-2); font-size: 14px; margin: 0 0 8px; }
+.analysis-page .analysis-field-required { color: rgb(var(--danger-6)); margin-right: 4px; }
 /* VE-O Form tokens: default label 13px / regular, text-2, vertical label gap 4px. */
 .analysis-page .filter-grid .analysis-field { display: flex; flex-direction: column; }
 .analysis-page .filter-grid .analysis-field > label { font-size: 13px; font-weight: 400; color: var(--color-text-2); line-height: 20px; margin-bottom: 4px; }
@@ -201,19 +201,6 @@ html.analysis-scroll body { height: auto !important; min-height: 100vh; overflow
 .analysis-chart-tooltip .vchart-tooltip-shape svg { display: block !important; flex-shrink: 0; }
 .analysis-chart-tooltip .vchart-tooltip-key { justify-content: flex-start; gap: 4px; }
 .analysis-chart-tooltip .vchart-tooltip-value { justify-content: flex-end; }
-.analysis-chart-tooltip .analysis-tooltip-peak-tag {
-  display: inline-flex;
-  flex-shrink: 0;
-  align-items: center;
-  height: 18px;
-  padding: 0 4px;
-  border-radius: 2px;
-  background: #ffecec;
-  color: #d7312a;
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 18px;
-}
 .analysis-page .analysis-table { overflow: hidden; min-width: 0; width: 100%; background: var(--color-bg-1); }
 .analysis-page .source-analysis-table .arco-table,
 .analysis-page .source-analysis-table .arco-table-container,

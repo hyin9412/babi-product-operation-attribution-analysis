@@ -2,7 +2,7 @@
 import React, {useEffect,useMemo,useRef,useState} from 'react';
 import {Alert, Button, Message, Popover, Select, Tabs, Tag} from '@byted-babi/babi-design';
 import {IconDown, IconRight} from '@arco-design/iconbox-react-ve-o-design';
-import {useSearchParams} from 'react-router-dom';
+import {Link,useSearchParams} from 'react-router-dom';
 import OverviewTab from './OverviewTab';
 import IncomeTab from './IncomeTab';
 import PricingTab from './PricingTab';
@@ -36,7 +36,7 @@ export default function AnalysisPage(){
  const areas=Object.keys(areaNames);
  const regions=(filters.areas===null?areas:filters.areas).flatMap(area=>areaRegions[area]||[]);
  const updateUrl=(nextTab:AnalysisTab,nextFilters:AnalysisFilters)=>{const next=normalizeAnalysisFilters(nextFilters);const query:Record<string,string>={tab:nextTab,product:next.product===TOS?'tos':next.product,month:next.month,targets:next.targets.join(',')};(['units','categories','areas','regions'] as const).forEach(key=>{if(next[key]!==null)query[key]=next[key]!.join(',');});setParams(query,{replace:true});};
- useEffect(()=>{document.title='商品经营归因分析 · BABI';document.documentElement.classList.add('analysis-scroll');return()=>document.documentElement.classList.remove('analysis-scroll');},[]);
+ useEffect(()=>{document.title='透明化分析 · BABI';document.documentElement.classList.add('analysis-scroll');return()=>document.documentElement.classList.remove('analysis-scroll');},[]);
  useEffect(()=>{const requested=params.get('tab') as AnalysisTab;if(requested&&requested!==tab&&requested in tabNames){setTab(requested);setExpanded(false);setDraft(initialFilters);setApplied(initialFilters);const nextPricing=normalizeAnalysisFilters({...initialFilters,areas:initialProduct===TOS?(initialFilters.areas||['cn']):initialFilters.areas});setPricing(nextPricing);setPricingDraft(nextPricing);}},[params]);
  const update=(key:keyof AnalysisFilters,value:any)=>{
   const current=filters;
@@ -52,7 +52,26 @@ export default function AnalysisPage(){
   if(tab==='pricing')setPricingDraft(next);else setDraft(next);
  };
  const changeTab=(next:AnalysisTab)=>{if(next===tab||loading)return;setTab(next);setExpanded(false);if(next==='pricing'){const nextPricing=normalizeAnalysisFilters({...applied,areas:applied.product===TOS?(applied.areas||['cn']):applied.areas});setPricing(nextPricing);setPricingDraft(nextPricing);updateUrl(next,nextPricing);}else updateUrl(next,applied);window.scrollTo({top:0,behavior:'smooth'});};
- const query=()=>{if(!dirty||loading)return;setLoading(true);const snapshot=normalizeAnalysisFilters({...filters});window.setTimeout(()=>{if(tab==='pricing')setPricing(snapshot);else setApplied(snapshot);updateUrl(tab,snapshot);setLoading(false);Message.success({content:'数据已更新'});},480);};
+ const query=()=>{
+  if(!dirty||loading)return;
+  const requiredFields:[keyof AnalysisFilters,string][]=[['month','账期'],['product','商品名称'],['areas',tab==='pricing'?'大区':'售卖大区']];
+  if(tab==='pricing')requiredFields.push(['categories','收入计费单元类别'],['units','收入计费单元']);
+  else requiredFields.push(['trueUp','海外即时 True Up 账单'],['sameProduct','同商品过滤'],['productLine','部门收支_产品线名称']);
+  if(filters.product!==TOS)requiredFields.push(['regions','收入售卖区域']);
+  const missing=requiredFields.filter(([key])=>{
+   const value=filters[key];
+   if(Array.isArray(value))return value.length===0;
+   if(value===null){
+    if(key==='categories')return categoryOptions.length===0;
+    if(key==='units')return units.length===0;
+    if(key==='areas')return areas.length===0;
+    if(key==='regions')return regions.length===0;
+   }
+   return value==='';
+  });
+  if(missing.length){Message.error({content:`请选择必填项：${missing.map(([,label])=>label).join('、')}`});return;}
+  setLoading(true);const snapshot=normalizeAnalysisFilters({...filters});window.setTimeout(()=>{if(tab==='pricing')setPricing(snapshot);else setApplied(snapshot);updateUrl(tab,snapshot);setLoading(false);Message.success({content:'数据已更新'});},480);
+ };
  const onDrill=(nextTab:AnalysisTab,anchor:string,focus:DrillFocus={})=>{
   let next=normalizeAnalysisFilters({...applied,...focus});
   if(nextTab==='pricing'){if(next.product===TOS&&next.areas===null)next.areas=['cn'];setPricing(next);setPricingDraft(next);}else{setApplied(next);setDraft(next);}
@@ -61,17 +80,20 @@ export default function AnalysisPage(){
  };
  // References: none — all tabs summarize submitted filters, never pending draft selections.
  const summaryRegionOptions=(active.areas===null?areas:active.areas).flatMap(area=>areaRegions[area]||[]);
- const summary=tab==='pricing'?[['账期',pricing.month],['商品名称',pricing.product],['收入计费单元类别',names(pricing.categories,Object.keys(unitCategories(pricing.product)))],['收入计费单元',names(pricing.units,unitOptions(pricing.product,pricing.categories))],['大区',names(pricing.areas,areas)],['收入售卖区域',pricing.product===TOS?'不适用（按收入计费单元&大区查看）':names(pricing.regions,summaryRegionOptions)],['目标值对比',pricing.targets.length?names(pricing.targets,targetOptions):'不对比']]:[['账期',applied.month],['海外即时 True Up 账单',applied.trueUp],['同商品过滤',applied.sameProduct],['目标值对比',applied.targets.length?names(applied.targets,targetOptions):'不对比'],['部门收支_产品线名称',applied.productLine],['商品名称/APP名称',applied.product],['售卖大区',names(applied.areas,areas)],['收入售卖区域',applied.product===TOS?'不适用（按收入计费单元&大区查看）':names(applied.regions,summaryRegionOptions)]];
+ const summary=tab==='pricing'?[['账期',pricing.month],['商品名称',pricing.product],['收入计费单元类别',names(pricing.categories,Object.keys(unitCategories(pricing.product)))],['收入计费单元',names(pricing.units,unitOptions(pricing.product,pricing.categories))],['大区',names(pricing.areas,areas)],['收入售卖区域',pricing.product===TOS?'不适用（按收入计费单元&大区查看）':names(pricing.regions,summaryRegionOptions)],['目标值对比',pricing.targets.length?names(pricing.targets,targetOptions):'不对比']]:[['账期',applied.month],['海外即时 True Up 账单',applied.trueUp],['同商品过滤',applied.sameProduct],['目标值对比',applied.targets.length?names(applied.targets,targetOptions):'不对比'],['部门收支_产品线名称',applied.productLine],['商品名称',applied.product],['售卖大区',names(applied.areas,areas)],['收入售卖区域',applied.product===TOS?'不适用（按收入计费单元&大区查看）':names(applied.regions,summaryRegionOptions)]];
   const regionSelection=active.regions;
   const allRegionsSelected=regionSelection===null || (regionSelection.length>0 && regionSelection.length===summaryRegionOptions.length && summaryRegionOptions.every(region=>regionSelection.includes(region)));
   const summaryRegions=active.product!==TOS && !allRegionsSelected ? regionSelection ?? [] : undefined;
-  const single=(label:string,key:keyof AnalysisFilters,options:string[])=> <Field label={label}><Select defaultActiveFirstOption={false} showSearch={options.length > SELECT_SEARCH_THRESHOLD} value={filters[key] as string} options={options} placeholder={getSelectPlaceholder(options.length > SELECT_SEARCH_THRESHOLD)} onChange={value=>update(key,value)}/></Field>;
- const multi=(label:string,key:keyof AnalysisFilters,options:string[],disabled=false)=> <Field label={label}><MultiFilter value={filters[key] as string[]|null} options={options} onChange={value=>update(key,value)} disabled={disabled}/></Field>;
- const tosRegionFilter=<Field label="收入售卖区域"><Popover content={TOS_REGION_DISABLED_TIP} trigger="hover" position="top" unmountOnExit><span className="filter-disabled-popover-trigger"><Select defaultActiveFirstOption={false} disabled placeholder="请选择"/></span></Popover></Field>;
- return <main className={`analysis-page${loading?' content-loading':''}`} aria-busy={loading}><div className="analysis-sticky-header" ref={stickyHeaderRef}><header className="analysis-page-header"><h1>商品经营归因分析</h1><Tabs className="analysis-tabs" type="line" activeTab={tab} headerPadding={false} onChange={key=>changeTab(key as AnalysisTab)}>{(Object.keys(tabNames) as AnalysisTab[]).map(key=><Tabs.TabPane key={key} title={tabNames[key]}/>)}</Tabs></header>
- <div className={`filter-panel${expanded?'':' filter-panel-collapsed'}`}><div className="filter-heading"><Popover content={expanded?'收起':'展开'} trigger="hover" position="top" unmountOnExit><span className="filter-toggle-popover-trigger"><Button type="text" size="mini" shape="square" className="filter-toggle" icon={expanded?<IconDown width="16" height="16"/>:<IconRight width="16" height="16"/>} aria-label={expanded?'收起筛选':'展开筛选'} aria-expanded={expanded} title={expanded?'收起筛选':'展开筛选'} onClick={()=>setExpanded(!expanded)}/></span></Popover><h2 style={{ 'fontSize': '14px' }}>全局筛选</h2><div className="filter-caliber"><Tag size="small" bordered className="filter-caliber-tag">“日正式+月正式”账单</Tag><Tag size="small" bordered className="filter-caliber-tag">人民币</Tag></div></div>
+  const single=(label:string,key:keyof AnalysisFilters,options:string[])=>{
+   const searchable=key==='productLine'||key==='product'||options.length > SELECT_SEARCH_THRESHOLD;
+   return <Field label={label} required><Select aria-label={label} aria-required defaultActiveFirstOption={false} showSearch={searchable} value={filters[key] as string} options={options} placeholder={getSelectPlaceholder(searchable)} onChange={value=>update(key,value)}/></Field>;
+  };
+ const multi=(label:string,key:keyof AnalysisFilters,options:string[],disabled=false)=> <Field label={label} required={key!=='targets'}><MultiFilter value={filters[key] as string[]|null} options={options} onChange={value=>update(key,value)} disabled={disabled}/></Field>;
+ const tosRegionFilter=<Field label="收入售卖区域" required><Popover content={TOS_REGION_DISABLED_TIP} trigger="hover" position="top" unmountOnExit><span className="filter-disabled-popover-trigger"><Select defaultActiveFirstOption={false} disabled placeholder="请选择"/></span></Popover></Field>;
+ return <main className={`analysis-page${loading?' content-loading':''}`} aria-busy={loading}><div className="analysis-sticky-header" ref={stickyHeaderRef}><header className="analysis-page-header"><h1>透明化分析</h1><Tabs className="analysis-tabs" type="line" activeTab={tab} headerPadding={false} onChange={key=>changeTab(key as AnalysisTab)}>{(Object.keys(tabNames) as AnalysisTab[]).map(key=><Tabs.TabPane key={key} title={tabNames[key]}/>)}</Tabs><Link to="/design-checklist" style={{marginLeft:'auto',paddingLeft:16,color:'rgb(var(--primary-6))',fontSize:12,whiteSpace:'nowrap'}}>设计调整清单（21）</Link></header>
+ <div className={`filter-panel${expanded?'':' filter-panel-collapsed'}`}><div className="filter-heading"><Popover content={expanded?'收起':'展开'} trigger="hover" position="top" unmountOnExit><span className="filter-toggle-popover-trigger"><Button type="text" size="mini" shape="square" className="filter-toggle" icon={expanded?<IconDown width="16" height="16"/>:<IconRight width="16" height="16"/>} aria-label={expanded?'收起筛选':'展开筛选'} aria-expanded={expanded} title={expanded?'收起筛选':'展开筛选'} onClick={()=>setExpanded(!expanded)}/></span></Popover><h2 style={{ 'fontSize': '14px' }}>全局筛选</h2><div className="filter-caliber"><Tag size="small" bordered className="filter-caliber-tag">日正式+月正式</Tag><Tag size="small" bordered className="filter-caliber-tag">人民币</Tag><Tag size="small" bordered className="filter-caliber-tag">纯资源</Tag></div></div>
  {expanded?<><div className={`filter-grid ${tab==='pricing'?'pricing-filters':''}`}>
- {tab==='pricing'?<>{single('账期','month',months)}{single('商品名称','product',products)}{multi('收入计费单元类别','categories',categoryOptions)}{multi('收入计费单元','units',units)}{multi('大区','areas',areas)}{filters.product===TOS?tosRegionFilter:multi('收入售卖区域','regions',regions)}{multi('目标值对比','targets',targetOptions)}</>:<>{single('账期','month',months)}{single('海外即时 True Up 账单','trueUp',['不包含','包含'])}{single('同商品过滤','sameProduct',['否','是'])}{multi('目标值对比','targets',targetOptions)}{single('部门收支_产品线名称','productLine',['研发商品中心-基础架构'])}{single('商品名称/APP名称','product',products)}{multi('售卖大区','areas',areas)}{filters.product===TOS?tosRegionFilter:multi('收入售卖区域','regions',regions)}</>}
+ {tab==='pricing'?<>{single('账期','month',months)}{single('商品名称','product',products)}{multi('收入计费单元类别','categories',categoryOptions)}{multi('收入计费单元','units',units)}{multi('大区','areas',areas)}{filters.product===TOS?tosRegionFilter:multi('收入售卖区域','regions',regions)}{multi('目标值对比','targets',targetOptions)}</>:<>{single('账期','month',months)}{single('海外即时 True Up 账单','trueUp',['不包含','包含'])}{single('同商品过滤','sameProduct',['否','是'])}{multi('目标值对比','targets',targetOptions)}{single('部门收支_产品线名称','productLine',['研发商品中心-基础架构'])}{single('商品名称','product',products)}{multi('售卖大区','areas',areas)}{filters.product===TOS?tosRegionFilter:multi('收入售卖区域','regions',regions)}</>}
    <div className="filter-query-slot"><Button type="primary" disabled={!dirty||loading} loading={loading} className={dirty&&!loading?'pending-query':''} onClick={query}>查询</Button></div>
   </div></>:<FilterSummary items={summary} regions={summaryRegions}/>}
  </div>
