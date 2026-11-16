@@ -40,14 +40,25 @@
     ["图例", [
       ["legendExclude", "点击图例排除 / 恢复", true, "checkbox"],
       ["legendIsolate", "图例后图标仅展示该指标", true, "checkbox"],
+      ["legendPaginationVisible", "显示图例分页器", true, "checkbox"],
       ["legendAlign", "图例对齐方式", "left", "select", [["left", "左对齐"], ["center", "居中"], ["right", "右对齐"]]],
       ["legendMaxRows", "每页最多展示图例行数", 2, 1, 10],
       ["chartLegendGap", "图表 → 图例", 8, 0, 64],
-      ["legendMinHeight", "图例最小高度", 24, 24, 80],
+      ["legendMinHeight", "图例最小高度", 20, 20, 80],
       ["legendColumnGap", "图例项水平间距", 4, 0, 64],
       ["legendRowGap", "图例换行间距", 12, 0, 64],
+      ["legendPagerWidth", "分页器宽度", 28, 20, 80],
+      ["legendPagerButtonSize", "分页按钮尺寸", 16, 12, 32],
+      ["legendPagerFontSize", "分页器页码字号", 12, 8, 24],
+      ["legendPagerColor", "分页器文字颜色", "#42464e", "color"],
+      ["legendPagerDisabledOpacity", "分页按钮禁用透明度", 0.35, 0, 1],
       ["legendMarkerGap", "色块 → 文字", 4, 0, 32],
       ["legendFontSize", "图例字号", 12, 8, 24]
+    ]],
+    ["标记点", [
+      ["annotationPointVisible", "显示峰值标记点", false, "checkbox"],
+      ["annotationPointSize", "峰值标记点尺寸", 8, 4, 20],
+      ["annotationPointColor", "峰值标记点颜色", "#E8002A", "color"]
     ]],
     ...window.CHART_STYLE_GROUPS
   ];
@@ -74,6 +85,9 @@
   const getValues = () => getSeries().flatMap((series, index) => index < 3
     ? baseValues.filter(item => item.series === series)
     : ["中国", "美国", "欧洲 TTP", "海外其他", "美国 TTP"].map((x, areaIndex) => ({ x, series, value: (index + 1) * 90000 / (areaIndex + 1) })));
+  const annotationPoint = { x: "中国", series: "收入", value: 19300000 };
+  const isAnnotationPoint = datum => state.annotationPointVisible
+    && datum.x === annotationPoint.x && datum.series === annotationPoint.series && Number(datum.value) === annotationPoint.value;
   const $ = id => document.getElementById(id);
   $("chart-type").value = savedDefaults.chartType || "line";
   $("show-unit").checked = savedDefaults.showUnit ?? true;
@@ -161,8 +175,12 @@
       case "chartLegendGap": target = box(slot.left, slot.bottom, slot.width, state.chartLegendGap); break;
       case "legendMinHeight": target = region(legend); note = `最小高度 ${state.legendMinHeight}px，当前实际高度 ${Math.round(legend.height)}px`; break;
       case "legendFontSize": target = region(legend); break;
-      case "legendAlign": case "legendMaxRows":
+      case "legendAlign": case "legendMaxRows": case "legendPaginationVisible":
         target = region(legend); note = `每页最多 ${state.legendMaxRows} 行，当前第 ${legendPage + 1} / ${legendPages.length || 1} 页；超出后通过上下按钮切换`; break;
+      case "legendPagerWidth": case "legendPagerButtonSize": case "legendPagerFontSize": case "legendPagerColor": case "legendPagerDisabledOpacity":
+        target = region(legend); note = state.legendPaginationVisible ? "分页器样式配置，图例超过每页行数时显示" : "分页器已关闭，开启后可查看分页器样式"; break;
+      case "annotationPointVisible": case "annotationPointSize": case "annotationPointColor":
+        target = region(slot); note = state.annotationPointVisible ? "当前示例在“中国 · 收入”数据点展示峰值标记" : "峰值标记点默认关闭，开启后可预览"; break;
       case "legendButtonPadding": {
         const button = rect(firstLegend(".legend-toggle"));
         target = box(button.left, button.top, state.legendButtonPadding, button.height);
@@ -335,17 +353,34 @@
           shape: { size: tooltipMarker().shapeSize, spacing: state.tooltipShapeGap },
           titleLabel: tooltipText("Title"), keyLabel: tooltipText("Key"), valueLabel: tooltipText("Value")
         },
-        updateElement: element => {
+        updateElement: (element, actualTooltip) => {
           tooltipElement = element;
           element.style.setProperty("--tooltip-content-row-height", px(Math.max(state.tooltipKeyLineHeight, state.tooltipValueLineHeight, tooltipMarker().shapeSize)));
           element.classList.toggle("playground-tooltip-focused", Boolean(selectedKey?.startsWith("tooltip")));
+          element.querySelectorAll(".annotation-point-tag").forEach(tag => tag.remove());
+          actualTooltip?.content?.forEach((entry, index) => {
+            if (!isAnnotationPoint(entry.datum)) return;
+            const key = element.querySelectorAll(".vchart-tooltip-key-column .vchart-tooltip-key")[index];
+            if (!key) return;
+            const tag = document.createElement("span");
+            tag.className = "annotation-point-tag";
+            tag.textContent = "峰值";
+            key.append(tag);
+          });
         }
       },
       line: { style: { lineWidth: state.lineWidth, strokeOpacity: state.lineOpacity, lineCap: state.lineCap, lineJoin: state.lineJoin,
         lineDash: state.lineDash === "dash" ? [state.lineDashLength, state.lineDashGap] : state.lineDash === "dot" ? [state.lineDotLength, state.lineDotGap] : [0, 0] } },
       point: {
-        visible: state.pointVisible,
-        style: { size: state.pointSize, symbolType: state.pointShape, fillOpacity: state.pointOpacity, stroke: state.pointStroke, lineWidth: state.pointStrokeWidth },
+        visible: state.pointVisible || state.annotationPointVisible,
+        style: {
+          size: datum => isAnnotationPoint(datum) ? state.annotationPointSize : (state.pointVisible ? state.pointSize : 0),
+          symbolType: state.pointShape,
+          fill: datum => isAnnotationPoint(datum) ? state.annotationPointColor : undefined,
+          fillOpacity: datum => isAnnotationPoint(datum) ? 1 : state.pointOpacity,
+          stroke: datum => isAnnotationPoint(datum) ? state.annotationPointColor : state.pointStroke,
+          lineWidth: datum => isAnnotationPoint(datum) ? 0 : state.pointStrokeWidth
+        },
         ...(state.pointHoverVisible ? { state: { dimension_hover: { visible: true, size: state.pointHoverSize, symbolType: "circle", fillOpacity: 1, stroke: state.pointStroke, lineWidth: state.pointStrokeWidth } } } : {})
       },
       bar: { style: { cornerRadius: state.barRadius, fillOpacity: state.barOpacity } }, legends: []
@@ -436,6 +471,11 @@
     $("preview-legend").style.setProperty("--legend-align", { left: "flex-start", center: "center", right: "flex-end" }[state.legendAlign]);
     $("preview-legend").style.setProperty("--legend-column-gap", px(state.legendColumnGap));
     $("preview-legend").style.setProperty("--legend-row-gap", px(state.legendRowGap));
+    $("preview-legend").style.setProperty("--legend-pager-width", px(state.legendPagerWidth));
+    $("preview-legend").style.setProperty("--legend-pager-button-size", px(state.legendPagerButtonSize));
+    $("preview-legend").style.setProperty("--legend-pager-font-size", px(state.legendPagerFontSize));
+    $("preview-legend").style.setProperty("--legend-pager-color", state.legendPagerColor);
+    $("preview-legend").style.setProperty("--legend-pager-disabled-opacity", state.legendPagerDisabledOpacity);
     $("preview-legend").style.setProperty("--legend-hover-background", state.legendHoverBackground);
     $("preview-legend").style.setProperty("--legend-hidden-opacity", state.legendHiddenOpacity);
     const legendVariables = {
@@ -548,7 +588,7 @@
       return rows;
     };
     let rows = measureRows();
-    if (rows.length > state.legendMaxRows) {
+    if (state.legendPaginationVisible && rows.length > state.legendMaxRows) {
       $("legend-pager").hidden = false;
       rows = measureRows();
     }
@@ -557,6 +597,9 @@
       legendPages.push(rows.slice(index, index + state.legendMaxRows).flatMap(row => row.items));
     }
     legendPage = Math.min(legendPage, Math.max(0, legendPages.length - 1));
+    if (!state.legendPaginationVisible) {
+      legendPages = [items];
+    }
     if (legendPages.length > 1) {
       const rowHeight = Math.max(...items.map(item => item.getBoundingClientRect().height));
       list.style.height = px(state.legendMaxRows * rowHeight + (state.legendMaxRows - 1) * state.legendRowGap);

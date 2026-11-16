@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Tooltip } from '@byted-babi/babi-design';
 import { AnalysisFilters, AnalysisRow, TOS, amount, areaNames, getRows, monthList, normalizeAnalysisFilters, quantityFormat } from './analysisData';
-import { AnalysisChart, ChartValue, DataTable, EmptyState, ExactValue, Fold, Note, Section, SourceTable, SourceTableSummary, sourcePaginationProps } from './analysisUI';
+import { AnalysisChart, ChartValue, DataTable, EmptyState, ExactValue, Fold, Note, Section, SourceTable, SourceTableSummary, sourcePaginationProps, trendMonthLabel } from './analysisUI';
 import './pricing.css';
 
 interface CostRow { id:string;unit:string;category:string;area:string;region?:string;capacity:number;unitLabel:string;cost:number;goods:Record<string,number>; }
@@ -38,10 +38,11 @@ function trends(filters:AnalysisFilters,category:string,kind:'cost'|'goods'|'qua
  });
 }
 const chartInsight=(values:ChartValue[],month:string,title:string)=>{
- const peak=values.filter((point):point is ChartValue&{value:number}=>point.value!==null&&Number.isFinite(point.value)).reduce<(ChartValue&{value:number})|null>((result,point)=>!result||point.value>result.value?point:result,null);
- const highlight=peak?.series.split(/\s*[|/]\s*/)[0]||'—';
+ const peak=values.filter((point):point is ChartValue&{value:number}=>point.value!==null&&Number.isFinite(point.value)).reduce<(ChartValue&{value:number})|null>((result,point)=>!result||point.value>=result.value?point:result,null);
+ const highlight=peak?.series||'—';
+ const peakMonth=peak?trendMonthLabel(month,peak.x):'—';
  const peakValue=peak?peak.value.toLocaleString('zh-CN',{maximumFractionDigits:2}):'—';
- return {summary:peak?`${highlight} 在 ${peak.x} 达到${title}峰值 ${peakValue}。`:'当前范围暂无可用趋势数据。',moreInfo:[`口径月：${month}`,`高亮：${highlight}`,`峰值：${peak?`${peak.x} ${peakValue}`:'—'}`],annotationPoint:peak?{x:peak.x,series:peak.series,value:peak.value}:null};
+ return {summary:peak?`${highlight} 在 ${peakMonth} 达到${title}峰值 ${peakValue}。`:'当前范围暂无可用趋势数据。',moreInfo:[`口径月：${month}`,`高亮：${highlight}`,`峰值：${peak?`${peakMonth} ${peakValue}`:'—'}`],annotationPoint:peak?{x:peak.x,series:peak.series,value:peak.value}:null};
 };
 function CostCategory({category,rows,filters,detailed,showChartInsights,embeddedIncome=false}:{category:string;rows:CostRow[];filters:AnalysisFilters;detailed:boolean;showChartInsights:boolean;embeddedIncome?:boolean}) {
  const tos=filters.product===TOS,goods=tos?tosGoods:byteGoods;

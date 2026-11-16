@@ -57,16 +57,16 @@ legend { float: left; width: 100%; font-size: 13px; font-weight: 600; margin-bot
 .chart-empty-text { color: var(--muted); font-size: 13px; font-weight: 400; line-height: 22px; }
 .chart-empty[hidden], #vchart[hidden], .chart-legend[hidden] { display: none; }
 #chart-error { position: absolute; inset: 0; padding: 32px; background: #fff; color: #cb2634; }
-.chart-legend { display: flex; align-items: center; gap: 8px; min-height: 24px; }
+.chart-legend { display: flex; align-items: center; gap: 8px; min-height: 20px; }
 .legend-list { display: flex; flex: 1; flex-wrap: wrap; align-content: flex-start; min-width: 0; justify-content: var(--legend-align, flex-start); column-gap: var(--legend-column-gap, 4px); row-gap: var(--legend-row-gap, 12px); }
-.legend-pager { display: flex; flex: 0 0 28px; flex-direction: column; align-items: center; color: #42464e; font-size: 12px; line-height: 16px; }
+.legend-pager { display: flex; flex: 0 0 var(--legend-pager-width, 28px); flex-direction: column; align-items: center; color: var(--legend-pager-color, #42464e); font-size: var(--legend-pager-font-size, 12px); line-height: 16px; }
 .legend-pager[hidden], .legend-item[hidden] { display: none; }
-.chart-legend .legend-pager button { justify-content: center; width: 20px; height: 16px; padding: 0; color: #737a87; }
+.chart-legend .legend-pager button { justify-content: center; width: var(--legend-pager-button-size, 20px); height: var(--legend-pager-button-size, 16px); padding: 0; color: inherit; }
 .chart-legend .legend-pager button:hover:not(:disabled) { color: #1664ff; background: #f6f8fa; }
-.chart-legend .legend-pager button:disabled { opacity: .35; cursor: default; }
+.chart-legend .legend-pager button:disabled { opacity: var(--legend-pager-disabled-opacity, .35); cursor: default; }
 .legend-item { display: inline-flex; align-items: center; gap: var(--legend-action-gap, 4px); max-width: 100%; min-width: 0; }
 .legend-hint { position: relative; display: inline-flex; min-width: 0; }
-.chart-legend button { display: inline-flex; align-items: center; height: 24px; padding: 0 4px; border: 0; border-radius: 2px; background: transparent; color: var(--muted); font-size: 12px; line-height: 20px; white-space: nowrap; }
+.chart-legend button { display: inline-flex; align-items: center; height: 20px; padding: 0 4px; border: 0; border-radius: 2px; background: transparent; color: var(--muted); font-size: 12px; line-height: 20px; white-space: nowrap; }
 .chart-legend .legend-toggle { min-width: 0; width: var(--legend-width, auto); max-width: var(--legend-max-width, 228px); border-radius: var(--legend-button-radius, 2px); font-weight: var(--legend-font-weight, 400); line-height: var(--legend-line-height, 20px); }
 .legend-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chart-legend .legend-toggle:hover, .chart-legend .legend-toggle.preview-hover { background: var(--legend-hover-background, #f6f8fa); color: var(--legend-hover-color, #0c0d0e) !important; }
@@ -95,6 +95,18 @@ legend { float: left; width: 100%; font-size: 13px; font-weight: 600; margin-bot
 .preview-stage .playground-tooltip .vchart-tooltip-shape svg { display: block !important; flex-shrink: 0; }
 .preview-stage .playground-tooltip .vchart-tooltip-key { justify-content: flex-start; }
 .preview-stage .playground-tooltip .vchart-tooltip-value { justify-content: flex-end; }
+.playground-tooltip .annotation-point-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 2px;
+  background: #ffecec;
+  color: #d7312a;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+}
 .show-guides h3 { outline: 1px dashed #7442d4; background: #7442d408; }
 .show-guides .chart-unit { outline: 1px dashed #ff8a00; background: #ff8a0008; }
 .show-guides .chart-heading-info { outline: 1px dashed #009488; }

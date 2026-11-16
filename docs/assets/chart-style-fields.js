@@ -86,7 +86,7 @@ window.CHART_STYLE_GROUPS = [
     ["legendFixedWidth", "图例背景固定宽度（固定模式生效）", 120, 40, 600],
     ["legendMaxWidth", "自适应最大宽度（超出文字省略）", 228, 40, 600],
     ["legendButtonPadding", "色块＋文字 → 背景左右边距", 4, 0, 32],
-    ["legendButtonHeight", "图例背景高度", 24, 16, 48],
+    ["legendButtonHeight", "图例背景高度", 20, 16, 48],
     ["legendButtonRadius", "图例背景圆角", 2, 0, 24],
     ["legendHoverBackground", "悬停图例背景颜色", "#f2f3f5", "color"],
     ["legendHoverColor", "悬停图例文字颜色", "#0c0d0e", "color"]

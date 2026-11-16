@@ -1,14 +1,14 @@
 // References: none — new income analysis tab, based on section 4 of the supplied PRD and its screenshots.
 import React, { useEffect, useMemo, useState } from 'react';
 import { Button, Tooltip } from '@byted-babi/babi-design';
-import { IconFunction } from '@arco-design/iconbox-react-babi';
+import { IconFunctionV2 as IconFunction } from '@arco-design/iconbox-react-ve-o-design';
 import {
   AnalysisProps, AnalysisFilters, AnalysisRow, BYTEGRAPH, TOS, areaNames,
   amount, percent, getRows, monthList, totals, trendValues, FinancialMetric,
   annualTargetValue, financialMetricValue, financialTargetSummary, financialTargetValue,
   metricDeviation, quarterMonthList,
 } from './analysisData';
-import { AnalysisChart, ChartValue, DataTable, EmptyState, Fold, MultiFilter, Note, Section, SourceTable, SourceTableSummary, sourcePaginationProps, trendPercent } from './analysisUI';
+import { AnalysisChart, ChartValue, DataTable, EmptyState, Fold, MultiFilter, Note, Section, SourceTable, SourceTableSummary, sourcePaginationProps, trendMonthLabel, trendPercent } from './analysisUI';
 import CostAnalysis from './CostAnalysis';
 import IncomeMetricCard, { IncomeMetricValueParts } from './IncomeMetricCard';
 import './income.css';
@@ -24,12 +24,13 @@ const metrics: {key: Metric; label: string}[] = [
 const resourceCategoryLabel=(category:string)=>category==='计算'?'计算资源':category==='存储'?'存储资源':category;
 const mergedHeaderDivider = '1px solid #EAEDF1';
 const valueText = (key:Metric, value:number|null|undefined) => key==='rate' ? percent(value) : amount(value);
-const chartInsight=(values:ChartValue[],key:Metric,month:string,rows:AnalysisRow[])=>{
+const chartInsight=(values:ChartValue[],key:Metric,month:string)=>{
   const points=values.filter((point):point is ChartValue&{value:number}=>point.value!==null&&Number.isFinite(point.value));
-  const peak=points.reduce<(ChartValue&{value:number})|null>((result,point)=>!result||point.value>result.value?point:result,null);
-  const highlight=rows.filter(row=>row[key]!==null).reduce<AnalysisRow|null>((result,row)=>!result||Number(row[key])>Number(result[key])?row:result,null)?.unit||'—';
-  const peakText=peak?`${peak.x} ${valueText(key,peak.value)}`:'—';
-  return {summary:peak?`${highlight} 在 ${peak.x} 达到${metrics.find(metric=>metric.key===key)?.label||''}峰值 ${valueText(key,peak.value)}。`:'当前范围暂无可用趋势数据。',moreInfo:[`口径月：${month}`,`高亮：${highlight}`,`峰值：${peakText}`],annotationPoint:peak?{x:peak.x,series:peak.series,value:peak.value}:null};
+  const peak=points.reduce<(ChartValue&{value:number})|null>((result,point)=>!result||point.value>=result.value?point:result,null);
+  const highlight=peak?.series||'—';
+  const peakMonth=peak?trendMonthLabel(month,peak.x):'—';
+  const peakText=peak?`${peakMonth} ${valueText(key,peak.value)}`:'—';
+  return {summary:peak?`${highlight} 在 ${peakMonth} 达到${metrics.find(metric=>metric.key===key)?.label||''}峰值 ${valueText(key,peak.value)}。`:'当前范围暂无可用趋势数据。',moreInfo:[`口径月：${month}`,`高亮：${highlight}`,`峰值：${peakText}`],annotationPoint:peak?{x:peak.x,series:peak.series,value:peak.value}:null};
 };
 const valueParts = (key:Metric,value:number|null|undefined):IncomeMetricValueParts => {
   if(value===null||value===undefined||!Number.isFinite(value))return {number:'-'};
@@ -190,7 +191,7 @@ function CategoryCard({category,filters,onDrill}:AnalysisProps&{category:string}
     return trendCombos.map(combo=>({x:month.slice(5)+'月',series:`${combo.unit} | ${combo.area}${tos?'':` | ${combo.region}`}`,value:monthMap.get(combo.id)?.[key]??null}));
   });
   const trendChart=(metric:{key:Metric;label:string})=>{
-    const values=comboTrends(metric.key),insight=chartInsight(values,metric.key,filters.month,selectedRows);
+    const values=comboTrends(metric.key),insight=chartInsight(values,metric.key,filters.month);
     return <AnalysisChart key={metric.key} title={metric.label} values={values} percent={metric.key==='rate'} unit={metric.key==='rate'?'%':'人民币'} summary={insight.summary} moreInfo={insight.moreInfo} annotationPoint={insight.annotationPoint}/>;
   };
   const supported=filters.product===BYTEGRAPH||tos;
@@ -223,7 +224,7 @@ export default function IncomeTab({filters,onDrill}:AnalysisProps) {
   const selectedCategories=activeCategories.filter(category=>candidates.includes(category));
   const categoryTrends=(key:Metric):ChartValue[]=>monthList(filters.month).flatMap(month=>selectedCategories.map(category=>({x:month.slice(5)+'月',series:category,value:scopeTotal(getRows({...filters,categories:[category]},month))[key]})));
   const categoryTrendChart=(metric:{key:Metric;label:string})=>{
-    const values=categoryTrends(metric.key),insight=chartInsight(values,metric.key,filters.month,rows.filter(row=>selectedCategories.includes(row.category||'其他')));
+    const values=categoryTrends(metric.key),insight=chartInsight(values,metric.key,filters.month);
     return <AnalysisChart key={metric.key} title={metric.label} values={values} percent={metric.key==='rate'} unit={metric.key==='rate'?'%':'人民币'} summary={insight.summary} moreInfo={insight.moreInfo} annotationPoint={insight.annotationPoint}/>;
   };
   const yearToDate=scopeTotal(monthList(filters.month).flatMap(month=>getRows(filters,month)));

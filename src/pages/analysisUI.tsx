@@ -294,6 +294,13 @@ export function Fold({title,children,defaultOpen=false,appearance='default'}:{ti
 }
 export interface ChartValue {x:string;series:string;value:number|null;}
 export interface ChartAnnotationPoint {x:string;series:string;value:number;}
+export const trendMonthLabel=(selectedMonth:string,x:string)=>{
+ const pointMonth=Number(x.match(/^(\d{1,2})月$/)?.[1]);
+ const selectedYear=Number(selectedMonth.slice(0,4)),selectedMonthNumber=Number(selectedMonth.slice(5,7));
+ if(!Number.isFinite(pointMonth)||!Number.isFinite(selectedYear)||!Number.isFinite(selectedMonthNumber))return x;
+ const year=pointMonth>selectedMonthNumber?selectedYear-1:selectedYear;
+ return `${year}-${String(pointMonth).padStart(2,'0')}`;
+};
 // References: none — supplied Source Design categorical palette, Figma 289:209522.
 const CHART_PALETTE = ['#1664FF','#1AC6FF','#FF8A00','#3CC780','#7442D4','#FFC400','#304D77','#B48DEB','#009488','#FF7DDA'];
 const CHART_PALETTE_EXTENDED = ['#1664FF','#B2CFFF','#1AC6FF','#94EFFF','#FF8A00','#FFCE7A','#3CC780','#B9EDCD','#7442D4','#DDC5FA','#FFC400','#FAE878','#304D77','#8B959E','#B48DEB','#EFE3FF','#009488','#59BAA8','#FF7DDA','#FFCFEE'];
@@ -315,9 +322,16 @@ function ChartLegend({series,colors,dashedSeries,hidden,setHidden,exclude,isolat
   const root=rootRef.current,list=listRef.current;
   if(!root||!list)return;
   const items=Array.from(list.querySelectorAll<HTMLElement>('.legend-item'));
+  const previousHidden=items.map(item=>item.hidden);
   items.forEach(item=>{item.hidden=false;});
-  const measured=items.map((item,index)=>item.offsetWidth||widthsRef.current[index]||80);
+  const measured=items.map((item,index)=>{
+   const toggle=item.querySelector<HTMLElement>('.legend-toggle');
+   const isolate=item.querySelector<HTMLElement>('.legend-isolate');
+   const measuredWidth=(toggle?.getBoundingClientRect().width||0)+(isolate?.getBoundingClientRect().width||0)+(isolate?4:0);
+   return measuredWidth||item.offsetWidth||widthsRef.current[index]||80;
+  });
   widthsRef.current=measured;
+  items.forEach((item,index)=>{item.hidden=previousHidden[index];});
   const pack=(available:number)=>{
    const rows:number[][]=[];let row:number[]=[];let used=0;
    measured.forEach((width,index)=>{const next=width+(row.length?4:0);if(row.length&&used+next>available){rows.push(row);row=[];used=0;}row.push(index);used+=width+(row.length>1?4:0);});
@@ -325,7 +339,7 @@ function ChartLegend({series,colors,dashedSeries,hidden,setHidden,exclude,isolat
    return rows;
   };
   let rows=pack(root.clientWidth);
-  if(rows.length>CHART_LEGEND_MAX_ROWS)rows=pack(Math.max(80,root.clientWidth-36));
+  if(rows.length>CHART_LEGEND_MAX_ROWS)rows=pack(Math.max(1,root.clientWidth-28));
   const next:number[][]=[];
   for(let index=0;index<rows.length;index+=CHART_LEGEND_MAX_ROWS)next.push(rows.slice(index,index+CHART_LEGEND_MAX_ROWS).flat());
   setPages(next);setPage(current=>Math.min(current,Math.max(0,next.length-1)));
@@ -343,14 +357,44 @@ function ChartLegend({series,colors,dashedSeries,hidden,setHidden,exclude,isolat
   {pages.length>1&&<div className="legend-pager" aria-label="图例翻页"><button type="button" aria-label="上一页图例" disabled={page===0} onClick={()=>setPage(current=>Math.max(0,current-1))}>⌃</button><span>{page+1}/{pages.length}</span><button type="button" aria-label="下一页图例" disabled={page===pages.length-1} onClick={()=>setPage(current=>Math.min(pages.length-1,current+1))}>⌄</button></div>}
  </div>;
 }
-export function AnalysisChart({title,values,type='line',unit='',percent=false,dashedSeries=[],dottedSeries=[],seriesColorIndexes={},legendExclude=true,legendIsolate=true,summary,moreInfo,annotationPoint}:{title:string;values:ChartValue[];type?:'line'|'bar';height?:number;unit?:string;percent?:boolean;dashedSeries?:string[];dottedSeries?:string[];seriesColorIndexes?:Record<string,number>;legendExclude?:boolean;legendIsolate?:boolean;summary?:React.ReactNode;moreInfo?:React.ReactNode[];annotationPoint?:ChartAnnotationPoint|null}) {
+export function AnalysisChart({title,values,type='line',unit='',percent=false,dashedSeries=[],dottedSeries=[],seriesColorIndexes={},legendExclude=true,legendIsolate=true,summary,moreInfo,annotationPoint,height}:{title:string;values:ChartValue[];type?:'line'|'bar';height?:number;unit?:string;percent?:boolean;dashedSeries?:string[];dottedSeries?:string[];seriesColorIndexes?:Record<string,number>;legendExclude?:boolean;legendIsolate?:boolean;summary?:React.ReactNode;moreInfo?:React.ReactNode[];annotationPoint?:ChartAnnotationPoint|null}) {
  const [hidden,setHidden]=useState<string[]>([]); const series=Array.from(new Set(values.map(v=>v.series)));const filtered=values.filter(v=>v.value!==null&&!hidden.includes(v.series));
+ const chartInstance=React.useRef<any>(null);
+ const tooltipElementRef=React.useRef<HTMLElement|null>(null);
+ const tooltipDataRef=React.useRef<any>(null);
+ const tooltipPinnedRef=React.useRef(false);
+ const clearPinnedTooltip=React.useCallback(()=>{
+  tooltipPinnedRef.current=false;
+  chartInstance.current?.hideTooltip();
+ },[]);
+ React.useEffect(()=>{
+  const dismissOutside=(event:PointerEvent)=>{
+   const target=event.target;
+   if(!(target instanceof Node)||!tooltipPinnedRef.current)return;
+   if(tooltipElementRef.current?.contains(target)||chartInstance.current?.getCanvas()?.contains(target))return;
+   clearPinnedTooltip();
+  };
+  document.addEventListener('pointerdown',dismissOutside);
+  return ()=>document.removeEventListener('pointerdown',dismissOutside);
+ },[clearPinnedTooltip]);
+ React.useEffect(()=>{clearPinnedTooltip();},[values,hidden,clearPinnedTooltip]);
+ const handleTooltipClick=(params:any)=>{
+  if(tooltipPinnedRef.current){clearPinnedTooltip();return;}
+  const actual=tooltipDataRef.current;
+  const datum=actual?.content?.[0]?.datum;
+  if(!datum||tooltipElementRef.current?.style.visibility!=='visible')return;
+  const query=actual.activeType==='dimension'?{x:datum.x}:datum;
+  tooltipPinnedRef.current=!!chartInstance.current?.showTooltip(query,{
+   activeType:actual.activeType,alwaysShow:true,x:params.event.canvasX,y:params.event.canvasY,
+  });
+ };
  React.useEffect(()=>setHidden(current=>current.filter(name=>series.includes(name))),[series.join('|')]);
  // Resolve against all series, not visible data: legend toggles never reassign colors.
  // For more than 20 combinations, repeat the supplied extended palette without inventing new colors.
  const palette=series.length<=10?CHART_PALETTE:CHART_PALETTE_EXTENDED;
  const colors=series.map((name,index)=>palette[(seriesColorIndexes[name]??index)%palette.length]);
  const colorBySeries=new Map(series.map((name,index)=>[name,colors[index]]));
+ const specifiedColors=Object.fromEntries(colorBySeries);
  const isAnnotationPoint=(datum:any)=>!!annotationPoint&&datum.x===annotationPoint.x&&datum.series===annotationPoint.series&&Number(datum.value)===annotationPoint.value;
  const markerPath=tooltipSquarePath(8);
  const abbreviateAmount=!percent&&(unit.includes('人民币')||/\bCNY\b/i.test(unit)||/(^|[/\s])(元|万元|亿元)($|[/\s])/.test(unit));
@@ -360,8 +404,11 @@ export function AnalysisChart({title,values,type='line',unit='',percent=false,da
   if(abbreviateAmount&&Math.abs(numeric)>=1e4)return `${(numeric/1e4).toFixed(2)}万`;
   return numeric.toLocaleString('zh-CN',{maximumFractionDigits:10});
  };
- const tooltipContent={shapeType:(datum:any)=>dashedSeries.includes(datum.series)?CHART_DASHED_MARKER_PATH:markerPath,shapeSize:(datum:any)=>dashedSeries.includes(datum.series)?10:8,shapeHollow:false,shapeLineWidth:0,key:(datum:any)=>datum.series,value:(datum:any)=>formatTooltipValue(datum.value)};
+ const seriesColor=(datum:any)=>colorBySeries.get(datum.series)||CHART_PALETTE[0];
+ const tooltipContent={shapeType:(datum:any)=>dashedSeries.includes(datum.series)?CHART_DASHED_MARKER_PATH:markerPath,shapeFill:seriesColor,shapeStroke:seriesColor,shapeSize:(datum:any)=>dashedSeries.includes(datum.series)?10:8,shapeHollow:false,shapeLineWidth:0,key:(datum:any)=>datum.series,value:(datum:any)=>formatTooltipValue(datum.value)};
  const updateTooltipPeakTag=(tooltipElement:HTMLElement,actualTooltip:any)=>{
+  tooltipElementRef.current=tooltipElement;
+  tooltipDataRef.current=actualTooltip;
   tooltipElement.querySelectorAll('.analysis-tooltip-peak-tag').forEach(tag=>tag.remove());
   const keyRows=tooltipElement.querySelectorAll('.vchart-tooltip-key-column .vchart-tooltip-key');
   actualTooltip.content?.forEach((entry:any,index:number)=>{
@@ -372,10 +419,16 @@ export function AnalysisChart({title,values,type='line',unit='',percent=false,da
    keyRows[index]?.appendChild(tag);
   });
  };
- const spec:any={type,autoFit:true,padding:{top:0,right:0,bottom:0,left:0},data:[{id:'data',values:filtered}],xField:type==='bar'?['x','series']:'x',yField:'value',seriesField:'series',activePoint:type==='line',color:{type:'ordinal',domain:series,range:colors},animation:false,axes:[{orient:'left',type:'linear',min:0,zero:true,label:{space:6,style:{fontSize:10,fill:'#737a87',fontWeight:'normal',fillOpacity:1},formatMethod:(v:any)=>percent?`${Number(v).toFixed(0)}%`:Math.abs(Number(v))>=1e8?`${(Number(v)/1e8).toFixed(1)}亿`:Math.abs(Number(v))>=1e4?`${(Number(v)/1e4).toFixed(0)}万`:Number(v).toFixed(Math.abs(Number(v))<1?4:0)},grid:{visible:true,style:{stroke:'#e9eef6',lineWidth:1,strokeOpacity:1,lineDash:[2,2]}},domainLine:{visible:false},tick:{visible:false}},{orient:'bottom',type:'band',label:{space:6,style:{fontSize:10,fill:'#737a87',fontWeight:'normal',fillOpacity:1}},grid:{visible:false},domainLine:{visible:true,style:{stroke:'#dce4ef',lineWidth:1,strokeOpacity:1}},tick:{visible:false}}],crosshair:{trigger:'hover',triggerOff:'hover',followTooltip:false,xField:type==='line'?{visible:true,line:{type:'line',style:{stroke:'#C9CDD4',lineWidth:1,lineDash:[]}},label:{visible:false}}:{visible:true,line:{type:'rect'},label:{visible:false}},yField:{visible:false}},tooltip:{visible:true,renderMode:'html',className:'analysis-chart-tooltip',offset:{x:10,y:10},updateElement:updateTooltipPeakTag,mark:{content:[tooltipContent]},dimension:{content:[tooltipContent]},style:{panel:{backgroundColor:'#fff',padding:{top:8,right:12,bottom:8,left:12},border:{color:'#fff',width:0,radius:4},shadow:{x:0,y:4,blur:12,spread:0,color:'rgba(33,37,44,.1)'}},spaceRow:2,shape:{size:8,spacing:6},titleLabel:{fontSize:12,lineHeight:20,fontColor:'#808893',fontWeight:'normal',spacing:0},keyLabel:{fontSize:12,lineHeight:20,fontColor:'#808893',fontWeight:'normal',spacing:26},valueLabel:{fontSize:12,lineHeight:20,fontColor:'#555960',fontWeight:'bold',spacing:0}}},line:{style:{lineWidth:2,strokeOpacity:1,lineCap:'round',lineJoin:'round',lineDash:(datum:any)=>dottedSeries.includes(datum.series)?[2,3]:dashedSeries.includes(datum.series)?[6,6]:[0,0]}},point:{visible:type==='line'&&!!annotationPoint,style:{size:(datum:any)=>isAnnotationPoint(datum)?8:0,symbolType:'circle',fill:(datum:any)=>isAnnotationPoint(datum)?'#E8002A':colorBySeries.get(datum.series)||CHART_PALETTE[0],fillOpacity:1,stroke:(datum:any)=>isAnnotationPoint(datum)?'#E8002A':'#fff',lineWidth:(datum:any)=>isAnnotationPoint(datum)?0:1},state:{dimension_hover:{visible:true,size:(datum:any)=>isAnnotationPoint(datum)?8:10,symbolType:'circle',fillOpacity:1,stroke:(datum:any)=>isAnnotationPoint(datum)?'#E8002A':'#fff',lineWidth:(datum:any)=>isAnnotationPoint(datum)?0:1}}},bar:{style:{cornerRadius:0,fillOpacity:1}},legends:[]};
+ const spec:any={type,autoFit:true,padding:{top:0,right:0,bottom:0,left:0},data:[{id:'data',values:filtered}],xField:type==='bar'?['x','series']:'x',yField:'value',seriesField:'series',activePoint:type==='line',color:{type:'ordinal',domain:series,range:colors,specified:specifiedColors},animation:false,axes:[{orient:'left',type:'linear',min:0,zero:true,label:{space:6,style:{fontSize:10,fill:'#737a87',fontWeight:'normal',fillOpacity:1},formatMethod:(v:any)=>percent?`${Number(v).toFixed(0)}%`:Math.abs(Number(v))>=1e8?`${(Number(v)/1e8).toFixed(1)}亿`:Math.abs(Number(v))>=1e4?`${(Number(v)/1e4).toFixed(0)}万`:Number(v).toFixed(Math.abs(Number(v))<1?4:0)},grid:{visible:true,style:{stroke:'#e9eef6',lineWidth:1,strokeOpacity:1,lineDash:[2,2]}},domainLine:{visible:false},tick:{visible:false}},{orient:'bottom',type:'band',label:{space:6,style:{fontSize:10,fill:'#737a87',fontWeight:'normal',fillOpacity:1}},grid:{visible:false},domainLine:{visible:true,style:{stroke:'#dce4ef',lineWidth:1,strokeOpacity:1}},tick:{visible:false}}],crosshair:{trigger:'hover',triggerOff:'hover',followTooltip:false,xField:type==='line'?{visible:true,line:{type:'line',style:{stroke:'#C9CDD4',lineWidth:1,lineDash:[]}},label:{visible:false}}:{visible:true,line:{type:'rect'},label:{visible:false}},yField:{visible:false}},tooltip:{visible:true,renderMode:'html',className:'analysis-chart-tooltip',offset:{x:10,y:10},updateElement:updateTooltipPeakTag,mark:{content:[tooltipContent]},dimension:{content:[tooltipContent]},style:{panel:{backgroundColor:'#fff',padding:{top:8,right:12,bottom:8,left:12},border:{color:'#fff',width:0,radius:4},shadow:{x:0,y:4,blur:12,spread:0,color:'rgba(33,37,44,.1)'}},spaceRow:2,shape:{size:8,spacing:6},titleLabel:{fontSize:12,lineHeight:20,fontColor:'#808893',fontWeight:'normal',spacing:0},keyLabel:{fontSize:12,lineHeight:20,fontColor:'#808893',fontWeight:'normal',spacing:26},valueLabel:{fontSize:12,lineHeight:20,fontColor:'#555960',fontWeight:'bold',spacing:0}}},line:{style:{stroke:seriesColor,zIndex:(datum:any)=>datum.series===annotationPoint?.series?2:1,lineWidth:2,strokeOpacity:1,lineCap:'round',lineJoin:'round',lineDash:(datum:any)=>dottedSeries.includes(datum.series)?[2,3]:dashedSeries.includes(datum.series)?[6,6]:[0,0]}},point:{visible:type==='line'&&!!annotationPoint,style:{zIndex:3,size:(datum:any)=>isAnnotationPoint(datum)?8:0,symbolType:'circle',fill:(datum:any)=>isAnnotationPoint(datum)?'#E8002A':seriesColor(datum),fillOpacity:1,stroke:(datum:any)=>isAnnotationPoint(datum)?'#E8002A':'#fff',lineWidth:(datum:any)=>isAnnotationPoint(datum)?0:1},state:{dimension_hover:{visible:true,size:(datum:any)=>isAnnotationPoint(datum)?8:10,symbolType:'circle',fillOpacity:1,stroke:(datum:any)=>isAnnotationPoint(datum)?'#E8002A':'#fff',lineWidth:(datum:any)=>isAnnotationPoint(datum)?0:1}}},bar:{style:{fill:seriesColor,cornerRadius:0,fillOpacity:1}},legends:[]};
+ // Public alwaysShow/hideTooltip APIs support both chart-click and outside dismissal.
+ // CSS enables DOM scrolling without enterable's conflicting pointerleave handler.
+ Object.assign(spec.tooltip,{trigger:'hover',lockAfterClick:false,enterable:false,transitionDuration:0});
+ spec.tooltip.mark.maxLineCount=0;
+ spec.tooltip.dimension.maxLineCount=0;
  // Explicit signed y-domain prevents losing negative profit or a negative change.
  if(filtered.some(v=>(v.value||0)<0)) delete spec.axes[0].min;
  const hasChartData=values.some(v=>v.value!==null);
- return <div className="analysis-chart" style={{height:CHART_CARD_HEIGHT}}><div className="chart-heading"><h3>{title}</h3>{(summary||moreInfo?.length)?<div className="chart-heading-info">{summary&&<p className="chart-summary">{summary}</p>}{!!moreInfo?.length&&<div className="chart-more-info">{moreInfo.map((item,index)=><span key={index}>{item}</span>)}</div>}</div>:null}{unit&&<span className="chart-unit">单位：{unit}</span>}</div>{hasChartData?<div className="analysis-chart-slot" role="img" aria-label={`${title}趋势图`}><VChart spec={spec}/></div>:<div className="analysis-chart-slot analysis-chart-empty-slot"><EmptyState text="暂无可用数据" kind="chart" size={80}/></div>}{hasChartData&&<ChartLegend series={series} colors={colors} dashedSeries={dashedSeries} hidden={hidden} setHidden={setHidden} exclude={legendExclude} isolate={legendIsolate}/>}</div>;
+ const chartHeight=height??CHART_CARD_HEIGHT;
+ return <div className="analysis-chart" style={{height:CHART_CARD_HEIGHT}}><div className="chart-heading"><h3>{title}</h3>{(summary||moreInfo?.length)?<div className="chart-heading-info">{summary&&<p className="chart-summary">{summary}</p>}{!!moreInfo?.length&&<div className="chart-more-info">{moreInfo.map((item,index)=><span key={index}>{item}</span>)}</div>}</div>:null}{unit&&<span className="chart-unit">单位：{unit}</span>}</div>{hasChartData?<div className="analysis-chart-slot" style={{height:chartHeight}} role="img" aria-label={`${title}趋势图`}><VChart spec={spec} onReady={instance=>{chartInstance.current=instance;}} onPointerTap={handleTooltipClick}/></div>:<div className="analysis-chart-slot analysis-chart-empty-slot" style={{height:chartHeight}}><EmptyState text="暂无可用数据" kind="chart" size={80}/></div>}{hasChartData&&<ChartLegend series={series} colors={colors} dashedSeries={dashedSeries} hidden={hidden} setHidden={setHidden} exclude={legendExclude} isolate={legendIsolate}/>}</div>;
 }
 export const ExactValue=({value,children}:{value:number|null;children:React.ReactNode})=><Tooltip content={value===null?'暂无可用数据':value.toLocaleString('zh-CN',{maximumFractionDigits:10})}><span>{children}</span></Tooltip>;

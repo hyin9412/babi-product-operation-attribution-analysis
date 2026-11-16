@@ -148,7 +148,10 @@ html.analysis-scroll body { height: auto !important; min-height: 100vh; overflow
 .analysis-page .chart-more-info { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .analysis-page .chart-more-info span { display: inline-flex; align-items: center; min-height: 20px; padding: 0 6px; border-radius: 4px; background: #f1f3f5; color: #42464e; font-size: 12px; font-weight: 500; line-height: 20px; letter-spacing: .003em; }
 .analysis-page .chart-unit { display: block; font-size: 10px; line-height: 18px; color: #737a87; }
-.analysis-page .analysis-chart-slot { flex: 1 1 0; min-height: 0; position: relative; }
+.analysis-page .analysis-chart-slot { flex: 1 1 auto; min-width: 0; min-height: 0; position: relative; overflow: hidden; }
+.analysis-page .analysis-chart-slot > div { width: 100%; height: 100%; min-width: 0; min-height: 0; }
+.analysis-page .analysis-chart-slot canvas,
+.analysis-page .analysis-chart-slot svg { display: block; width: 100% !important; height: 100% !important; }
 .analysis-page .analysis-chart-empty-slot {
   display: flex;
   align-items: center;
@@ -161,13 +164,15 @@ html.analysis-scroll body { height: auto !important; min-height: 100vh; overflow
   padding-bottom: 0;
 }
 /* Figma 5339:149359: exclude on legend, isolate on separate trailing target icon. */
-.analysis-page .chart-legend { display: flex; align-items: center; gap: 8px; min-height: 24px; margin-top: 8px; }
-.analysis-page .legend-list { display: flex; flex: 1; flex-wrap: wrap; align-content: flex-start; justify-content: flex-start; column-gap: 4px; row-gap: 12px; min-width: 0; }
-.analysis-page .legend-pager { display: flex; flex: 0 0 28px; flex-direction: column; align-items: center; color: #42464e; font-size: 12px; line-height: 16px; }
-.analysis-page .legend-pager button { justify-content: center; width: 20px; height: 16px; padding: 0; color: #737a87; }
+.analysis-page .chart-legend { display: flex; align-items: center; gap: 8px; min-height: 20px; margin-top: 8px; }
+.analysis-page .legend-list { display: flex; flex: 1; flex-wrap: wrap; align-content: flex-start; justify-content: flex-start; column-gap: 4px; row-gap: 4px; min-width: 0; max-height: 44px; overflow: hidden; }
+.analysis-page .legend-pager { display: flex; flex: 0 0 20px; flex-direction: column; align-items: center; color: #42464e; font-size: 12px; line-height: 16px; }
+.analysis-page .chart-legend .legend-pager button { justify-content: center; width: 12px; height: 12px; padding: 0; color: inherit; line-height: 12px; }
 .analysis-page .legend-pager button:disabled { opacity: .35; cursor: default; }
 .analysis-page .legend-item { display: inline-flex; align-items: center; gap: 4px; min-width: 0; max-width: 100%; }
-.analysis-page .chart-legend button { display: inline-flex; align-items: center; height: 24px; padding: 0 4px; border: 0; border-radius: 2px; background: transparent; color: var(--color-text-2); font: inherit; font-size: 12px; line-height: 20px; cursor: pointer; }
+.analysis-page .legend-item[hidden] { display: none; }
+.analysis-page .legend-item > :first-child { display: inline-flex; min-width: 0; max-width: 100%; }
+.analysis-page .chart-legend button { display: inline-flex; align-items: center; height: 20px; padding: 0 4px; border: 0; border-radius: 2px; background: transparent; color: var(--color-text-2); font: inherit; font-size: 12px; line-height: 20px; cursor: pointer; }
 .analysis-page .legend-toggle { min-width: 0; max-width: 228px; }
 .analysis-page .legend-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .analysis-page .chart-legend i { display: block; flex-shrink: 0; width: 8px; height: 8px; border-radius: 1.54px; margin-right: 4px; }
@@ -179,6 +184,18 @@ html.analysis-scroll body { height: auto !important; min-height: 100vh; overflow
 .analysis-page .legend-item:hover .legend-isolate, .analysis-page .legend-item:focus-within .legend-isolate { opacity: 1; }
 .analysis-page .chart-legend button:focus-visible { outline: 2px solid #1664ff; outline-offset: 2px; }
 @media (hover: none) { .analysis-page .chart-legend .legend-isolate { opacity: 1; } }
+.vchart-tooltip-container:has(> .analysis-chart-tooltip) {
+  position: fixed !important;
+  inset: 0;
+  pointer-events: none;
+}
+.analysis-chart-tooltip { pointer-events: auto !important; }
+.analysis-chart-tooltip .vchart-tooltip-content-box {
+  max-height: min(280px, calc(100vh - 100px));
+  overflow-y: auto;
+  overflow-x: auto;
+  overscroll-behavior: contain;
+}
 .analysis-chart-tooltip .vchart-tooltip-content-box .vchart-tooltip-column > div { display: flex !important; align-items: center; height: 20px !important; }
 .analysis-chart-tooltip .vchart-tooltip-shape { justify-content: center; }
 .analysis-chart-tooltip .vchart-tooltip-shape svg { display: block !important; flex-shrink: 0; }
@@ -232,8 +249,8 @@ html.analysis-scroll body { height: auto !important; min-height: 100vh; overflow
   z-index: 3;
   background: var(--color-bg-3);
   box-shadow: none;
-  outline: 1px solid var(--color-border-3);
-  outline-offset: -1px;
+  /* Header cells own the boundary above the summary; an outline adds a second line. */
+  outline: none;
 }
 .analysis-page .source-analysis-table div.arco-table-tfoot::-webkit-scrollbar {
   display: none;

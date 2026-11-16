@@ -140,7 +140,11 @@ export default function IncomeMetricCard({
       {showMonthly&&<TargetComparisonRow label="月度目标" value={monthlyTarget} deviation={monthlyDeviation} unit={changeUnit} formula="月度偏差 =（当月实际值 - 月度目标值）/ 月度目标值"/>}
       {showQuarterly&&<TargetComparisonRow label="季度目标" value={quarterlyTarget} deviation={quarterlyDeviation} unit={changeUnit}/>}
       {showAnnual&&(changeUnit==='pp'
-        ?<TargetComparisonRow label="年度目标" value={annualTarget} deviation={annualDeviation} unit="pp"/>
+        ?<>
+          <TargetComparisonRow label="年度目标" value={annualTarget} deviation={annualDeviation} unit="pp"/>
+          <TargetValueRow label="1月至今累计实际值" value={yearToDateActual}/>
+          <TargetValueRow label="年度目标累计占比" value={annualTargetShare===null||!Number.isFinite(annualTargetShare)?'-':`${annualTargetShare.toFixed(2)}%`} formula="年度目标累计占比 = 1月至当前账期累计实际值 / 全年目标"/>
+        </>
         :<>
           <TargetValueRow label="年度目标" value={annualTarget}/>
           <TargetValueRow label="1月至今累计实际值" value={yearToDateActual}/>

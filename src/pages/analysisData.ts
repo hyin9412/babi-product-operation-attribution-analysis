@@ -111,7 +111,7 @@ export function financialTargetSummary(filters:AnalysisFilters,key:FinancialMetr
     annualTarget,
     annualDeviation:metricDeviation(yearToDateActual,annualTarget,key),
     yearToDateActual,
-    annualTargetShare:key==='rate'||yearToDateActual===null||annualTarget===null||annualTarget===0?null:yearToDateActual/annualTarget*100,
+    annualTargetShare:yearToDateActual===null||annualTarget===null||annualTarget===0?null:yearToDateActual/annualTarget*100,
   };
 }
 export function trendValues(filters:AnalysisFilters,key:'income'|'cost'|'profit'|'rate') {return monthList(filters.month).map(month=>({x:month.slice(5)+'月', series:'实际值', value:totals(getRows(filters,month))[key] ?? 0}));}

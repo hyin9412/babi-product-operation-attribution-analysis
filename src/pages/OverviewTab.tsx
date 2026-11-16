@@ -201,6 +201,11 @@ export default function OverviewTab({filters,onDrill}:AnalysisProps) {
     {title:'定位依据',dataIndex:'basis',width:370},
     {title:'管理动作',dataIndex:'action',width:385,responsiveFixed:'right',render:(v:string,row:ActionRow)=><div>{v}<br/><QuickLink disabled={row.tab==='pricing'&&!supported} onClick={()=>onDrill(row.tab,row.anchor,row.focus)}>{row.link}</QuickLink></div>},
   ];
+  const annualGapSubtitle=filters.product===BYTEGRAPH
+    ? 'US Storage/MEM 负偏差优先治理'
+    : filters.product===TOS
+      ? 'Request 负偏差优先治理，Storage/StorageEC 为 P1 观察'
+      : '年度累计测算单价与原型年度目标按相同计费单元口径比较。';
   return <>
     <Section title={<span className="conclusion-title">商品经营结论<Tag size="small" color={conclusionTag.color} bordered={false} className={`conclusion-status-tag conclusion-status-tag-${conclusionTag.color}`}>{conclusionTag.text}</Tag></span>} id="overview-conclusion">
       <div className="conclusion-grid">
@@ -246,7 +251,7 @@ export default function OverviewTab({filters,onDrill}:AnalysisProps) {
       <h3 className="subsection-title">公式归因</h3>
       {insights.length?<DataTable className="overview-formula-table" columns={formulaColumns} data={insights} width={875}/>:<EmptyState/>}
     </Section>
-    <Section title="年度累计价差" id="overview-yearly" subtitle="年度累计测算单价与原型年度目标按相同计费单元口径比较。">
+    <Section title="年度累计价差" id="overview-yearly" subtitle={annualGapSubtitle}>
       {insights.length?<div className="analysis-two-col equal"><AnalysisChart title="年度累计单价偏差" type="bar" values={insights.map(insight=>({x:insight.unit,series:'年度累计单价偏差',value:insight.annualDeviation}))} height={265} percent/><DataTable className="overview-yearly-table" columns={yearlyColumns} data={insights} width={750}/></div>:<EmptyState/>}
     </Section>
     <Section title="处理动作" id="overview-actions">
