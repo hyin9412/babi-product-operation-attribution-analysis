@@ -1,0 +1,21 @@
+.constant-topology-node {
+  display: inline-flex;
+  width: max-content;
+  min-width: 32px;
+  height: 32px;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #dde2e9;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  color: #0c0d0e;
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 22px;
+  letter-spacing: 0.003em;
+  padding: 0 11px;
+  white-space: nowrap;
+}

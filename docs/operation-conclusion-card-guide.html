@@ -270,10 +270,6 @@
         background: linear-gradient(-1deg, rgba(255, 255, 255, .75) 0%, rgba(255, 255, 255, .75) 32%, rgba(227, 251, 224, .75) 98%);
       }
 
-      .semantic-card-yellow {
-        background: linear-gradient(-1deg, rgba(255, 255, 255, .75) 0%, rgba(255, 255, 255, .75) 32%, rgba(255, 245, 220, .75) 98%);
-      }
-
       .semantic-card-neutral {
         background: linear-gradient(-1deg, rgba(255, 255, 255, .75) 0%, rgba(255, 255, 255, .75) 32%, rgba(236, 237, 237, .75) 98%);
       }
@@ -598,13 +594,8 @@
             <td>浅蓝渐变</td>
           </tr>
           <tr>
-            <td><span class="code">yellow</span></td>
-            <td>提示、待补、谨慎关注。设计稿中如写琥珀色，统一替换为黄色</td>
-            <td>浅黄渐变</td>
-          </tr>
-          <tr>
             <td><span class="code">neutral</span></td>
-            <td>无数据、无亏损大区、版本与公式待核验</td>
+            <td>无数据、无亏损大区、版本与公式待核验、趋势待补</td>
             <td>浅灰渐变</td>
           </tr>
         </tbody>
@@ -622,7 +613,7 @@
         </div>
         <div class="rule-card">
           <strong>3. 目标差距趋势</strong>
-          <p>对比最近两期利润月度偏差，按 +/-0.5pct 判定「目标差距收窄 / 扩大 / 持平」；不足两期展示「趋势待补」。下方只要含数值，比如「最近一期利润月度偏差 -24.34%」，就按补充字段样式。</p>
+          <p>对比最近两期利润月度偏差，按 +/-0.5pct 判定「目标差距收窄 / 扩大 / 持平」；不足两期展示「趋势待补」，使用灰色卡片（neutral）。下方只要含数值，比如「最近一期利润月度偏差 -24.34%」，就按补充字段样式。</p>
         </div>
         <div class="rule-card">
           <strong>4. 动作边界</strong>
@@ -844,7 +835,7 @@
           cards: [
             { title: "经营状态", tone: "green", text: "整体盈利", fields: [["利润", "1.12 亿元"], ["成本利润率", "9.86%"]] },
             { title: "主要风险", tone: "red", text: "1 个亏损大区", description: "海外其他" },
-            { title: "目标差距趋势", tone: "yellow", text: "趋势待补", description: "最近两期可比利润不足" },
+            { title: "目标差距趋势", tone: "neutral", text: "趋势待补", description: "最近两期可比利润不足" },
             { title: "动作边界", tone: "blue", text: "暂不直接调价", description: "年度累计偏差持续扩大并越界后再评审" }
           ]
         },

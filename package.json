@@ -19,6 +19,7 @@
     "@tod-m/materials": "2.36.11",
     "@visactor/react-vchart": "1.13.10",
     "@visactor/vchart": "1.13.10",
+    "@xyflow/react": "^12.12.1",
     "classnames": "^2.5.1",
     "dayjs": "1.11.13",
     "lodash": "^4.17.23",
