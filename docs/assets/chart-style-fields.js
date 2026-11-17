@@ -76,8 +76,8 @@ window.CHART_STYLE_GROUPS = [
   ["图例外观 · 页面样式", [
     ["legendColor", "图例文字颜色", "#737a87", "color"],
     ["legendMarkerType", "图例标记样式", "square", "select", [["square", "方块"], ["dash", "虚线"]]],
-    ["legendMarkerSize", "图例色块大小", 8, 2, 24],
-    ["legendMarkerDashWidth", "图例虚线标记宽度", 16, 8, 48],
+    ["legendMarkerSize", "图例色块大小", 10, 2, 24],
+    ["legendMarkerDashWidth", "图例虚线标记宽度", 10, 8, 48],
     ["legendMarkerRadius", "图例方块圆角（固定）", 1.54, 1.54, 1.54],
     ["legendHiddenOpacity", "隐藏系列的图例不透明度", 0.35, 0, 1]
   ]],
@@ -150,9 +150,9 @@ window.CHART_STYLE_GROUPS = [
     ["tooltipShadowColor", "阴影颜色", "#21252c", "color"],
     ["tooltipShadowOpacity", "阴影不透明度", 0.1, 0, 1],
     ["tooltipShapeType", "Tooltip 图例标记样式", "square", "select", [["square", "方块"], ["dash", "虚线"]]],
-    ["tooltipShapeSize", "内容方块大小", 8, 0, 24],
+    ["tooltipShapeSize", "内容方块大小", 10, 0, 24],
     ["tooltipShapeRadius", "Tooltip 方块圆角（固定）", 1.54, 1.54, 1.54],
-    ["tooltipShapeDashWidth", "Tooltip 虚线标记宽度", 16, 8, 48],
+    ["tooltipShapeDashWidth", "Tooltip 虚线标记宽度", 10, 8, 48],
     ["tooltipShapeGap", "色块与字段间距", 6, 0, 32]
   ]],
   ...[["Title", "标题", "#21252c", "bold", 0], ["Key", "字段名", "#606773", "normal", 26], ["Value", "数值", "#21252c", "bold", 0]].map(([part, label, color, weight, spacing]) => [`Tooltip ${label} · VChart 默认主题`, [

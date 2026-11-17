@@ -18,6 +18,7 @@ export const normalizeAnalysisFilters = (filters:AnalysisFilters):AnalysisFilter
 export const unitCategories = (product:string):Record<string,string[]> => product===TOS ? {'请求':['Request'],'存储':['Storage','StorageEC']} : product===BYTEGRAPH ? {'计算':['bytegraph.cpu','bytegraph.mem'],'存储':['bytegraph.storage']} : {'其他':['kv.storage']};
 export const unitOptions = (product:string, categories:string[]|null=null) => Object.entries(unitCategories(product)).filter(([category]) => categories===null || categories.includes(category)).flatMap(([,units])=>units);
 export interface AnalysisRow { id:string; month:string; product:string; category:string; unit:string; area:string; region:string; income:number; cost:number|null; profit:number|null; rate:number|null; quantity:number; capacity:number|null; price:number|null; cumulativePrice:number|null; priceStatus:string; unitLabel:string; modelVersion:string; dataVersion:string; }
+export const chartSeriesName=(dimensions:readonly (string|undefined)[],metric?:string)=>[dimensions.filter(Boolean).join('|'),metric].filter(Boolean).join(', ');
 const pattern=[0.72,0.74,0.82,0.79,0.88,0.94,0.97,1.04,1];
 export const snapshot:AnalysisRow[] = products.flatMap(product=>unitOptions(product).flatMap((unit,ui)=>Object.entries(areaRegions).flatMap(([area,regions],ai)=>regions.map((region,ri)=>Array.from({length:9},(_,mi)=>{
   const isTos=product===TOS, month=`2026-${String(mi+1).padStart(2,'0')}`;
@@ -118,7 +119,7 @@ export function financialTargetSummary(filters:AnalysisFilters,key:FinancialMetr
     annualTargetShare:yearToDateActual===null||annualTarget===null||annualTarget===0?null:yearToDateActual/annualTarget*100,
   };
 }
-export function trendValues(filters:AnalysisFilters,key:'income'|'cost'|'profit'|'rate') {return monthList(filters.month).map(month=>({x:month.slice(5)+'月', series:'实际值', value:totals(getRows(filters,month))[key] ?? 0}));}
+export function trendValues(filters:AnalysisFilters,key:'income'|'cost'|'profit'|'rate') {return monthList(filters.month).map(month=>({x:month, series:'实际值', value:totals(getRows(filters,month))[key] ?? 0}));}
 export const amount=(value:number|null|undefined)=>value==null||!Number.isFinite(value)?'—':Math.abs(value)>=1e8?`${(value/1e8).toFixed(2)} 亿元`:Math.abs(value)>=1e4?`${(value/1e4).toFixed(2)} 万元`:`${value.toLocaleString('zh-CN',{maximumFractionDigits:2,minimumFractionDigits:2})} 元`;
 export const percent=(value:number|null|undefined)=>value==null||!Number.isFinite(value)?'—':`${value.toFixed(2)}%`;
 export const priceFormat=(value:number|null|undefined)=>value==null||!Number.isFinite(value)?'—':value.toFixed(10);

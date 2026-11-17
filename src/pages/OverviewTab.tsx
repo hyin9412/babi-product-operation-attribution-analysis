@@ -6,7 +6,7 @@ import {
   getRows, totals, areaNames, amount, percent, monthList,
   financialMetricValue, financialTargetValue, metricDeviation, prototypeTargetValue,
 } from './analysisData';
-import {Section, EmptyState, AnalysisChart, DataTable, QuickLink, TrendValue, trendPercent} from './analysisUI';
+import {Section, EmptyState, AnalysisChart, DataTable, QuickLink, TrendValue, tableAmount, tablePercent, trendPercent} from './analysisUI';
 import AIDataInterpretation from './AIDataInterpretation';
 import './overview.css';
 
@@ -63,7 +63,7 @@ const finiteTotal = (rows:AnalysisRow[], key:'quantity'|'capacity') => {
   return values.length ? values.reduce((sum,v)=>sum+v,0) : null;
 };
 const relativeChange = (current:number|null, previous:number|null) => current===null||previous===null||previous===0 ? null : (current-previous)/previous*100;
-const changeText = (value:number|null) => <TrendValue value={value}>{value===null ? '不可比' : `${value>0?'+':''}${value.toFixed(2)}%`}</TrendValue>;
+const changeText = (value:number|null) => <TrendValue value={value} unavailable="不可比"/>;
 const signedPercent = (value:number|null) => value===null ? '—' : `${value>0?'+':''}${value.toFixed(2)}%`;
 const weightedPrice = (rows:AnalysisRow[], key:'price'|'cumulativePrice') => {
   const usable=rows.filter(row=>row[key]!==null&&Number.isFinite(row[key])&&row.quantity>0);
@@ -133,10 +133,10 @@ export default function OverviewTab({filters,onDrill}:AnalysisProps) {
       {title:'大区',dataIndex:'area',width:90,render:(v:string)=>areaNames[v]||v},
       {title:'售卖区域',dataIndex:'region',width:116},
     ]),
-    {title:`${Number(filters.month.slice(-2))}月收入`,dataIndex:'income',width:125,sorter:(a:OperatingGroup,b:OperatingGroup)=>a.income-b.income,render:amount},
-    {title:`${Number(filters.month.slice(-2))}月成本`,dataIndex:'cost',width:125,render:amount},
-    {title:`${Number(filters.month.slice(-2))}月利润`,dataIndex:'profit',width:125,render:(v:number|null)=><span className={v!==null&&v<0?'red-value':''}>{amount(v)}</span>},
-    {title:'成本利润率',dataIndex:'rate',width:105,render:percent},
+    {title:`${Number(filters.month.slice(-2))}月收入`,dataIndex:'income',width:125,sorter:(a:OperatingGroup,b:OperatingGroup)=>a.income-b.income,render:tableAmount},
+    {title:`${Number(filters.month.slice(-2))}月成本`,dataIndex:'cost',width:125,render:tableAmount},
+    {title:`${Number(filters.month.slice(-2))}月利润`,dataIndex:'profit',width:125,render:(v:number|null)=><span className={v!==null&&v<0?'red-value':''}>{tableAmount(v)}</span>},
+    {title:'成本利润率',dataIndex:'rate',width:105,render:tablePercent},
     {title:isTos?'下钻方向':'解读',dataIndex:'id',width:250,render:(_:string,group:OperatingGroup)=><div>
       <span>{group.cost===null?'当前范围成本不可比，仅查看收入。':(group.profit||0)<0?'当前范围亏损；需核验计费项成本与公式。':'实际经营盈利，可继续查看原型目标差距。'}</span>
       <br/><QuickLink onClick={()=>onDrill('income','product-income-expense',focusFor(group.rows))}>商品收支</QuickLink>
@@ -146,7 +146,7 @@ export default function OverviewTab({filters,onDrill}:AnalysisProps) {
     {title:'计费单元',dataIndex:'unit',width:126,responsiveFixed:'left'},
     {title:'单价环比',dataIndex:'priceChange',width:95,render:changeText},
     {title:'容量环比',dataIndex:'capacityChange',width:95,render:changeText},
-    {title:'售卖率',dataIndex:'salesRate',width:85,render:percent},
+    {title:'售卖率',dataIndex:'salesRate',width:85,render:tablePercent},
     {title:'归因判断',dataIndex:'id',width:280,render:(_:string,insight:UnitInsight)=><div>
       <span>{insight.salesRate===null?'同粒度物理容量缺失，原因待确认。':'售卖率口径可比；可结合目标偏差继续归因。'}</span>
       <QuickLink disabled={!supported} onClick={()=>onDrill('pricing','pricing-item-formula',focusFor(insight.rows))}>{supported?'计费项公式':'暂无定价公式'}</QuickLink>

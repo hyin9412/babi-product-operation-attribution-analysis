@@ -1,11 +1,16 @@
 // References: none — PRD screenshot aligned primitives shared by the three analysis tabs.
 import React, {useState} from 'react';
-import { Alert, Button, Checkbox, Pagination, Popover, Select, Tag, Tooltip } from '@byted-babi/babi-design';
+import { Alert, Button, Checkbox, Pagination, Select as BaseSelect, Tag } from '@byted-babi/babi-design';
+import type { SelectProps } from '@arco-design/web-react';
+import Popover from './AnalysisPopover';
 import TableBlock from '@byted-babi/babi-design/es/TableBlock';
 import { Table as ArcoTable } from '@arco-design/web-react';
 import { IconDown, IconUp, IconRight, IconPageEmpty, IconEmptyChart, IconNoContent, IconQueryFailed } from '@arco-design/iconbox-react-babi';
 import { IconDown as FilterIconDown, IconRight as FilterIconRight } from '@arco-design/iconbox-react-ve-o-design';
 import { VChart } from '@visactor/react-vchart';
+import trendUpIcon from '../app/static/icon/环比icon正.svg';
+import trendDownIcon from '../app/static/icon/环比icon负.svg';
+import trendFlatIcon from '../app/static/icon/环比icon无变化.svg';
 import { percent } from './analysisData';
 export const Section=({title,children,id,subtitle,extra,blue=false}:{title:React.ReactNode;children:React.ReactNode;id?:string;subtitle?:React.ReactNode;extra?:React.ReactNode;blue?:boolean})=><section id={id} className={`analysis-section ${blue?'section-blue':''}`}><div className="section-heading"><h2>{title}</h2>{extra}</div>{subtitle&&<p className="section-subtitle">{subtitle}</p>}{children}</section>;
 export const Note=({children,tone='info'}:{children:React.ReactNode;tone?:'info'|'warning'|'error'})=><Alert className="analysis-note" type={tone} content={children}/>;
@@ -25,14 +30,18 @@ export interface SemanticMetricCardProps {
  description?: React.ReactNode;
  className?: string;
 }
-const SemanticTruncatedText=({children,className='',as='span',styleWidth}:{children:React.ReactNode;className?:string;as?:'span'|'strong'|'div';styleWidth?:number|null})=>{
+export const OverflowText=({children,className='',as='span',styleWidth,content,semantic=false}:{children:React.ReactNode;className?:string;as?:'span'|'strong'|'div'|'h3';styleWidth?:number|null;content?:React.ReactNode;semantic?:boolean})=>{
  const ref=React.useRef<HTMLElement|null>(null);
  const [isOverflowing,setIsOverflowing]=useState(false);
  React.useEffect(()=>{
   const element=ref.current;
   if(!element)return;
   const check=()=>setIsOverflowing(current=>{
-   const next=element.scrollWidth>element.clientWidth+1||element.scrollHeight>element.clientHeight+1;
+   const overflows=(node:HTMLElement)=>node.clientWidth>0&&(node.scrollWidth>node.clientWidth+1||node.scrollHeight>node.clientHeight+1);
+   const next=overflows(element)||Array.from(element.querySelectorAll<HTMLElement>('*')).some(node=>{
+    const style=window.getComputedStyle(node);
+    return (style.textOverflow==='ellipsis'||Number(style.webkitLineClamp)>0)&&overflows(node);
+   });
    return current===next?current:next;
   });
   check();
@@ -45,9 +54,18 @@ const SemanticTruncatedText=({children,className='',as='span',styleWidth}:{child
    window.removeEventListener('resize',check);
   };
  },[children,isOverflowing]);
- const commonProps={ref:ref as React.Ref<any>,className:`semantic-card-truncate ${className}`.trim(),style:styleWidth===null||styleWidth===undefined?undefined:{width:styleWidth,flexBasis:styleWidth,maxWidth:styleWidth}};
- const node=as==='strong'?<strong {...commonProps}>{children}</strong>:as==='div'?<div {...commonProps}>{children}</div>:<span {...commonProps}>{children}</span>;
- return isOverflowing?<Popover content={children} trigger="hover" unmountOnExit>{node}</Popover>:node;
+ const commonProps={ref:ref as React.Ref<any>,className:`${semantic?'semantic-card-truncate':'analysis-overflow-text'} ${className}`.trim(),style:styleWidth===null||styleWidth===undefined?undefined:{width:styleWidth,flexBasis:styleWidth,maxWidth:styleWidth},'data-overflow':isOverflowing?'true':'false'};
+ const hasContentPopover=React.isValidElement<{content?:React.ReactNode;disabled?:boolean}>(children)&&children.props.content!==undefined;
+ const displayedChildren=isOverflowing&&hasContentPopover?React.cloneElement(children as React.ReactElement<{disabled?:boolean}>,{disabled:true}):children;
+ const node=React.createElement(as,commonProps,displayedChildren);
+ const fullContent=content??(hasContentPopover?(children as React.ReactElement<{content:React.ReactNode}>).props.content:textFromNode(children)||ref.current?.textContent||'');
+ return isOverflowing&&fullContent?<Popover content={fullContent}>{node}</Popover>:node;
+};
+const SemanticTruncatedText=(props:React.ComponentProps<typeof OverflowText>)=><OverflowText {...props} semantic/>;
+// Select already truncates long selected labels; expose that full label on hover.
+export const AnalysisSelect=(props:SelectProps)=>{
+ const renderFormat:SelectProps['renderFormat']=(option,value)=><OverflowText className="analysis-select-label">{option?.label??option?.children??(typeof value==='object'?value.label:value)}</OverflowText>;
+ return <BaseSelect {...props} renderFormat={props.renderFormat??renderFormat}/>;
 };
 const MIN_SEMANTIC_FIELD_WIDTH=36;
 const MIN_SEMANTIC_FIELD_VALUE_WIDTH=16;
@@ -160,7 +178,7 @@ export const EmptyState=({text='暂无数据',kind,compact=false,size}:{text?:st
  return <div className={`analysis-empty analysis-empty-${resolvedKind}${compact?' compact':''}${autoResponsive?' auto-responsive':''}`} data-size={resolvedSize} role="status" aria-live="polite"><Icon className="analysis-empty-icon"/><div className="analysis-empty-detail">{displayText}</div></div>;
 };
 export const QuickLink=({children,onClick,disabled=false}:{children:React.ReactNode;onClick:()=>void;disabled?:boolean})=><Button size="small" type="text" className="quick-link" disabled={disabled} onClick={onClick}>{children}<IconRight useCurrentColor/></Button>;
-export const Field=({label,children,required=false}:{label:string;children:React.ReactNode;required?:boolean})=><div className="analysis-field"><label>{required&&<span className="analysis-field-required" title="必填" aria-label="必填">*</span>}{label}</label>{children}</div>;
+export const Field=({label,children,required=false}:{label:string;children:React.ReactNode;required?:boolean})=><div className="analysis-field"><label>{required&&<span className="analysis-field-required" aria-label="必填">*</span>}{label}</label>{children}</div>;
 export const SELECT_SEARCH_THRESHOLD = 10;
 export const getSelectPlaceholder = (searchable:boolean) => searchable ? '请输入' : '请选择';
 // References: none — keep the region popup in the same sticky coordinate space as its summary trigger.
@@ -174,7 +192,7 @@ export function MultiFilter({value,options,onChange,disabled=false,addBefore,siz
  const selected = value === null ? options : value;
  const selectedCount = options.filter(option => selected.includes(option)).length;
  const allSelected = options.length > 0 && selectedCount === options.length;
- return <Select addBefore={addBefore} size={size} defaultActiveFirstOption={false} mode="multiple" animation={false} allowClear showSearch={options.length > SELECT_SEARCH_THRESHOLD} value={selected} options={options} placeholder={getSelectPlaceholder(options.length > SELECT_SEARCH_THRESHOLD)} maxTagCount={1} disabled={disabled} onChange={onChange} dropdownRender={menu=><div className="analysis-multi-menu"><div className="analysis-multi-options">{menu}</div><div className="analysis-multi-footer" onMouseDown={event=>event.preventDefault()}><Checkbox checked={allSelected} indeterminate={selectedCount > 0 && !allSelected} disabled={disabled || options.length === 0} onChange={checked=>onChange(checked ? options : [])}>全部<span className="analysis-multi-total">（共 {options.length} ）</span></Checkbox></div></div>}/>;
+ return <AnalysisSelect addBefore={addBefore} size={size} defaultActiveFirstOption={false} mode="multiple" animation={false} allowClear showSearch={options.length > SELECT_SEARCH_THRESHOLD} value={selected} options={options} placeholder={getSelectPlaceholder(options.length > SELECT_SEARCH_THRESHOLD)} maxTagCount={1} disabled={disabled} onChange={onChange} dropdownRender={menu=><div className="analysis-multi-menu"><div className="analysis-multi-options">{menu}</div><div className="analysis-multi-footer" onMouseDown={event=>event.preventDefault()}><Checkbox checked={allSelected} indeterminate={selectedCount > 0 && !allSelected} disabled={disabled || options.length === 0} onChange={checked=>onChange(checked ? options : [])}>全部<span className="analysis-multi-total">（共 {options.length} ）</span></Checkbox></div></div>}/>;
 }
 const textFromNode=(node:any):string=>{
  if(node===null||node===undefined||typeof node==='boolean')return '';
@@ -202,7 +220,8 @@ const uniqueColumns=(columns:any[],data:any[]=[],prefix='column',enableResponsiv
  const {responsiveFixed,...columnProps}=column;
  const children=column.children?uniqueColumns(column.children,data,`${prefix}-${index}`,enableResponsiveFixed):undefined;
  const shouldAlignRight=!children&&column.align===undefined&&isComparableNumericColumn(column,data);
- return {...columnProps,key:`${prefix}-${index}`,children,align:shouldAlignRight?'right':column.align,fixed:responsiveFixed?(enableResponsiveFixed?responsiveFixed:undefined):column.fixed};
+ const key=column.key??(column.sorter&&typeof column.dataIndex==='string'?column.dataIndex:`${prefix}-${index}`);
+ return {...columnProps,key,children,align:shouldAlignRight?'right':column.align,fixed:responsiveFixed?(enableResponsiveFixed?responsiveFixed:undefined):column.fixed};
 });
 export const TABLE_PAGE_SIZE_OPTIONS = [10,20,50,100];
 export const sourcePaginationProps=(total:number,overrides:any={})=>({
@@ -213,6 +232,7 @@ export const sourcePaginationProps=(total:number,overrides:any={})=>({
  sizeCanChange:true,
  sizeOptions:TABLE_PAGE_SIZE_OPTIONS,
  pageSizeChangeResetCurrent:true,
+ selectProps:{renderFormat:(option:any,value:any)=><span>{option?.label??option?.children??value}</span>},
  ...overrides,
 });
 const resolveTablePagination=(pagination:any,total:number)=>pagination&&pagination!==true?sourcePaginationProps(total,pagination):sourcePaginationProps(total);
@@ -272,19 +292,49 @@ export const SourceTable=({columns,data,width,pagination,maxHeight,noDataElement
  </div>;
 };
 export const DataTable=SourceTable;
-// Directional values share the existing theme tokens; absolute values keep their own business semantics.
-export const TrendValue=({value,children}:{value:number|null|undefined;children:React.ReactNode})=>{
- const comparable=typeof value==='number'&&Number.isFinite(value);
- const className=comparable&&value>0?'red-value':comparable&&value<0?'green-value':undefined;
- return <span className={className}>{children}</span>;
+export type TableNumberKind='amount'|'percent'|'quantity'|'price';
+export const TableNumberValue=({value,kind,unit,className=''}:{value:number|null|undefined;kind:TableNumberKind;unit?:string;className?:string})=>{
+ const available=typeof value==='number'&&Number.isFinite(value);
+ if(!available)return <span className={`table-number-value is-missing ${className}`.trim()}>—</span>;
+ let number:string;
+ let resolvedUnit=unit||'';
+ if(kind==='amount'){
+  if(Math.abs(value)>=1e8)number=`${(value/1e8).toFixed(2)}亿`;
+  else if(Math.abs(value)>=1e4)number=`${(value/1e4).toFixed(2)}万`;
+  else number=value.toLocaleString('zh-CN',{maximumFractionDigits:2,minimumFractionDigits:2});
+  resolvedUnit=unit??'元';
+ }else if(kind==='percent'){
+  number=value.toFixed(2);
+  resolvedUnit=unit??'%';
+ }else if(kind==='quantity'){
+  number=Math.abs(value)>=1e8?`${(value/1e8).toFixed(2)}亿`:Math.abs(value)>=1e4?`${(value/1e4).toFixed(2)}万`:value.toLocaleString('zh-CN',{maximumFractionDigits:4});
+ }else{
+  number=value.toFixed(10);
+ }
+ return <span className={`table-number-value ${className}`.trim()}><span className="table-number-main">{number}</span>{resolvedUnit&&<span className="table-number-unit">{resolvedUnit}</span>}</span>;
 };
-export const trendPercent=(value:number|null|undefined)=><TrendValue value={value}>{percent(value)}</TrendValue>;
+export const tableAmount=(value:number|null|undefined)=><TableNumberValue value={value} kind="amount"/>;
+export const tablePercent=(value:number|null|undefined)=><TableNumberValue value={value} kind="percent"/>;
+export const tableQuantity=(value:number|null|undefined)=><TableNumberValue value={value} kind="quantity"/>;
+export const tablePrice=(value:number|null|undefined)=><TableNumberValue value={value} kind="price"/>;
+// Figma 5354:209724: trend color lives in the arrow; value and unit retain text hierarchy.
+export const TrendValue=({value,unit='%',unavailable='—'}:{value:number|null|undefined;unit?:string;unavailable?:React.ReactNode})=>{
+ const comparable=typeof value==='number'&&Number.isFinite(value);
+ if(!comparable)return <span className="table-trend-value is-missing">{unavailable}</span>;
+ const positive=value>0,negative=value<0;
+ const icon=positive?trendUpIcon:negative?trendDownIcon:trendFlatIcon;
+ return <span className={`table-trend-value${positive?' is-positive':negative?' is-negative':' is-zero'}`}>
+  <span className="table-trend-icon" aria-hidden><img src={icon} alt=""/></span>
+  <span className="table-trend-text"><span className="table-trend-number">{positive?'+':''}{value.toFixed(2)}</span>{unit&&<span className="table-trend-unit">{unit}</span>}</span>
+ </span>;
+};
+export const trendPercent=(value:number|null|undefined)=><TrendValue value={value}/>;
 export function Fold({title,children,defaultOpen=false,appearance='default'}:{title:string;children:React.ReactNode;defaultOpen?:boolean;appearance?:'default'|'filter'}) {
  const [open,setOpen]=useState(defaultOpen);
  if(appearance==='filter') return <div className={`analysis-fold analysis-fold-filter${open?'':' analysis-fold-collapsed'}`}>
   <div className="filter-heading">
    <Popover content={open?'收起':'展开'} trigger="hover" position="top" unmountOnExit>
-    <span className="filter-toggle-popover-trigger"><span role="button" tabIndex={0} className="analysis-fold-toggle" aria-label={`${open?'收起':'展开'}${title}`} aria-expanded={open} title={`${open?'收起':'展开'}${title}`} onClick={()=>setOpen(!open)} onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();setOpen(!open);}}}>{open?<FilterIconDown width="16" height="16"/>:<FilterIconRight width="16" height="16"/>}</span></span>
+    <span className="filter-toggle-popover-trigger"><span role="button" tabIndex={0} className="analysis-fold-toggle" aria-label={`${open?'收起':'展开'}${title}`} aria-expanded={open} onClick={()=>setOpen(!open)} onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();setOpen(!open);}}}>{open?<FilterIconDown width="16" height="16"/>:<FilterIconRight width="16" height="16"/>}</span></span>
    </Popover>
    <h2 style={{fontSize:'14px'}}>{title}</h2>
   </div>
@@ -307,6 +357,7 @@ const CHART_PALETTE_EXTENDED = ['#1664FF','#B2CFFF','#1AC6FF','#94EFFF','#FF8A00
 const CHART_CARD_HEIGHT=352;
 const CHART_LEGEND_MAX_ROWS=2;
 const CHART_TOOLTIP_MARKER_RADIUS=1.54;
+const CHART_MARKER_SIZE=10;
 const tooltipSquarePath=(size:number)=>{
  const radius=Math.min(CHART_TOOLTIP_MARKER_RADIUS,size/2),edge=size-radius;
  return `M${radius},0H${edge}A${radius},${radius} 0 0 1 ${size},${radius}V${edge}A${radius},${radius} 0 0 1 ${edge},${size}H${radius}A${radius},${radius} 0 0 1 0,${edge}V${radius}A${radius},${radius} 0 0 1 ${radius},0Z`;
@@ -349,17 +400,19 @@ function ChartLegend({series,colors,dashedSeries,hidden,setHidden,exclude,isolat
  const visible=new Set(pages[page]||series.map((_name,index)=>index));
  return <div className="chart-legend" ref={rootRef}>
   <div className="legend-list" ref={listRef}>{series.map((name,index)=><div key={name} className="legend-item" hidden={!visible.has(index)}>
-   <Tooltip content={`${name}：${exclude?(hidden.includes(name)?'点击恢复展示':'点击排除展示'):'图例'}`}>
+   <Popover content={`${name}：${exclude?(hidden.includes(name)?'点击恢复展示':'点击排除展示'):'图例'}`}>
     <button type="button" className={`legend-toggle${hidden.includes(name)?' legend-hidden':''}`} aria-label={`${hidden.includes(name)?'恢复':'排除'}${name}`} aria-pressed={!hidden.includes(name)} disabled={!exclude} onClick={()=>setHidden(current=>current.includes(name)?current.filter(item=>item!==name):[...current,name])}><i className={dashedSeries.includes(name)?'legend-marker-dash':undefined} style={{background:dashedSeries.includes(name)?`repeating-linear-gradient(to right, ${colors[index]} 0%, ${colors[index]} 20%, transparent 20%, transparent 40%)`:colors[index]}} aria-hidden="true"/><span className="legend-label">{name}</span></button>
-   </Tooltip>
-   {isolate&&<Tooltip content="点击仅展示该指标"><button type="button" className="legend-isolate" aria-label={`仅展示${name}`} onClick={()=>setHidden(series.filter(item=>item!==name))}><LegendIsolateIcon/></button></Tooltip>}
+   </Popover>
+   {isolate&&<Popover content="点击仅展示该指标"><button type="button" className="legend-isolate" aria-label={`仅展示${name}`} onClick={()=>setHidden(series.filter(item=>item!==name))}><LegendIsolateIcon/></button></Popover>}
   </div>)}</div>
   {pages.length>1&&<div className="legend-pager" aria-label="图例翻页"><button type="button" aria-label="上一页图例" disabled={page===0} onClick={()=>setPage(current=>Math.max(0,current-1))}>⌃</button><span>{page+1}/{pages.length}</span><button type="button" aria-label="下一页图例" disabled={page===pages.length-1} onClick={()=>setPage(current=>Math.min(pages.length-1,current+1))}>⌄</button></div>}
  </div>;
 }
-export function AnalysisChart({title,values,type='line',unit='',percent:percentProp=false,dashedSeries=[],dottedSeries=[],seriesColorIndexes={},legendExclude=true,legendIsolate=true,summary,moreInfo,annotationPoint,height}:{title:string;values:ChartValue[];type?:'line'|'bar';height?:number;unit?:string;percent?:boolean;dashedSeries?:string[];dottedSeries?:string[];seriesColorIndexes?:Record<string,number>;legendExclude?:boolean;legendIsolate?:boolean;summary?:React.ReactNode;moreInfo?:React.ReactNode[];annotationPoint?:ChartAnnotationPoint|null}) {
+export function AnalysisChart({title,titleExtra:providedTitleExtra,legendReset=false,values,type='line',unit='',percent:percentProp=false,percentSeries=[],dashedSeries=[],dottedSeries=[],seriesColorIndexes={},legendExclude=true,legendIsolate=true,summary,moreInfo,annotationPoint,height}:{title:string;titleExtra?:React.ReactNode;legendReset?:boolean;values:ChartValue[];type?:'line'|'bar';height?:number;unit?:string;percent?:boolean;percentSeries?:string[];dashedSeries?:string[];dottedSeries?:string[];seriesColorIndexes?:Record<string,number>;legendExclude?:boolean;legendIsolate?:boolean;summary?:React.ReactNode;moreInfo?:React.ReactNode[];annotationPoint?:ChartAnnotationPoint|null}) {
  const percent=percentProp||unit.trim()==='%';
+ const dualAxis=type==='line'&&percentSeries.length>0;
  const [hidden,setHidden]=useState<string[]>([]); const series=Array.from(new Set(values.map(v=>v.series)));const filtered=values.filter(v=>v.value!==null&&!hidden.includes(v.series));
+ const titleExtra=providedTitleExtra??(legendReset&&hidden.length>0?<></>:undefined);
  const chartInstance=React.useRef<any>(null);
  const tooltipElementRef=React.useRef<HTMLElement|null>(null);
  const tooltipDataRef=React.useRef<any>(null);
@@ -392,11 +445,12 @@ export function AnalysisChart({title,values,type='line',unit='',percent:percentP
  React.useEffect(()=>setHidden(current=>current.filter(name=>series.includes(name))),[series.join('|')]);
  // Resolve against all series, not visible data: legend toggles never reassign colors.
  // For more than 20 combinations, repeat the supplied extended palette without inventing new colors.
- const palette=series.length<=10?CHART_PALETTE:CHART_PALETTE_EXTENDED;
+ const colorCount=new Set(series.map((name,index)=>seriesColorIndexes[name]??index)).size;
+ const palette=colorCount<=10?CHART_PALETTE:CHART_PALETTE_EXTENDED;
  const colors=series.map((name,index)=>palette[(seriesColorIndexes[name]??index)%palette.length]);
  const colorBySeries=new Map(series.map((name,index)=>[name,colors[index]]));
  const specifiedColors=Object.fromEntries(colorBySeries);
- const markerPath=tooltipSquarePath(8);
+ const markerPath=tooltipSquarePath(CHART_MARKER_SIZE);
  const abbreviateAmount=!percent&&(unit.includes('人民币')||/\bCNY\b/i.test(unit)||/(^|[/\s])(元|万元|亿元)($|[/\s])/.test(unit));
  const formatTooltipValue=(value:any)=>{
   const numeric=Number(value);
@@ -405,22 +459,47 @@ export function AnalysisChart({title,values,type='line',unit='',percent:percentP
   return numeric.toLocaleString('zh-CN',{maximumFractionDigits:10});
  };
  const seriesColor=(datum:any)=>colorBySeries.get(datum.series)||CHART_PALETTE[0];
- const tooltipContent={shapeType:(datum:any)=>dashedSeries.includes(datum.series)?CHART_DASHED_MARKER_PATH:markerPath,shapeFill:seriesColor,shapeStroke:seriesColor,shapeSize:(datum:any)=>dashedSeries.includes(datum.series)?10:8,shapeHollow:false,shapeLineWidth:0,key:(datum:any)=>datum.series,value:(datum:any)=>formatTooltipValue(datum.value)};
+ const tooltipContent={shapeType:(datum:any)=>dashedSeries.includes(datum.series)?CHART_DASHED_MARKER_PATH:markerPath,shapeFill:seriesColor,shapeStroke:seriesColor,shapeSize:CHART_MARKER_SIZE,shapeHollow:false,shapeLineWidth:0,key:(datum:any)=>datum.series,value:(datum:any)=>percentSeries.includes(datum.series)?`${Number(datum.value).toLocaleString('zh-CN',{maximumFractionDigits:2})}%`:formatTooltipValue(datum.value)};
  const updateTooltipRefs=(tooltipElement:HTMLElement,actualTooltip:any)=>{
   tooltipElementRef.current=tooltipElement;
   tooltipDataRef.current=actualTooltip;
+  // Keep VChart's DOM and marker rendering, but align wrapping labels by row.
+  tooltipElement.querySelectorAll<HTMLElement>('.vchart-tooltip-column').forEach((column,columnIndex)=>{
+   Array.from(column.children).forEach((child,rowIndex)=>{
+    const cell=child as HTMLElement;
+    cell.style.gridColumn=String(columnIndex*2+1);
+    cell.style.gridRow=String(rowIndex+1);
+    cell.hidden=actualTooltip.content?.[rowIndex]?.visible===false;
+   });
+  });
  };
  const spec:any={type,autoFit:true,padding:{top:0,right:0,bottom:0,left:0},data:[{id:'data',values:filtered}],xField:type==='bar'?['x','series']:'x',yField:'value',seriesField:'series',activePoint:type==='line',color:{type:'ordinal',domain:series,range:colors,specified:specifiedColors},animation:false,axes:[{orient:'left',type:'linear',min:0,zero:true,label:{space:6,style:{fontSize:10,fill:'#737a87',fontWeight:'normal',fillOpacity:1},formatMethod:(v:any)=>percent?`${Number(v).toFixed(0)}%`:Math.abs(Number(v))>=1e8?`${(Number(v)/1e8).toFixed(1)}亿`:Math.abs(Number(v))>=1e4?`${(Number(v)/1e4).toFixed(0)}万`:Number(v).toFixed(Math.abs(Number(v))<1?4:0)},grid:{visible:true,style:{stroke:'#e9eef6',lineWidth:1,strokeOpacity:1,lineDash:[2,2]}},domainLine:{visible:false},tick:{visible:false}},{orient:'bottom',type:'band',label:{space:6,style:{fontSize:10,fill:'#737a87',fontWeight:'normal',fillOpacity:1}},grid:{visible:false},domainLine:{visible:true,style:{stroke:'#dce4ef',lineWidth:1,strokeOpacity:1}},tick:{visible:false}}],crosshair:{trigger:'hover',triggerOff:'hover',followTooltip:false,xField:type==='line'?{visible:true,line:{type:'line',style:{stroke:'#C9CDD4',lineWidth:1,lineDash:[]}},label:{visible:false}}:{visible:true,line:{type:'rect'},label:{visible:false}},yField:{visible:false}},tooltip:{visible:true,renderMode:'html',className:'analysis-chart-tooltip',offset:{x:10,y:10},updateElement:updateTooltipRefs,mark:{content:[tooltipContent]},dimension:{content:[tooltipContent]},style:{panel:{backgroundColor:'#fff',padding:{top:8,right:12,bottom:8,left:12},border:{color:'#fff',width:0,radius:4},shadow:{x:0,y:4,blur:12,spread:0,color:'rgba(33,37,44,.1)'}},spaceRow:2,shape:{size:8,spacing:6},titleLabel:{fontSize:12,lineHeight:20,fontColor:'#808893',fontWeight:'normal',spacing:0},keyLabel:{fontSize:12,lineHeight:20,fontColor:'#808893',fontWeight:'normal',spacing:26},valueLabel:{fontSize:12,lineHeight:20,fontColor:'#555960',fontWeight:'bold',spacing:0}}},line:{style:{stroke:seriesColor,zIndex:1,lineWidth:2,strokeOpacity:1,lineCap:'round',lineJoin:'round',lineDash:(datum:any)=>dottedSeries.includes(datum.series)?[2,3]:dashedSeries.includes(datum.series)?[6,6]:[0,0]}},point:{visible:false,style:{zIndex:3,size:0,symbolType:'circle',fill:seriesColor,fillOpacity:1,stroke:'#fff',lineWidth:1},state:{dimension_hover:{visible:true,size:10,symbolType:'circle',fillOpacity:1,stroke:'#fff',lineWidth:1}}},bar:{style:{fill:seriesColor,cornerRadius:0,fillOpacity:1}},legends:[]};
  // Public alwaysShow/hideTooltip APIs support both chart-click and outside dismissal.
  // CSS enables DOM scrolling without enterable's conflicting pointerleave handler.
  Object.assign(spec.tooltip,{trigger:'hover',lockAfterClick:false,enterable:false,transitionDuration:0});
+ spec.tooltip.style.shape.size=CHART_MARKER_SIZE;
  spec.tooltip.mark.maxLineCount=0;
  spec.tooltip.dimension.maxLineCount=0;
  // Explicit signed y-domain prevents losing negative profit or a negative change.
  if(filtered.some(v=>(v.value||0)<0)) delete spec.axes[0].min;
+ if(dualAxis){
+  const amountValues=filtered.filter(value=>!percentSeries.includes(value.series));
+  const percentageValues=filtered.filter(value=>percentSeries.includes(value.series));
+  const leftAxis={...spec.axes[0],seriesIndex:[0],min:0};
+  if(amountValues.some(value=>(value.value||0)<0))delete leftAxis.min;
+  const rightAxis={...spec.axes[0],orient:'right',seriesIndex:[1],grid:{visible:false},label:{...spec.axes[0].label,containerAlign:'right',formatMethod:(value:any)=>`${Number(value).toFixed(0)}%`}};
+  delete rightAxis.min;
+  spec.type='common';
+  spec.data=[{id:'amount-data',values:amountValues},{id:'percentage-data',values:percentageValues}];
+  const sharedLine={type:'line',xField:'x',yField:'value',seriesField:'series',activePoint:true,line:spec.line,point:spec.point};
+  spec.series=[{...sharedLine,dataId:'amount-data'},{...sharedLine,dataId:'percentage-data'}];
+  spec.axes=[leftAxis,{...spec.axes[1],seriesIndex:[0,1]},rightAxis];
+  // A dimension contains both axis series; keep billing-item metric order.
+  spec.tooltip.dimension.updateContent=(content:any[])=>[...content].sort((a,b)=>series.indexOf(a.key)-series.indexOf(b.key));
+ }
  const hasChartData=values.some(v=>v.value!==null);
  const chartHeight=height??CHART_CARD_HEIGHT;
- const chart=<div className="analysis-chart" style={{height:CHART_CARD_HEIGHT}}><div className="chart-heading"><h3>{title}</h3>{unit&&!percent&&<span className="chart-unit">单位：{unit}</span>}</div>{hasChartData?<div className="analysis-chart-slot" style={{height:chartHeight}} role="img" aria-label={`${title}趋势图`}><VChart spec={spec} onReady={instance=>{chartInstance.current=instance;}} onPointerTap={handleTooltipClick}/></div>:<div className="analysis-chart-slot analysis-chart-empty-slot" style={{height:chartHeight}}><EmptyState text="暂无可用数据" kind="chart" size={80}/></div>}{hasChartData&&<ChartLegend series={series} colors={colors} dashedSeries={dashedSeries} hidden={hidden} setHidden={setHidden} exclude={legendExclude} isolate={legendIsolate}/>}</div>;
+ const chart=<div className="analysis-chart" style={{height:CHART_CARD_HEIGHT}}><div className="chart-heading">{titleExtra?<div className="analysis-chart-title-row"><h3>{title}</h3><div className="analysis-chart-title-actions">{titleExtra}{hidden.length>0&&<Button type="text" size="mini" aria-label="重置图例" onClick={()=>setHidden([])}>重置图例</Button>}</div></div>:<h3>{title}</h3>}{dualAxis?<div className="chart-unit-row"><span className="chart-unit">单位：{unit}</span><span className="chart-unit chart-unit-right">单位：%</span></div>:unit&&!percent&&<span className="chart-unit">单位：{unit}</span>}</div>{hasChartData?<div className="analysis-chart-slot" style={{height:chartHeight}} role="img" aria-label={`${title}趋势图`}><VChart spec={spec} onReady={instance=>{chartInstance.current=instance;}} onPointerTap={handleTooltipClick}/></div>:<div className="analysis-chart-slot analysis-chart-empty-slot" style={{height:chartHeight}}><EmptyState text="暂无可用数据" kind="chart" size={80}/></div>}{hasChartData&&<ChartLegend series={series} colors={colors} dashedSeries={dashedSeries} hidden={hidden} setHidden={setHidden} exclude={legendExclude} isolate={legendIsolate}/>}</div>;
  return chart;
 }
-export const ExactValue=({value,children}:{value:number|null;children:React.ReactNode})=><Tooltip content={value===null?'暂无可用数据':value.toLocaleString('zh-CN',{maximumFractionDigits:10})}><span>{children}</span></Tooltip>;
+export const ExactValue=({value,children}:{value:number|null;children:React.ReactNode})=><OverflowText content={value===null?undefined:value.toLocaleString('zh-CN',{maximumFractionDigits:10})}>{children}</OverflowText>;

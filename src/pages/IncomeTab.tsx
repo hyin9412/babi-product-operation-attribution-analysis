@@ -1,29 +1,31 @@
 // References: none — new income analysis tab, based on section 4 of the supplied PRD and its screenshots.
 import React, { useEffect, useMemo, useState } from 'react';
-import { Button, Tooltip } from '@byted-babi/babi-design';
-import { IconFunctionV2 as IconFunction } from '@arco-design/iconbox-react-ve-o-design';
+import { Button } from '@byted-babi/babi-design';
+import IconFx from './IconFx';
 import {
   AnalysisProps, AnalysisFilters, AnalysisRow, BYTEGRAPH, TOS, areaNames,
   amount, percent, getRows, monthList, totals, trendValues, FinancialMetric,
   annualTargetValue, financialMetricValue, financialTargetSummary, financialTargetValue,
-  metricDeviation, quarterMonthList,
+  metricDeviation, quarterMonthList, chartSeriesName,
 } from './analysisData';
-import { AnalysisChart, ChartValue, DataTable, EmptyState, Fold, MultiFilter, Note, Section, SourceTable, SourceTableSummary, sourcePaginationProps, trendMonthLabel, trendPercent } from './analysisUI';
+import { AnalysisChart, ChartValue, DataTable, EmptyState, Fold, MultiFilter, Note, OverflowText, Section, SourceTable, SourceTableSummary, sourcePaginationProps, tableAmount, tablePercent, trendMonthLabel, trendPercent } from './analysisUI';
 import CostAnalysis from './CostAnalysis';
 import IncomeMetricCard, { IncomeMetricValueParts } from './IncomeMetricCard';
+import TableTrendView, { TrendDrillIcon, TrendRangeControl, rankedTrendRows, useTableTrend } from './TableTrendView';
 import './income.css';
 
 type Metric = 'income' | 'cost' | 'profit' | 'rate';
 type DisplayRow = { id: string; unit: string; area: string; region: string; income: number; cost: number | null; profit: number | null; rate: number | null; accumulatedIncome: number; accumulatedCost: number | null; accumulatedProfit: number | null; sourceRows:AnalysisRow[] } & Record<string,unknown>;
 const metrics: {key: Metric; label: string}[] = [
-  { key:'rate', label:'纯资源成本利润率' },
-  { key:'income', label:'纯资源收入' },
+  { key:'rate', label:'成本利润率' },
+  { key:'income', label:'收入' },
   { key:'cost', label:'总资源成本' },
-  { key:'profit', label:'纯资源毛利' },
+  { key:'profit', label:'毛利' },
 ];
 const resourceCategoryLabel=(category:string)=>category==='计算'?'计算资源':category==='存储'?'存储资源':category;
 const mergedHeaderDivider = '1px solid #EAEDF1';
 const valueText = (key:Metric, value:number|null|undefined) => key==='rate' ? percent(value) : amount(value);
+const tableValue = (key:Metric, value:number|null|undefined) => key==='rate' ? tablePercent(value) : tableAmount(value);
 const chartInsight=(values:ChartValue[],key:Metric,month:string)=>{
   const points=values.filter((point):point is ChartValue&{value:number}=>point.value!==null&&Number.isFinite(point.value));
   const peak=points.reduce<(ChartValue&{value:number})|null>((result,point)=>!result||point.value>=result.value?point:result,null);
@@ -83,13 +85,13 @@ function productTrend(filters:AnalysisFilters,key:Metric):ChartValue[] {
   const months=monthList(filters.month);
   const values=availableTrend(filters,key);
   if(filters.targets.includes('月度目标值')){
-    values.push(...months.map(month=>({x:month.slice(5)+'月',series:'月度目标',value:financialTargetValue(getRows(filters,month),key)})));
+    values.push(...months.map(month=>({x:month,series:'月度目标',value:financialTargetValue(getRows(filters,month),key)})));
   }
   if(filters.targets.includes('季度目标值')){
     values.push(...months.map(month=>{
       const quarterMonths=quarterMonthList(month);
       const target=financialTargetValue(quarterMonths.flatMap(quarterMonth=>getRows(filters,quarterMonth)),key);
-      return {x:month.slice(5)+'月',series:'季度目标',value:key==='rate'||target===null?target:target/quarterMonths.length};
+      return {x:month,series:'季度目标',value:key==='rate'||target===null?target:target/quarterMonths.length};
     }));
   }
   return values;
@@ -124,6 +126,8 @@ function CategoryCard({category,filters,onDrill}:AnalysisProps&{category:string}
     const order=typeof av==='number'?av-bv:String(av).localeCompare(String(bv));
     return (sort.direction==='ascend'?order:-order)||a.unit.localeCompare(b.unit);
   });
+  const trendView=useTableTrend(sortedRows,JSON.stringify(localFilters));
+  const dimensionLabel=(row:DisplayRow)=>chartSeriesName([row.unit,row.area,...(tos?[]:[row.region])]);
   const monthTargets=filters.targets.includes('月度目标值');
   const quarterTargets=filters.targets.includes('季度目标值');
   const yearTargets=filters.targets.includes('年度目标值');
@@ -134,34 +138,42 @@ function CategoryCard({category,filters,onDrill}:AnalysisProps&{category:string}
     const up=()=>{window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);};
     window.addEventListener('pointermove',move);window.addEventListener('pointerup',up);
   };
-  const dimension=(key:'unit'|'area'|'region',label:string)=>({title:<div className="income-resizable-title"><span>{label}</span><span role="separator" aria-label={`调整${label}列宽`} className="income-resize-handle" onPointerDown={event=>startResize(event,key)} /></div>,dataIndex:key,width:widths[key],fixed:'left',render:(value:string)=><Tooltip content={key==='area'?`${value} · ${areaNames[value]||value}`:value}><span className="income-dimension-text">{value}</span></Tooltip>});
+  const dimension=(key:'unit'|'area'|'region',label:string)=>({title:<div className="income-resizable-title"><span>{label}</span><span role="separator" aria-label={`调整${label}列宽`} className="income-resize-handle" onPointerDown={event=>startResize(event,key)} /></div>,dataIndex:key,width:widths[key],fixed:'left',render:(value:string,row:DisplayRow)=>{
+    const text=<OverflowText className="income-dimension-text">{value}</OverflowText>;
+    return key===(tos?'area':'region')?<span className="analysis-trend-dimension">{text}<TrendDrillIcon label={dimensionLabel(row)} onClick={()=>trendView.drill(row)}/></span>:text;
+  }});
   const columns:any[]=[dimension('unit','原始收入计费单元'),dimension('area','大区'),...(!tos?[dimension('region','收入售卖区域')]:[])];
   const flatFields:{field:string;render:(value:any)=>React.ReactNode;width:number}[]=[];
   const groups:Metric[]=metrics.map(metric=>metric.key);
   groups.forEach(key=>{
     const label=metrics.find(metric=>metric.key===key)!.label;
-    const children:any[]=[{title:'实际值',dataIndex:key,width:146,align:'right',sorter:true,sortOrder:sort.field===key?sort.direction:undefined,render:(value:number|null)=><span className={value===null?'muted-value':'income-actual'}>{valueText(key,value)}</span>}];
-    flatFields.push({field:key,render:value=>valueText(key,value),width:146});
+    const children:any[]=[{title:'实际值',dataIndex:key,width:146,align:'right',sorter:true,sortOrder:sort.field===key?sort.direction:undefined,render:(value:number|null)=><span className={value===null?'muted-value':'income-actual'}>{tableValue(key,value)}</span>}];
+    flatFields.push({field:key,render:value=>tableValue(key,value),width:146});
     if(monthTargets){
-      children.push({title:'月度目标',dataIndex:`${key}MonthlyTarget`,width:146,align:'right',render:(value:number|null)=> <Tooltip content="原型目标版本 V1"><span>{valueText(key,value)}</span></Tooltip>},{title:'月度偏差',dataIndex:`${key}MonthlyDeviation`,width:130,align:'right',render:trendPercent});
-      flatFields.push({field:`${key}MonthlyTarget`,render:value=>valueText(key,value),width:146},{field:`${key}MonthlyDeviation`,render:trendPercent,width:130});
+      children.push({title:'月度目标',dataIndex:`${key}MonthlyTarget`,width:146,align:'right',render:(value:number|null)=>tableValue(key,value)},{title:'月度偏差',dataIndex:`${key}MonthlyDeviation`,width:130,align:'right',render:trendPercent});
+      flatFields.push({field:`${key}MonthlyTarget`,render:value=>tableValue(key,value),width:146},{field:`${key}MonthlyDeviation`,render:trendPercent,width:130});
     }
     if(quarterTargets){
-      children.push({title:'季度目标',dataIndex:`${key}QuarterTarget`,width:146,align:'right',render:(value:number|null)=> <Tooltip content="本季度截至当前账期累计目标"><span>{valueText(key,value)}</span></Tooltip>},{title:'季度偏差',dataIndex:`${key}QuarterDeviation`,width:130,align:'right',render:trendPercent});
-      flatFields.push({field:`${key}QuarterTarget`,render:value=>valueText(key,value),width:146},{field:`${key}QuarterDeviation`,render:trendPercent,width:130});
+      children.push({title:'季度目标',dataIndex:`${key}QuarterTarget`,width:146,align:'right',render:(value:number|null)=>tableValue(key,value)},{title:'季度偏差',dataIndex:`${key}QuarterDeviation`,width:130,align:'right',render:trendPercent});
+      flatFields.push({field:`${key}QuarterTarget`,render:value=>tableValue(key,value),width:146},{field:`${key}QuarterDeviation`,render:trendPercent,width:130});
     }
     if(yearTargets){
-      children.push({title:'年度目标',dataIndex:`${key}YearTarget`,width:146,align:'right',render:(value:number|null)=> <Tooltip content="原型全年目标"><span>{valueText(key,value)}</span></Tooltip>});
-      flatFields.push({field:`${key}YearTarget`,render:value=>valueText(key,value),width:146});
+      children.push({title:'年度目标',dataIndex:`${key}YearTarget`,width:146,align:'right',render:(value:number|null)=>tableValue(key,value)});
+      flatFields.push({field:`${key}YearTarget`,render:value=>tableValue(key,value),width:146});
       if(key!=='rate'){
         const accumulatedKey=`accumulated${key.charAt(0).toUpperCase()+key.slice(1)}`;
-        children.push({title:'1月至今累计实际值',dataIndex:accumulatedKey,width:182,align:'right',sorter:true,sortOrder:sort.field===accumulatedKey?sort.direction:undefined,render:(value:number|null)=>amount(value)},{title:'年度目标累积占比',dataIndex:`${key}YearDeviation`,width:162,align:'right',render:(value:number|null)=>percent(value)});
-        flatFields.push({field:accumulatedKey,render:value=>amount(value),width:182},{field:`${key}YearDeviation`,render:percent,width:162});
+        children.push({title:'1月至今累计实际值',dataIndex:accumulatedKey,width:182,align:'right',sorter:true,sortOrder:sort.field===accumulatedKey?sort.direction:undefined,render:tableAmount},{title:'年度目标累积占比',dataIndex:`${key}YearDeviation`,width:162,align:'right',render:tablePercent});
+        flatFields.push({field:accumulatedKey,render:tableAmount,width:182},{field:`${key}YearDeviation`,render:tablePercent,width:162});
       }else{
         children.push({title:'年度偏差',dataIndex:'rateYearDeviation',width:174,align:'right',render:trendPercent});
         flatFields.push({field:'rateYearDeviation',render:trendPercent,width:174});
       }
     }
+    children.forEach(column=>{
+      column.sorter=true;
+      column.sortOrder=sort.field===column.dataIndex?sort.direction:undefined;
+      column.sortDirections=['descend','ascend'];
+    });
     // Figma 222:21126: multiple two-level headers separate every group vertically and both header levels horizontally.
     children[0]={...children[0],headerCellStyle:{...children[0].headerCellStyle,borderLeft:mergedHeaderDivider}};
     columns.push({title:label,children,headerCellStyle:{borderLeft:mergedHeaderDivider,borderBottom:mergedHeaderDivider}});
@@ -184,28 +196,70 @@ function CategoryCard({category,filters,onDrill}:AnalysisProps&{category:string}
       {summaryCells.map((cell,index)=><SourceTableSummary.Cell key={index} colSpan={cell.colSpan} className="analysis-summary-number">{cell.render((summaryValues as any)[cell.field])}</SourceTableSummary.Cell>)}
     </SourceTableSummary.Row>
   </SourceTableSummary>;
-  const trendCombos=grouped(selectedRows,tos);
-  const comboTrends=(key:Metric)=>monthList(filters.month).flatMap(month=>{
-    const monthRows=grouped(getRows(localFilters,month),tos);
-    const monthMap=new Map(monthRows.map(row=>[row.id,row]));
-    return trendCombos.map(combo=>({x:month.slice(5)+'月',series:`${combo.unit} | ${combo.area}${tos?'':` | ${combo.region}`}`,value:monthMap.get(combo.id)?.[key]??null}));
-  });
+  const comboTrends=(key:Metric,trendCombos:DisplayRow[])=>{
+    const actualValues:ChartValue[]=[];
+    const targetValues:ChartValue[]=[];
+    const dashedSeries:string[]=[];
+    const seriesColorIndexes:Record<string,number>={};
+    const singleCombo=trendCombos.length===1;
+    monthList(filters.month).forEach(month=>{
+      const monthRows=grouped(getRows(localFilters,month),tos);
+      const monthMap=new Map(monthRows.map(row=>[row.id,row]));
+      const quarterMonths=quarterMonthList(month);
+      const quarterRows=grouped(quarterMonths.flatMap(quarterMonth=>getRows(localFilters,quarterMonth)),tos);
+      const quarterMap=new Map(quarterRows.map(row=>[row.id,row]));
+      trendCombos.forEach((combo,index)=>{
+        const item=dimensionLabel(combo);
+        const series=chartSeriesName([item],'实际值');
+        const monthRow=monthMap.get(combo.id);
+        const quarterRow=quarterMap.get(combo.id);
+        seriesColorIndexes[series]=index;
+        actualValues.push({x:month,series,value:monthRow?.[key]??null});
+        if(filters.targets.includes('月度目标值')){
+          const monthlySeries=chartSeriesName([item],'月度目标');
+          seriesColorIndexes[monthlySeries]=index;
+          if(!dashedSeries.includes(monthlySeries))dashedSeries.push(monthlySeries);
+          targetValues.push({x:month,series:monthlySeries,value:financialTargetValue(monthRow?.sourceRows||[],key)});
+        }
+        if(filters.targets.includes('季度目标值')){
+          const quarterlySeries=chartSeriesName([item],'季度目标');
+          seriesColorIndexes[quarterlySeries]=singleCombo?1:index;
+          if(!dashedSeries.includes(quarterlySeries))dashedSeries.push(quarterlySeries);
+          const target=financialTargetValue(quarterRow?.sourceRows||[],key);
+          targetValues.push({x:month,series:quarterlySeries,value:key==='rate'||target===null?target:target/quarterMonths.length});
+        }
+      });
+    });
+    const valuesBySeries=new Map<string,ChartValue[]>();
+    [...actualValues,...targetValues].forEach(value=>valuesBySeries.set(value.series,[...(valuesBySeries.get(value.series)||[]),value]));
+    const seriesOrder=trendCombos.flatMap(combo=>{
+      const item=dimensionLabel(combo);
+      return [
+        chartSeriesName([item],'实际值'),
+        ...(filters.targets.includes('月度目标值')?[chartSeriesName([item],'月度目标')]:[]),
+        ...(filters.targets.includes('季度目标值')?[chartSeriesName([item],'季度目标')]:[]),
+      ];
+    });
+    return {actualValues,values:seriesOrder.flatMap(series=>valuesBySeries.get(series)||[]),dashedSeries,seriesColorIndexes};
+  };
   const trendChart=(metric:{key:Metric;label:string})=>{
-    const values=comboTrends(metric.key),insight=chartInsight(values,metric.key,filters.month);
-    return <AnalysisChart key={metric.key} title={metric.label} values={values} percent={metric.key==='rate'} unit={metric.key==='rate'?'%':'人民币'} summary={insight.summary} moreInfo={insight.moreInfo} annotationPoint={insight.annotationPoint}/>;
+    const selected=trendView.selected,range=trendView.range(metric.key);
+    const combos=rankedTrendRows(displayRows,range,row=>{const value=row[`${metric.key}MonthlyDeviation`];return typeof value==='number'?Math.abs(value):null;},selected);
+    const trend=comboTrends(metric.key,combos),insight=chartInsight(trend.actualValues,metric.key,filters.month);
+    return <AnalysisChart key={`${metric.key}-${selected?.id}-${range}`} title={metric.label} legendReset titleExtra={selected?undefined:<TrendRangeControl range={range} rankingLabel="偏差" onChange={value=>trendView.setRange(metric.key,value)}/>} values={trend.values} dashedSeries={trend.dashedSeries} seriesColorIndexes={trend.seriesColorIndexes} percent={metric.key==='rate'} unit={metric.key==='rate'?'%':'人民币'} summary={insight.summary} moreInfo={insight.moreInfo} annotationPoint={insight.annotationPoint}/>;
   };
   const supported=filters.product===BYTEGRAPH||tos;
   return <div className="income-category-card">
-    <div className="income-category-heading"><div className="income-category-controls"><span className="income-category-title">{resourceCategoryLabel(category)}</span><span className="income-category-heading-divider" aria-hidden/><div className="income-unit-select"><MultiFilter addBefore="收入计费单元" size="mini" value={units} options={candidates} onChange={setUnits}/></div><Button type="text" className="income-formula-link" icon={<IconFunction width="16" height="16"/>} disabled={!supported||!selectedRows.length} onClick={()=>onDrill('pricing','pricing-item-formula',{categories:[category],units:units===null?candidates:units,areas:Array.from(new Set(selectedRows.map(row=>row.area))),regions:null})}>{supported?'定价公式分析':'暂无定价公式'}</Button></div></div>
+    <div className="income-category-heading"><div className="income-category-controls"><span className="income-category-title">{resourceCategoryLabel(category)}</span><span className="income-category-heading-divider" aria-hidden/><div className="income-unit-select"><MultiFilter addBefore="收入计费单元" size="mini" value={units} options={candidates} onChange={setUnits}/></div><Button type="text" className="income-formula-link" icon={<IconFx width="16" height="16"/>} disabled={!supported||!selectedRows.length} onClick={()=>onDrill('pricing','pricing-item-formula',{categories:[category],units:units===null?candidates:units,areas:Array.from(new Set(selectedRows.map(row=>row.area))),regions:null})}>{supported?'定价公式分析':'暂无定价公式'}</Button></div></div>
     <div className="income-category-dashed-divider"/>
     <div className="income-category-body">
       <section className="income-category-subsection">
-        <h3 className="income-category-subtitle">收支明细</h3>
-        {units!==null&&!units.length?<EmptyState text="当前筛选无数据，请至少选择一项或点击“全选”"/>:<div className="income-detail-table"><SourceTable columns={columns} data={sortedRows} pagination={sourcePaginationProps(sortedRows.length)} width={tableWidth} maxHeight={320} summary={summary} onChange={(_pagination:any,sorter:any)=>{if(sorter?.field&&sorter?.direction)setSort({field:sorter.field,direction:sorter.direction});else setSort({field:'rate',direction:'descend'});}}/></div>}
-        <Fold title="月趋势" appearance="filter"><div className="analysis-chart-grid">{metrics.map(trendChart)}</div></Fold>
+        <TableTrendView title="收支明细" label={`${resourceCategoryLabel(category)}收支明细`} view={trendView.view} onChange={trendView.setView} selectedLabel={trendView.selected?dimensionLabel(trendView.selected):undefined} onClearSelection={trendView.clearSelection}
+          table={units!==null&&!units.length?<EmptyState text="当前筛选无数据，请至少选择一项或点击“全选”"/>:<div className="income-detail-table"><SourceTable columns={columns} data={sortedRows} pagination={sourcePaginationProps(sortedRows.length)} width={tableWidth} maxHeight={320} summary={summary} onChange={(_pagination:any,sorter:any)=>{if(sorter?.field&&sorter?.direction)setSort({field:sorter.field,direction:sorter.direction});else setSort({field:'rate',direction:'descend'});}}/></div>}
+          trend={displayRows.length?<div className="analysis-chart-grid">{metrics.map(trendChart)}</div>:<EmptyState/>}
+        />
       </section>
       <section className="income-category-subsection">
-        <h3 className="income-category-subtitle">计费项成本</h3>
         <CostAnalysis filters={localFilters} embeddedIncome showChartInsights/>
       </section>
     </div>
@@ -222,7 +276,7 @@ export default function IncomeTab({filters,onDrill}:AnalysisProps) {
   useEffect(()=>setCategories(null),[filters]);
   const activeCategories=categories===null?candidates:categories;
   const selectedCategories=activeCategories.filter(category=>candidates.includes(category));
-  const categoryTrends=(key:Metric):ChartValue[]=>monthList(filters.month).flatMap(month=>selectedCategories.map(category=>({x:month.slice(5)+'月',series:category,value:scopeTotal(getRows({...filters,categories:[category]},month))[key]})));
+  const categoryTrends=(key:Metric):ChartValue[]=>monthList(filters.month).flatMap(month=>selectedCategories.map(category=>({x:month,series:category,value:scopeTotal(getRows({...filters,categories:[category]},month))[key]})));
   const categoryTrendChart=(metric:{key:Metric;label:string})=>{
     const values=categoryTrends(metric.key),insight=chartInsight(values,metric.key,filters.month);
     return <AnalysisChart key={metric.key} title={metric.label} values={values} percent={metric.key==='rate'} unit={metric.key==='rate'?'%':'人民币'} summary={insight.summary} moreInfo={insight.moreInfo} annotationPoint={insight.annotationPoint}/>;

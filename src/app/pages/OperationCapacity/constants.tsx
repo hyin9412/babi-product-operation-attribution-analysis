@@ -905,10 +905,10 @@ export const businessAnalysisChildrenMetricCodeMapInfo = (
             {i18n.t(
               'k3068328412',
               {},
-              '成本利润率=纯资源（收入-成本）/成本（（过往完整6个月账期的纯资源口径（当月未落库账期不参与测试））',
+              '成本利润率=（收入-成本）/成本（过往完整6个月账期口径，当月未落库账期不参与测试）',
             )}
           </p>
-          <p>{i18n.t('k2548546272', {}, '目标：中国和非中纯资源成本利润率绝对值 < 5%。')}</p>
+          <p>{i18n.t('k2548546272', {}, '目标：中国和非中成本利润率绝对值 < 5%。')}</p>
         </>
       ),
       passCurrentData: (
@@ -947,7 +947,7 @@ export const businessAnalysisChildrenMetricCodeMapInfo = (
             '非中区 近半年 成本利润率 {placeholder1}%，月均成本总金额{placeholder3}元，{costProfitRateCurrentMonthDisplay}成本利润率{placeholder7}%',
           )}`}
           <br />
-          {i18n.t('k796894179', {}, '金额口径：纯资源金额')}
+          金额口径：金额
         </>
       ),
       noPassCurrentData: (
@@ -986,7 +986,7 @@ export const businessAnalysisChildrenMetricCodeMapInfo = (
             '非中区 近半年 成本利润率 {placeholder1}%，月均成本总金额{placeholder3}元，{costProfitRateCurrentMonthDisplay}成本利润率{placeholder7}%',
           )}`}
           <br />
-          {i18n.t('k796894179', {}, '金额口径：纯资源金额')}
+          金额口径：金额
         </>
       ),
       noPassReason: `${
@@ -1002,7 +1002,7 @@ export const businessAnalysisChildrenMetricCodeMapInfo = (
           ? `${i18n.t('k3366592613', {}, '近半年内，非中成本利润率绝对值大于5%')}`
           : ''
       }`,
-      target: i18n.t('k3589145820', {}, '中国和非中成本利润率绝对值<5% （纯资源金额）'),
+      target: i18n.t('k3589145820', {}, '中国和非中成本利润率绝对值<5%'),
       defaultSuggestion: isMonthlyBillRepairStatusPass
         ? i18n.t(
             'k1351729351',
@@ -1221,7 +1221,7 @@ const CostIncomeTrendTitle = () => (
           {i18n.t('day_official_+_month_official', {}, '日正式+月正式')}
         </Tag>
         <Tag style={{ marginLeft: 8, height: 20, color: '#737A87' }}>
-          {i18n.t('pure_resource_amount', {}, '纯资源金额')}
+          金额
         </Tag>
       </span>
     </div>
@@ -1269,7 +1269,7 @@ export const TrendTitleMap = {
     <>
       {i18n.t('k2589645595', {}, '成本利润率趋势图')}
       <Tag style={{ marginLeft: 8, height: 20, color: '#737A87' }}>
-        {i18n.t('pure_resource_amount', {}, '纯资源金额')}
+        金额
       </Tag>
     </>
   ),

@@ -3,8 +3,8 @@
 ## 规范映射与自检
 - 页面框架：沿用商品经营归因分析 Dashboard 及现有 Tab。
 - 模块：经营现状、计费项公式归因、年度累计价差、收支资源分类表、计费项收入价格表、公式指标趋势明细。
-- 组件：沿用 SourceTable / DataTable、SourceTableSummary；共享 TrendValue 包装现有数值文本。
-- 核心功能：涨跌与目标偏差按正值红、负值绿展示；保留原始格式、单位和计算口径。
+- 组件：沿用 SourceTable / DataTable、SourceTableSummary；共享 TrendValue 使用本地 Figma 箭头资源。
+- 核心功能：正值增加 `+`，负值保留 `-`；正值使用红色上涨箭头，负值使用绿色下跌箭头；保留原始计算口径。
 - 交互闭环：筛选、目标显隐、排序、分页及下钻继续沿用；明细与总计使用相同偏差渲染。
 
 ## 字段契约
@@ -18,12 +18,15 @@
 | 公式指标趋势明细 | 月度、季度、年度偏差幅度 |
 
 ## 样式与边界
-- 正值使用现有 red-value（danger-6），负值使用 green-value（success-6）。
-- 零值、null、undefined、NaN、Infinity 不添加涨跌颜色。
+- 来源：Figma `eXQQeB4FWw5jsIIhhFOwAH` 节点 `5354:209724`。
+- 图标资源使用 `src/app/static/icon/环比icon正.svg`、`环比icon负.svg`、`环比icon无变化.svg`；视觉尺寸 12×12px。
+- 箭头与数值间距 4px；单元格整体右对齐。
+- 数值（含正负号）使用 `var(--color-text-1)`，单位使用 `var(--color-text-3)`，不再用红绿文字表达方向。
+- 零值显示无变化 icon；null、undefined、NaN、Infinity 展示原缺失态。
 - 实际值、目标值、累计值、售卖率、年度目标累积占比不属于涨跌信息，不按正负着色。
 - 现有亏损利润标红为经营状态提示，继续沿用。
 - 不修改数值计算、数值格式、布局、列宽或表格组件 API。
-- 来源：现有 PRD 原型与原页面契约；当前未找到 PRD 正文副本。
+- Header 不做任何调整。
 
 ## 验收约束
 - 共享渲染覆盖所有已列字段，收支表明细与总计一致。

@@ -1,7 +1,7 @@
 import React from 'react';
-import { Popover } from '@byted-babi/babi-design';
+import Popover from './AnalysisPopover';
 import { IconGreeDown, IconRedUp } from '@arco-design/iconbox-react-babi';
-import { SemanticCardFields, SemanticCardNoteField } from './analysisUI';
+import { OverflowText, SemanticCardFields, SemanticCardNoteField } from './analysisUI';
 import { FinancialTargetSummary } from './analysisData';
 
 export type IncomeMetricValueParts = {
@@ -81,8 +81,8 @@ function annualShareFormula(actual:number|null,target:number|null,share:number|n
   </div>;
 }
 
-function FormulaValue({content,children}:{content:React.ReactNode;children:React.ReactNode}) {
-  return <Popover className="income-metric-formula-popover" content={content} trigger="hover" unmountOnExit><span className="income-metric-formula-value">{children}</span></Popover>;
+function FormulaValue({content,children,disabled=false}:{content:React.ReactNode;children:React.ReactNode;disabled?:boolean}) {
+  return <Popover className="income-metric-formula-popover" content={content} disabled={disabled} trigger="hover" unmountOnExit><span className="income-metric-formula-value">{children}</span></Popover>;
 }
 
 function MetricFields({fields}:{fields:SemanticCardNoteField[]}) {
@@ -143,9 +143,9 @@ export default function IncomeMetricCard({
 
   return <article className="income-metric-card">
     <div className="income-metric-content">
-      <h3 className="income-metric-title">{title}</h3>
+      <OverflowText as="h3" className="income-metric-title">{title}</OverflowText>
       <div className="income-metric-primary">
-        <span className="income-metric-number">{displayValue(value.number)}</span>
+        <OverflowText className="income-metric-number">{displayValue(value.number)}</OverflowText>
         {value.scale&&<span className="income-metric-scale">{value.scale}</span>}
         {value.unit&&<span className="income-metric-unit">{value.unit}</span>}
       </div>

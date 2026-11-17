@@ -1,13 +1,14 @@
 // References: none — new PRD page controller; screenshot layout and explicit query/drill state contract.
 import React, {useEffect,useMemo,useRef,useState} from 'react';
-import {Alert, Button, Message, Popover, Select, Tabs, Tag} from '@byted-babi/babi-design';
+import {Alert, Button, Message, Tabs, Tag} from '@byted-babi/babi-design';
+import Popover from './AnalysisPopover';
 import {IconDown, IconRight} from '@arco-design/iconbox-react-ve-o-design';
 import {Link,useSearchParams} from 'react-router-dom';
 import OverviewTab from './OverviewTab';
 import IncomeTab from './IncomeTab';
 import PricingTab from './PricingTab';
 import {AnalysisFilters,AnalysisTab,DrillFocus,BYTEGRAPH,TOS,products,months,areaNames,areaRegions,defaultFilters,normalizeAnalysisFilters,unitCategories,unitOptions,targetOptions} from './analysisData';
-import {Field,FilterSummary,MultiFilter,SELECT_SEARCH_THRESHOLD,getSelectPlaceholder} from './analysisUI';
+import {AnalysisSelect as Select,Field,FilterSummary,MultiFilter,SELECT_SEARCH_THRESHOLD,getSelectPlaceholder} from './analysisUI';
 import './analysis.css';
 const tabNames:Record<AnalysisTab,string>={overview:'商品概览',income:'收支分析',pricing:'成本定价'};
 const TOS_REGION_DISABLED_TIP='TOS按收入计费单元&大区查看';
@@ -91,7 +92,7 @@ export default function AnalysisPage(){
  const multi=(label:string,key:keyof AnalysisFilters,options:string[],disabled=false)=> <Field label={label} required={key!=='targets'}><MultiFilter value={filters[key] as string[]|null} options={options} onChange={value=>update(key,value)} disabled={disabled}/></Field>;
  const tosRegionFilter=<Field label="收入售卖区域" required><Popover content={TOS_REGION_DISABLED_TIP} trigger="hover" position="top" unmountOnExit><span className="filter-disabled-popover-trigger"><Select defaultActiveFirstOption={false} disabled placeholder="请选择"/></span></Popover></Field>;
  return <main className={`analysis-page${loading?' content-loading':''}`} aria-busy={loading}><div className="analysis-sticky-header" ref={stickyHeaderRef}><header className="analysis-page-header"><h1>透明化分析</h1><Tabs className="analysis-tabs" type="line" activeTab={tab} headerPadding={false} onChange={key=>changeTab(key as AnalysisTab)}>{(Object.keys(tabNames) as AnalysisTab[]).map(key=><Tabs.TabPane key={key} title={tabNames[key]}/>)}</Tabs><Link to="/design-checklist" style={{marginLeft:'auto',paddingLeft:16,color:'rgb(var(--primary-6))',fontSize:12,whiteSpace:'nowrap'}}>设计调整清单（21）</Link></header>
- <div className={`filter-panel${expanded?'':' filter-panel-collapsed'}`}><div className="filter-heading"><Popover content={expanded?'收起':'展开'} trigger="hover" position="top" unmountOnExit><span className="filter-toggle-popover-trigger"><Button type="text" size="mini" shape="square" className="filter-toggle" icon={expanded?<IconDown width="16" height="16"/>:<IconRight width="16" height="16"/>} aria-label={expanded?'收起筛选':'展开筛选'} aria-expanded={expanded} title={expanded?'收起筛选':'展开筛选'} onClick={()=>setExpanded(!expanded)}/></span></Popover><h2 style={{ 'fontSize': '14px' }}>全局筛选</h2><div className="filter-caliber"><Tag size="small" bordered className="filter-caliber-tag">日正式+月正式</Tag><Tag size="small" bordered className="filter-caliber-tag">人民币</Tag><Tag size="small" bordered className="filter-caliber-tag">纯资源</Tag></div></div>
+ <div className={`filter-panel${expanded?'':' filter-panel-collapsed'}`}><div className="filter-heading"><Popover content={expanded?'收起':'展开'} trigger="hover" position="top" unmountOnExit><span className="filter-toggle-popover-trigger"><Button type="text" size="mini" shape="square" className="filter-toggle" icon={expanded?<IconDown width="16" height="16"/>:<IconRight width="16" height="16"/>} aria-label={expanded?'收起筛选':'展开筛选'} aria-expanded={expanded} onClick={()=>setExpanded(!expanded)}/></span></Popover><h2 style={{ 'fontSize': '14px' }}>全局筛选</h2><div className="filter-caliber"><Tag size="small" bordered className="filter-caliber-tag">日正式+月正式</Tag><Tag size="small" bordered className="filter-caliber-tag">人民币</Tag><Tag size="small" bordered className="filter-caliber-tag">纯资源</Tag></div></div>
  {expanded?<><div className={`filter-grid ${tab==='pricing'?'pricing-filters':''}`}>
  {tab==='pricing'?<>{single('账期','month',months)}{single('商品名称','product',products)}{multi('收入计费单元类别','categories',categoryOptions)}{multi('收入计费单元','units',units)}{multi('大区','areas',areas)}{filters.product===TOS?tosRegionFilter:multi('收入售卖区域','regions',regions)}{multi('目标值对比','targets',targetOptions)}</>:<>{single('账期','month',months)}{single('海外即时 True Up 账单','trueUp',['不包含','包含'])}{single('同商品过滤','sameProduct',['否','是'])}{multi('目标值对比','targets',targetOptions)}{single('部门收支_产品线名称','productLine',['研发商品中心-基础架构'])}{single('商品名称','product',products)}{multi('售卖大区','areas',areas)}{filters.product===TOS?tosRegionFilter:multi('收入售卖区域','regions',regions)}</>}
    <div className="filter-query-slot"><Button type="primary" disabled={!dirty||loading} loading={loading} className={dirty&&!loading?'pending-query':''} onClick={query}>查询</Button></div>

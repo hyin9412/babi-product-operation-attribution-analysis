@@ -19,6 +19,30 @@
 .analysis-page .pricing-deviation-info:focus-visible {
   color: rgb(var(--primary-6));
 }
+.analysis-page .pricing-target-gap-section .analysis-view-heading {
+  align-items: center;
+}
+.analysis-page .pricing-target-gap-section .analysis-view-title {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding-left: 11px;
+  color: var(--color-text-1);
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 26px;
+}
+.analysis-page .pricing-target-gap-section .analysis-view-title::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 7px;
+  width: 3px;
+  height: 12px;
+  background: rgb(var(--primary-6));
+  border-radius: 0 2px 2px 0;
+}
 .pricing-deviation-formula {
   max-width: 420px;
   white-space: normal;
@@ -135,6 +159,7 @@
   scroll-margin-top: 250px;
 }
 .analysis-page .pricing-metric-panel .analysis-toolbar { flex-wrap: wrap; }
+.analysis-page .pricing-metric-panel > .analysis-chart { margin-bottom: 16px; }
 .analysis-page .pricing-metric-panel h3 { font-size: 14px; font-weight: 500; line-height: 22px; color: var(--color-text-1); margin: 0; }
 .analysis-page .pricing-trend-controls {
   display: flex;

@@ -1,6 +1,7 @@
 // Reference: Figma lX5i7W9KsKxtSVrXIuLZC0 / 4248:58316.
 import React, {useEffect, useId, useState} from 'react';
-import {Button, Message, Tooltip} from '@byted-babi/babi-design';
+import {Button, Message} from '@byted-babi/babi-design';
+import Popover from './AnalysisPopover';
 import {IconCopy, IconThumbDown, IconThumbUp} from '@arco-design/iconbox-react-ve-o-design';
 import './ai-data-interpretation.css';
 
@@ -48,10 +49,10 @@ export default function AIDataInterpretation({items, id, context='数据解读'}
       {items.map((item,index)=><li key={index}>{item}</li>)}
     </ul>
     <div className="ai-interpretation-actions" role="group" aria-label={`${context}操作`}>
-      <Tooltip content="满意"><Button type="text" size="mini" shape="square" aria-label="满意" aria-pressed={feedback==='up'} className={feedback==='up'?'is-selected':undefined} icon={<IconThumbUp width={16} height={16}/>} onClick={()=>setFeedback(current=>current==='up'?null:'up')}/></Tooltip>
-      <Tooltip content="不满意"><Button type="text" size="mini" shape="square" aria-label="不满意" aria-pressed={feedback==='down'} className={feedback==='down'?'is-selected':undefined} icon={<IconThumbDown width={16} height={16}/>} onClick={()=>setFeedback(current=>current==='down'?null:'down')}/></Tooltip>
+      <Popover content="满意"><Button type="text" size="mini" shape="square" aria-label="满意" aria-pressed={feedback==='up'} className={feedback==='up'?'is-selected':undefined} icon={<IconThumbUp width={16} height={16}/>} onClick={()=>setFeedback(current=>current==='up'?null:'up')}/></Popover>
+      <Popover content="不满意"><Button type="text" size="mini" shape="square" aria-label="不满意" aria-pressed={feedback==='down'} className={feedback==='down'?'is-selected':undefined} icon={<IconThumbDown width={16} height={16}/>} onClick={()=>setFeedback(current=>current==='down'?null:'down')}/></Popover>
       <span className="ai-interpretation-divider" aria-hidden="true"/>
-      <Tooltip content="复制"><Button type="text" size="mini" shape="square" aria-label="复制解读" icon={<IconCopy width={16} height={16}/>} onClick={copy}/></Tooltip>
+      <Popover content="复制"><Button type="text" size="mini" shape="square" aria-label="复制解读" icon={<IconCopy width={16} height={16}/>} onClick={copy}/></Popover>
     </div>
   </section>;
 }

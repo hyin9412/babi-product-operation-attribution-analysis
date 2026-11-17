@@ -3,4 +3,5 @@ node-v*-darwin-*/
 .DS_Store
 dist/
 .vite/
+.dbg/
 *.log
