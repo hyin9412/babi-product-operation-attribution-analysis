@@ -3,8 +3,8 @@ import React, {useMemo} from 'react';
 import {IconP0, IconP1, IconP3, IconP4, IconP5} from '@arco-design/iconbox-react-ve-o-design';
 import {
   AnalysisProps, AnalysisRow, DrillFocus, TOS, BYTEGRAPH,
-  getRows, totals, areaNames, amount, percent, monthList,
-  financialMetricValue, financialTargetValue, metricDeviation, prototypeTargetValue,
+  getRows, totals, areaNames, amount, percent,
+  metricDeviation, prototypeTargetValue,
 } from './analysisData';
 import {Section, EmptyState, AnalysisChart, DataTable, QuickLink, TrendValue, tableAmount, tablePercent, trendPercent} from './analysisUI';
 import AIDataInterpretation from './AIDataInterpretation';
@@ -64,7 +64,6 @@ const finiteTotal = (rows:AnalysisRow[], key:'quantity'|'capacity') => {
 };
 const relativeChange = (current:number|null, previous:number|null) => current===null||previous===null||previous===0 ? null : (current-previous)/previous*100;
 const changeText = (value:number|null) => <TrendValue value={value} unavailable="不可比"/>;
-const signedPercent = (value:number|null) => value===null ? '—' : `${value>0?'+':''}${value.toFixed(2)}%`;
 const weightedPrice = (rows:AnalysisRow[], key:'price'|'cumulativePrice') => {
   const usable=rows.filter(row=>row[key]!==null&&Number.isFinite(row[key])&&row.quantity>0);
   const quantity=usable.reduce((sum,row)=>sum+row.quantity,0);
@@ -80,31 +79,16 @@ const splitRows = (rows:AnalysisRow[], key:(row:AnalysisRow)=>string) => {
   rows.forEach(row=>groups.set(key(row), [...(groups.get(key(row))||[]),row]));
   return Array.from(groups.entries());
 };
-const conclusionAreaName = (area:string) => (areaNames[area]||area).replace(/[（(]TTP[）)]/g,' TTP');
-
 export default function OverviewTab({filters,onDrill}:AnalysisProps) {
   const isTos=filters.product===TOS;
   const supported=filters.product===TOS||filters.product===BYTEGRAPH;
   const rows=useMemo(()=>getRows(filters),[filters]);
   const comparableRows=rows.filter(row=>row.cost!==null);
-  const current=totals(comparableRows);
-  const hasComparable=comparableRows.length>0;
   const previousMonth=Number(filters.month.slice(-2))>1 ? `2026-${String(Number(filters.month.slice(-2))-1).padStart(2,'0')}` : null;
   const previousRows=previousMonth?getRows(filters,previousMonth):[];
   const negativeAreas=splitRows(comparableRows,row=>row.area)
     .filter(([,areaRows])=>totals(areaRows).profit<0)
     .map(([area])=>area);
-  const profitByMonth = (month:string) => {
-    const monthRows=getRows(filters,month).filter(row=>row.cost!==null);
-    const actual=financialMetricValue(monthRows,'profit'),target=financialTargetValue(monthRows,'profit');
-    return metricDeviation(actual,target,'profit');
-  };
-  const monthsForTrend=monthList(filters.month).slice(-3);
-  const profitPoints=monthsForTrend.map(profitByMonth);
-  const previousDeviation=profitPoints.length>=2?profitPoints[profitPoints.length-2]:null;
-  const latestDeviation=profitPoints.length?profitPoints[profitPoints.length-1]:null;
-  const deviationDelta=latestDeviation===null||previousDeviation===null?null:latestDeviation-previousDeviation;
-  const trendText=deviationDelta===null?'趋势待补':deviationDelta>0.5?'目标差距收窄':deviationDelta<-0.5?'目标差距扩大':'目标差距持平';
   // References: none — TOS only compares known CN costs, never distributes costs by sales region.
   const operatingGroups:OperatingGroup[]=splitRows(isTos?comparableRows:rows,row=>isTos?row.unit:`${row.area}|${row.region}`).map(([id,group])=>{
     const total=totals(group), costAvailable=group.some(row=>row.cost!==null);
@@ -188,32 +172,13 @@ export default function OverviewTab({filters,onDrill}:AnalysisProps) {
     {title:'定位依据',dataIndex:'basis',width:370},
     {title:'管理动作',dataIndex:'action',width:385,responsiveFixed:'right',render:(v:string,row:ActionRow)=><div>{v}<br/><QuickLink disabled={row.tab==='pricing'&&!supported} onClick={()=>onDrill(row.tab,row.anchor,row.focus)}>{row.link}</QuickLink></div>},
   ];
-  const conclusionItems=rows.length?[
-    hasComparable
-      ? `${filters.month}，${filters.product} 在可比收入与成本范围内${current.profit>=0?'整体盈利':'整体亏损'}，利润 ${amount(current.profit)}，成本利润率 ${percent(current.rate)}。`
-      : `${filters.month}，${filters.product} 当前范围暂无可比成本，仅支持查看收入，不能判断利润。`,
-    hasComparable
-      ? negativeAreas.length
-        ? `当前有 ${negativeAreas.length} 个亏损大区：${negativeAreas.map(conclusionAreaName).join('、')}。建议拆分计费项成本和公式指标，核验亏损原因。`
-        : '当前可比范围内无亏损大区；仍需核验目标版本与定价公式。'
-      : '当前范围成本数据缺失，应先补齐同粒度成本，再判断经营风险。',
-    filters.targets.includes('月度目标值')
-      ? deviationDelta===null
-        ? '最近两期利润目标偏差不可比，暂不能判断目标差距趋势。'
-        : `最近一期利润月度偏差为 ${signedPercent(latestDeviation)}，上期为 ${signedPercent(previousDeviation)}，${trendText}。目标来自原型目标版本。`
-      : '未选择月度目标值，当前不判断利润目标差距趋势。',
-    isTos&&rows.some(row=>row.cost===null)
-      ? 'TOS 海外成本缺失，仅单独跟踪收入变化，不使用中国成本推断海外利润。暂不直接调价，待同粒度证据核验后再评审。'
-      : '暂不直接调价；先核验同粒度成本、售卖率及公式关系，年度累计偏差持续扩大并越界后再评审。',
-  ]:['当前筛选无数据，暂无可用的经营结论。'];
   const operatingItems=[
     'Bytegraph 的主要问题不是“整体收入差”，而是 US 区域亏损与售卖量断崖式下滑；同时海外目标偏低导致部分区域年度达成率被放大。成本定价公式拆解显示，Bytegraph 计算层价格主要受单位成本、综合售卖率、其他成本加成和策略加成影响；9 月 US 的策略加成稳定，异常更集中在售卖率与其他成本加成，US 其他成本加成从 6 月 20.9% 升至 9 月 66.6%。',
   ];
-  const annualItems=!insights.length?['当前筛选无数据，暂无可用的年度累计价差解读。']
-    :!filters.targets.includes('年度目标值')?['未选择年度目标值，当前不判断年度累计单价目标偏差。']
-    :insights.map(insight=>`${insight.unit}：${insight.annualDeviation===null?'暂无可比年度累计单价与目标，需核验累计价格取数。':`年度累计单价偏差 ${signedPercent(insight.annualDeviation)}，${Math.abs(insight.annualDeviation)>5?'偏差超过 5%，建议复核该计费组合。':'偏差在 ±5% 范围内，建议持续跟踪后续月份。'}`}目标采用原型年度目标，同计费单元口径比较。`);
+  const annualItems=isTos
+    ? ['Request 负偏差优先治理、Storage/StorageEC 为 P1 观察。']
+    : ['US Storage/MEM 负偏差优先治理'];
   return <>
-    <AIDataInterpretation id="overview-conclusion" context="商品经营结论" items={conclusionItems}/>
     <Section title="经营现状" id="overview-operating">
       <AIDataInterpretation context="经营现状" items={operatingItems}/>
       {/* Financial and price charts share the operating summary below. */}
