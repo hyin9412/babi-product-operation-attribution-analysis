@@ -487,6 +487,13 @@ html.analysis-scroll body { height: auto !important; min-height: 100vh; overflow
   overflow-wrap: anywhere;
   white-space: normal;
 }
+.analysis-page .source-analysis-table .arco-table-cell-with-sorter { position: relative; }
+.analysis-page .analysis-sorter-popover-trigger {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  cursor: pointer;
+}
 .analysis-page .semantic-card-icon {
   display: inline-flex;
   flex: 0 0 16px;

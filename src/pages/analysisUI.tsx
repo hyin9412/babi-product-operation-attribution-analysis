@@ -216,12 +216,22 @@ const isComparableNumericColumn=(column:any,data:any[])=>{
  if(nonComparableField.test(field)||nonComparableTitle.test(title))return false;
  return hasNumericData(column,data)||comparableNumericTitle.test(title);
 };
-const uniqueColumns=(columns:any[],data:any[]=[],prefix='column',enableResponsiveFixed=false):any[]=>columns.map((column,index)=>{
+const sorterPopoverText=(column:any,key:string,activeSorter:any)=>{
+ const sorters=(Array.isArray(activeSorter)?activeSorter:[activeSorter]).filter(Boolean);
+ const active=sorters.find((item:any)=>String(item?.field)===String(column.dataIndex??key));
+ const currentDirection=column.sortOrder||active?.direction;
+ const directions=column.sortDirections||['ascend','descend'];
+ const currentIndex=currentDirection?directions.indexOf(currentDirection):-1;
+ const nextDirection=directions[currentIndex+1];
+ return nextDirection==='ascend'?'点击升序':nextDirection==='descend'?'点击降序':'取消排序';
+};
+const uniqueColumns=(columns:any[],data:any[]=[],prefix='column',enableResponsiveFixed=false,activeSorter:any=null):any[]=>columns.map((column,index)=>{
  const {responsiveFixed,...columnProps}=column;
- const children=column.children?uniqueColumns(column.children,data,`${prefix}-${index}`,enableResponsiveFixed):undefined;
+ const children=column.children?uniqueColumns(column.children,data,`${prefix}-${index}`,enableResponsiveFixed,activeSorter):undefined;
  const shouldAlignRight=!children&&column.align===undefined&&isComparableNumericColumn(column,data);
  const key=column.key??(column.sorter&&typeof column.dataIndex==='string'?column.dataIndex:`${prefix}-${index}`);
- return {...columnProps,key,children,align:shouldAlignRight?'right':column.align,fixed:responsiveFixed?(enableResponsiveFixed?responsiveFixed:undefined):column.fixed};
+ const title=column.sorter&&!children?<>{column.title}<Popover content={sorterPopoverText(column,key,activeSorter)} position="top"><span className="analysis-sorter-popover-trigger" aria-hidden/></Popover></>:column.title;
+ return {...columnProps,key,title,children,align:shouldAlignRight?'right':column.align,fixed:responsiveFixed?(enableResponsiveFixed?responsiveFixed:undefined):column.fixed};
 });
 export const TABLE_PAGE_SIZE_OPTIONS = [10,20,50,100];
 export const sourcePaginationProps=(total:number,overrides:any={})=>({
@@ -242,6 +252,7 @@ export const SourceTable=({columns,data,width,pagination,maxHeight,noDataElement
  const resolvedPagination=resolveTablePagination(pagination,data.length);
  const [current,setCurrent]=React.useState(resolvedPagination.current||1);
  const [pageSize,setPageSize]=React.useState(resolvedPagination.pageSize||resolvedPagination.defaultPageSize||10);
+ const [activeSorter,setActiveSorter]=React.useState<any>(null);
  const tableRef=React.useRef<HTMLDivElement|null>(null);
  const [enableResponsiveFixed,setEnableResponsiveFixed]=React.useState(false);
  // #region debug-point A:summary-row-overlap
@@ -287,7 +298,7 @@ export const SourceTable=({columns,data,width,pagination,maxHeight,noDataElement
  const safeCurrent=Math.min(current,maxPage);
  const pageData=data.slice((safeCurrent-1)*safePageSize,safeCurrent*safePageSize);
  return <div ref={tableRef} className={`analysis-table source-analysis-table ${className}`.trim()} data-horizontal-overflow={enableResponsiveFixed?'true':'false'}>
-  <SourceBaseTable rowKey="id" border={{wrapper:true}} columns={uniqueColumns(columns,data,'column',enableResponsiveFixed)} dataSource={pageData} pagination={false} scroll={width||maxHeight?{x:width,y:maxHeight}:undefined} noDataElement={noDataElement||<EmptyState compact size={60}/>} onChange={onChange} footer={footer} {...rest}/>
+  <SourceBaseTable rowKey="id" border={{wrapper:true}} columns={uniqueColumns(columns,data,'column',enableResponsiveFixed,activeSorter)} dataSource={pageData} pagination={false} scroll={width||maxHeight?{x:width,y:maxHeight}:undefined} noDataElement={noDataElement||<EmptyState compact size={60}/>} onChange={(pagination:any,sorter:any,filters:any,extra:any)=>{setActiveSorter(sorter);onChange?.(pagination,sorter,filters,extra);}} footer={footer} showSorterTooltip={false} {...rest}/>
   <div className="source-table-pagination"><Pagination {...resolvedPagination} current={safeCurrent} pageSize={safePageSize} onChange={(nextPage:number,nextSize:number)=>{setPageSize(nextSize||safePageSize);setCurrent(nextSize&&nextSize!==safePageSize?1:nextPage);}} onPageSizeChange={(nextSize:number)=>{setPageSize(nextSize);setCurrent(1);}}/></div>
  </div>;
 };
@@ -400,7 +411,7 @@ function ChartLegend({series,colors,dashedSeries,hidden,setHidden,exclude,isolat
  const visible=new Set(pages[page]||series.map((_name,index)=>index));
  return <div className="chart-legend" ref={rootRef}>
   <div className="legend-list" ref={listRef}>{series.map((name,index)=><div key={name} className="legend-item" hidden={!visible.has(index)}>
-   <Popover content={`${name}：${exclude?(hidden.includes(name)?'点击恢复展示':'点击排除展示'):'图例'}`}>
+   <Popover content={exclude?(hidden.includes(name)?'点击恢复展示':'点击排除展示'):'图例'}>
     <button type="button" className={`legend-toggle${hidden.includes(name)?' legend-hidden':''}`} aria-label={`${hidden.includes(name)?'恢复':'排除'}${name}`} aria-pressed={!hidden.includes(name)} disabled={!exclude} onClick={()=>setHidden(current=>current.includes(name)?current.filter(item=>item!==name):[...current,name])}><i className={dashedSeries.includes(name)?'legend-marker-dash':undefined} style={{background:dashedSeries.includes(name)?`repeating-linear-gradient(to right, ${colors[index]} 0%, ${colors[index]} 20%, transparent 20%, transparent 40%)`:colors[index]}} aria-hidden="true"/><span className="legend-label">{name}</span></button>
    </Popover>
    {isolate&&<Popover content="点击仅展示该指标"><button type="button" className="legend-isolate" aria-label={`仅展示${name}`} onClick={()=>setHidden(series.filter(item=>item!==name))}><LegendIsolateIcon/></button></Popover>}
