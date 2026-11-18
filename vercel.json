@@ -1,13 +1,13 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "framework": "vite",
-  "installCommand": "npm install --no-frozen-lockfile",
+  "outputDirectory": "docs",
+  "installCommand": "",
+  "buildCommand": "",
   "trailingSlash": false,
+  "cleanUrls": true,
   "rewrites": [
     {
       "source": "/(.*)",
-      "destination": "/index.html"
+      "destination": "/$1.html"
     }
   ]
 }
