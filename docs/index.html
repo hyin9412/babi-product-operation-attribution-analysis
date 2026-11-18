@@ -1,74 +1,467 @@
 <!doctype html>
 <html lang="zh-CN">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Genius AI Prototype - 文档索引</title>
-  <style>
-    :root {
-      --bg: #f6f8fa;
-      --panel: #ffffff;
-      --text: #0c0d0e;
-      --link: #0969da;
-      --border: #dde2e9;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      font-size: 14px;
-      line-height: 1.6;
-    }
-    .page {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 48px 24px;
-    }
-    h1 { font-size: 24px; font-weight: 600; margin: 0 0 8px; }
-    .desc { color: #656d76; margin: 0 0 32px; font-size: 14px; }
-    .card {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 20px;
-      margin-bottom: 12px;
-    }
-    .card a {
-      font-size: 15px;
-      font-weight: 500;
-      color: var(--link);
-      text-decoration: none;
-    }
-    .card a:hover { text-decoration: underline; }
-    .card .meta { color: #656d76; font-size: 12px; margin-top: 4px; }
-  </style>
-</head>
-<body>
-  <div class="page">
-    <h1>Genius AI Prototype</h1>
-    <p class="desc">经营归因分析原型文档 &amp; 设计建议修改点</p>
-    <div class="card">
-      <a href="/design-suggestions">经营归因分析页面设计建议修改点</a>
-      <div class="meta">设计评审问题跟踪与修改建议</div>
-    </div>
-    <div class="card">
-      <a href="/chart-spacing-playground">图表间距 Playground</a>
-      <div class="meta">图表组件间距调试工具</div>
-    </div>
-    <div class="card">
-      <a href="/topology-flow-preview">拓扑图交互说明预览</a>
-      <div class="meta">拓扑图流程预览页面</div>
-    </div>
-    <div class="card">
-      <a href="/operation-conclusion-card-guide">经营结论卡片指引</a>
-      <div class="meta">经营结论卡片交互说明</div>
-    </div>
-    <div class="card">
-      <a href="/operation-conclusion-card-guide-topology">经营结论卡片指引（拓扑版）</a>
-      <div class="meta">经营结论卡片交互说明 - 拓扑图版本</div>
-    </div>
-  </div>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>经营归因分析页面设计建议修改点</title>
+    <style>
+      :root {
+        --bg: #f6f8fa;
+        --panel: #ffffff;
+        --text: #0c0d0e;
+        --subtle: #41464f;
+        --line: #dde2e9;
+        --line-light: #eaedf1;
+        --warning-bg: #fff7e6;
+        --warning-border: #ffd591;
+        --warning-text: #7c4a03;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        color: var(--text);
+        background: var(--bg);
+        font-family:
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          "PingFang SC",
+          "Hiragino Sans GB",
+          "Microsoft YaHei",
+          sans-serif;
+        font-size: 14px;
+        line-height: 1.7;
+      }
+
+      .page {
+        width: min(1180px, calc(100vw - 64px));
+        margin: 0 auto;
+        padding: 40px 0 80px;
+      }
+
+      h1,
+      h2 {
+        margin: 0;
+        font-weight: 600;
+        letter-spacing: 0;
+      }
+
+      h1 {
+        font-size: 28px;
+        line-height: 36px;
+      }
+
+      h2 {
+        margin-top: 32px;
+        margin-bottom: 18px;
+        font-size: 24px;
+        line-height: 32px;
+      }
+
+      p {
+        margin: 0;
+      }
+
+      .subtitle {
+        margin-top: 12px;
+        color: var(--subtle);
+        font-size: 16px;
+      }
+
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 22px;
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        height: 32px;
+        padding: 0 12px;
+        color: var(--subtle);
+        background: var(--panel);
+        border: 1px solid var(--line-light);
+        border-radius: 4px;
+        font-size: 14px;
+      }
+
+      .notice {
+        margin-top: 20px;
+        padding: 16px 18px;
+        color: var(--warning-text);
+        background: var(--warning-bg);
+        border: 1px solid var(--warning-border);
+        border-radius: 6px;
+        font-size: 15px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--panel);
+        border: 1px solid var(--line-light);
+      }
+
+      th,
+      td {
+        padding: 16px 14px;
+        border: 1px solid var(--line-light);
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        color: var(--subtle);
+        background: #f6f8fa;
+        font-weight: 600;
+      }
+
+      .screenshot-cell {
+        width: 220px;
+      }
+
+      .screenshot-button {
+        display: block;
+        width: 190px;
+        padding: 0;
+        border: 1px solid var(--line-light);
+        border-radius: 6px;
+        background: var(--panel);
+        cursor: zoom-in;
+        overflow: hidden;
+      }
+
+      .screenshot-thumb {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+
+      .image-dialog {
+        width: min(1180px, calc(100vw - 48px));
+        max-width: 1180px;
+        padding: 0;
+        border: 0;
+        border-radius: 6px;
+        background: var(--panel);
+        box-shadow: 0 18px 48px rgba(0, 0, 0, 0.22);
+      }
+
+      .image-dialog::backdrop {
+        background: rgba(0, 0, 0, 0.58);
+      }
+
+      .dialog-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--line-light);
+        font-weight: 600;
+      }
+
+      .dialog-close {
+        width: 28px;
+        height: 28px;
+        border: 1px solid var(--line-light);
+        border-radius: 4px;
+        background: var(--panel);
+        cursor: pointer;
+        font-size: 18px;
+        line-height: 24px;
+      }
+
+      .dialog-image {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+
+      @media (max-width: 760px) {
+        .page {
+          width: calc(100vw - 32px);
+          padding-top: 24px;
+        }
+
+        h1 {
+          font-size: 24px;
+          line-height: 32px;
+        }
+
+        h2 {
+          font-size: 20px;
+          line-height: 28px;
+        }
+
+        table {
+          display: block;
+          overflow-x: auto;
+          white-space: nowrap;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <header>
+        <h1>经营归因分析页面设计建议修改点</h1>
+        <p class="subtitle">
+          本文档用于记录后续页面改版建议，仅作为产品确认前的评审材料。本阶段不执行业务页面代码、样式或交互修改。
+        </p>
+        <div class="meta">
+          <span class="tag">页面：经营归因分析 / 透明化看板</span>
+          <span class="tag">状态：待产品确认</span>
+          <span class="tag">依据：源力设计体系 + 字节云业务场景规范</span>
+          <span class="tag">更新日期：2026-11-13</span>
+        </div>
+        <div class="notice">
+          执行原则：先确认设计建议与产品口径，再进入页面修改；修改时以截图对比、浏览器实际渲染和跨宽度适配作为验收标准。
+        </div>
+      </header>
+
+      <section>
+        <h2>一、已记录问题清单</h2>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 90px">编号</th>
+              <th style="width: 120px">优先级</th>
+              <th>问题描述</th>
+              <th class="screenshot-cell">截图</th>
+              <th>建议处理</th>
+              <th>产品需确认</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>问题 1</td>
+              <td>P0</td>
+              <td>
+                菜单名称和页面名称不一致。
+              </td>
+              <td class="screenshot-cell">
+                <button
+                  class="screenshot-button"
+                  type="button"
+                  aria-label="点击放大查看问题 1 截图"
+                  data-title="问题 1 截图"
+                  data-src="./assets/problem-1-menu-page-name.png"
+                  data-alt="左侧菜单名称为透明化分析，页面标题为商品经营归因分析，二者命名不一致"
+                >
+                  <img
+                    class="screenshot-thumb"
+                    src="./assets/problem-1-menu-page-name.png"
+                    alt="左侧菜单名称为透明化分析，页面标题为商品经营归因分析，二者命名不一致"
+                  />
+                </button>
+              </td>
+              <td>
+                统一菜单名称和页面名称。
+              </td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>问题 2</td>
+              <td>P0</td>
+              <td>
+                筛选区域，原型中，数据加载中当前是，有筛选换了，先展示 button 数据加载中再可以点击查询，奇怪，应该先允许点击，再出现加载中，下方内容都以加载态出现。
+              </td>
+              <td class="screenshot-cell">
+                <button
+                  class="screenshot-button"
+                  type="button"
+                  aria-label="点击放大查看问题 2 截图"
+                  data-title="问题 2 截图"
+                  data-src="./assets/problem-2-filter-loading.png"
+                  data-alt="筛选区域中按钮显示数据加载中"
+                >
+                  <img
+                    class="screenshot-thumb"
+                    src="./assets/problem-2-filter-loading.png"
+                    alt="筛选区域中按钮显示数据加载中"
+                  />
+                </button>
+              </td>
+              <td>
+                先允许点击查询，再展示加载中。
+              </td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>问题 3</td>
+              <td>P0</td>
+              <td>
+                全局筛选，账单月份改账单，商品名称/App名称 改 商品/App名称。
+              </td>
+              <td class="screenshot-cell"></td>
+              <td>
+                调整全局筛选字段名称。
+              </td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>问题 4</td>
+              <td>P0</td>
+              <td>
+                需要确认全局筛选中是不是区分必填和选填更合理？
+              </td>
+              <td class="screenshot-cell">
+                <button
+                  class="screenshot-button"
+                  type="button"
+                  aria-label="点击放大查看问题 4 截图"
+                  data-title="问题 4 截图"
+                  data-src="./assets/problem-4-required-optional-filters.png"
+                  data-alt="全局筛选未选择必填项时的空态说明"
+                >
+                  <img
+                    class="screenshot-thumb"
+                    src="./assets/problem-4-required-optional-filters.png"
+                    alt="全局筛选未选择必填项时的空态说明"
+                  />
+                </button>
+              </td>
+              <td>
+                区分全局筛选的必填项和选填项。
+              </td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>问题 5</td>
+              <td>P0</td>
+              <td>
+                纯资源这几个字重复特别多，是否可以在全局筛选里最上方新增纯资源 Tag，这样页面里就不需要重复出现了？
+              </td>
+              <td class="screenshot-cell"></td>
+              <td>
+                在全局筛选顶部新增“纯资源”Tag。
+              </td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>问题 6</td>
+              <td>P0</td>
+              <td>
+                纯资源成本利用率，到底是环比还是差值？pp 应该是本期-上期。
+              </td>
+              <td class="screenshot-cell">
+                <button
+                  class="screenshot-button"
+                  type="button"
+                  aria-label="点击放大查看问题 6 截图"
+                  data-title="问题 6 截图"
+                  data-src="./assets/problem-6-cost-rate-pp.png"
+                  data-alt="纯资源成本利润率卡片中显示环比负3.44pp"
+                >
+                  <img
+                    class="screenshot-thumb"
+                    src="./assets/problem-6-cost-rate-pp.png"
+                    alt="纯资源成本利润率卡片中显示环比负3.44pp"
+                  />
+                </button>
+              </td>
+              <td>
+                明确为差值，pp 按本期-上期计算。
+              </td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>问题 7</td>
+              <td>P0</td>
+              <td>
+                第一个Tab，不同表格默认排序，缺少说明。
+              </td>
+              <td class="screenshot-cell"></td>
+              <td>
+                补充默认排序说明。
+              </td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>问题 8</td>
+              <td>P0</td>
+              <td>
+                口径月，高亮，峰值，后两个有直接关系，第一个口径月有啥用？
+              </td>
+              <td class="screenshot-cell"></td>
+              <td>
+                明确口径月的用途。
+              </td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>问题 9</td>
+              <td>P0</td>
+              <td>
+                能不能大部分图表都去掉单位 币种的，如果有不同单位，再展示？
+              </td>
+              <td class="screenshot-cell"></td>
+              <td>
+                统一单位和币种时隐藏，存在差异时展示。
+              </td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>问题 10</td>
+              <td>P0</td>
+              <td>
+                图表的结论 一行展示不下，能截断吗，还是必须展示全，下方Tag同理
+              </td>
+              <td class="screenshot-cell"></td>
+              <td>
+                确认结论和下方 Tag 的截断规则。
+              </td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </main>
+    <dialog class="image-dialog" aria-label="问题截图放大预览">
+      <div class="dialog-header">
+        <span class="dialog-title">问题截图</span>
+        <button class="dialog-close" type="button" aria-label="关闭截图预览">×</button>
+      </div>
+      <img class="dialog-image" src="" alt="" />
+    </dialog>
+    <script>
+      const dialog = document.querySelector(".image-dialog");
+      const dialogTitle = document.querySelector(".dialog-title");
+      const dialogImage = document.querySelector(".dialog-image");
+      const openButtons = document.querySelectorAll(".screenshot-button");
+      const closeButton = document.querySelector(".dialog-close");
+
+      openButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          if (dialogTitle) {
+            dialogTitle.textContent = button.dataset.title || "问题截图";
+          }
+
+          if (dialogImage) {
+            dialogImage.src = button.dataset.src || "";
+            dialogImage.alt = button.dataset.alt || "";
+          }
+
+          dialog?.showModal();
+        });
+      });
+
+      closeButton?.addEventListener("click", () => {
+        dialog?.close();
+      });
+
+      dialog?.addEventListener("click", (event) => {
+        if (event.target === dialog) {
+          dialog.close();
+        }
+      });
+    </script>
+  </body>
 </html>
