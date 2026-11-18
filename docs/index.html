@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Genius AI Prototype - 文档索引</title>
+  <style>
+    :root {
+      --bg: #f6f8fa;
+      --panel: #ffffff;
+      --text: #0c0d0e;
+      --link: #0969da;
+      --border: #dde2e9;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .page {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 48px 24px;
+    }
+    h1 { font-size: 24px; font-weight: 600; margin: 0 0 8px; }
+    .desc { color: #656d76; margin: 0 0 32px; font-size: 14px; }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 12px;
+    }
+    .card a {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--link);
+      text-decoration: none;
+    }
+    .card a:hover { text-decoration: underline; }
+    .card .meta { color: #656d76; font-size: 12px; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <h1>Genius AI Prototype</h1>
+    <p class="desc">经营归因分析原型文档 &amp; 设计建议修改点</p>
+    <div class="card">
+      <a href="/design-suggestions">经营归因分析页面设计建议修改点</a>
+      <div class="meta">设计评审问题跟踪与修改建议</div>
+    </div>
+    <div class="card">
+      <a href="/chart-spacing-playground">图表间距 Playground</a>
+      <div class="meta">图表组件间距调试工具</div>
+    </div>
+    <div class="card">
+      <a href="/topology-flow-preview">拓扑图交互说明预览</a>
+      <div class="meta">拓扑图流程预览页面</div>
+    </div>
+    <div class="card">
+      <a href="/operation-conclusion-card-guide">经营结论卡片指引</a>
+      <div class="meta">经营结论卡片交互说明</div>
+    </div>
+    <div class="card">
+      <a href="/operation-conclusion-card-guide-topology">经营结论卡片指引（拓扑版）</a>
+      <div class="meta">经营结论卡片交互说明 - 拓扑图版本</div>
+    </div>
+  </div>
+</body>
+</html>
