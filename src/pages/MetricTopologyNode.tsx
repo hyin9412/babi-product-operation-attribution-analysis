@@ -4,7 +4,11 @@ import Popover from './AnalysisPopover';
 import expandIcon from '../app/static/icon/下级节点_展开.svg';
 import collapseIcon from '../app/static/icon/下级节点_收起.svg';
 import './metric-topology-node.css';
-import { FormulaSideHandles } from './GroupTargetHandle';
+import { Position } from '@xyflow/react';
+import { FormulaSideHandles, TopologyHandle } from './GroupTargetHandle';
+
+// The 40px icon's visible circle ends at y=32; its button starts 20px above the card bottom.
+export const METRIC_SOURCE_OFFSET = 12;
 
 export type MetricTopologyTarget = {
   id: 'month' | 'quarter' | 'annual';
@@ -119,6 +123,7 @@ export default function MetricTopologyNode({
         aria-expanded={expanded}
         onClick={onToggle}
       >
+        <TopologyHandle nodeId={nodeId} id="bottom" position={Position.Bottom} type="source" centered offsetY={METRIC_SOURCE_OFFSET} />
         <img src={expanded ? collapseIcon : expandIcon} alt="" />
       </button>
     </Popover> : null}

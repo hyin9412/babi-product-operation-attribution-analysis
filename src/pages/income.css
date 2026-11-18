@@ -286,15 +286,11 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 16px 8px;
   min-width: 0;
 }
 .analysis-page .income-category-title { color: var(--color-text-1); font-size: 14px; font-weight: 500; line-height: 22px; }
-.analysis-page .income-category-heading-divider {
-  width: 1px;
-  height: 8px;
-  background: var(--color-border-2);
-}
+.analysis-page .income-category-controls > .income-category-title { margin-right: 8px; }
 .analysis-page .income-category-dashed-divider {
   border-top: 1px dashed var(--color-text-4);
 }
@@ -330,20 +326,20 @@
 .analysis-page .income-cost-trend-grid {
   grid-template-columns: minmax(0, 1fr);
 }
-.analysis-page .income-unit-select { width: 276px; }
-.analysis-page .income-unit-select .arco-select-size-mini.arco-select-multiple .arco-select-view {
-  height: 24px;
-  min-height: 24px;
+.analysis-page .income-unit-select { width: 332px; }
+.analysis-page .income-unit-select .arco-select-size-default.arco-select-multiple .arco-select-view {
+  height: 32px;
+  min-height: 32px;
   overflow: hidden;
 }
 .analysis-page .income-unit-select .arco-input-tag-view {
-  height: 22px;
-  min-height: 22px;
+  height: 30px;
+  min-height: 30px;
 }
 .analysis-page .income-unit-select .arco-input-tag-inner {
   flex-wrap: nowrap;
   min-width: 0;
-  height: 22px;
+  height: 30px;
 }
 .analysis-page .income-unit-select .arco-input-tag-tag {
   flex: 0 1 auto;
@@ -417,6 +413,5 @@
   .analysis-page .income-category-filter > div { flex-wrap: wrap; width: 100%; }
   .analysis-page .income-category-filter .arco-select-wrapper { width: 100%; }
   .analysis-page .income-unit-select { width: 100%; }
-  .analysis-page .income-category-heading-divider { display: none; }
   .analysis-page .income-table-hint { white-space: normal; }
 }

@@ -20,7 +20,7 @@ const metrics: {key: Metric; label: string}[] = [
   { key:'rate', label:'成本利润率' },
   { key:'income', label:'收入' },
   { key:'cost', label:'总资源成本' },
-  { key:'profit', label:'毛利' },
+  { key:'profit', label:'利润' },
 ];
 const resourceCategoryLabel=(category:string)=>category==='计算'?'计算资源':category==='存储'?'存储资源':category;
 const mergedHeaderDivider = '1px solid #EAEDF1';
@@ -80,7 +80,7 @@ function availableTrend(filters:AnalysisFilters,key:Metric):ChartValue[] {
   const existing=trendValues(filters,key);
   return existing.map((point,index)=>({ ...point, value:scopeTotal(getRows(filters,monthList(filters.month)[index]))[key] }));
 }
-const PRODUCT_TREND_COLOR_INDEXES={实际值:0,月度目标:0,季度目标:1};
+const PRODUCT_TREND_COLOR_INDEXES={实际值:0,月度目标:1,季度目标:2};
 function productTrend(filters:AnalysisFilters,key:Metric):ChartValue[] {
   const months=monthList(filters.month);
   const values=availableTrend(filters,key);
@@ -217,13 +217,13 @@ function CategoryCard({category,filters,onDrill}:AnalysisProps&{category:string}
         actualValues.push({x:month,series,value:monthRow?.[key]??null});
         if(filters.targets.includes('月度目标值')){
           const monthlySeries=chartSeriesName([item],'月度目标');
-          seriesColorIndexes[monthlySeries]=index;
+          seriesColorIndexes[monthlySeries]=singleCombo?1:index;
           if(!dashedSeries.includes(monthlySeries))dashedSeries.push(monthlySeries);
           targetValues.push({x:month,series:monthlySeries,value:financialTargetValue(monthRow?.sourceRows||[],key)});
         }
         if(filters.targets.includes('季度目标值')){
           const quarterlySeries=chartSeriesName([item],'季度目标');
-          seriesColorIndexes[quarterlySeries]=singleCombo?1:index;
+          seriesColorIndexes[quarterlySeries]=singleCombo?2:index;
           if(!dashedSeries.includes(quarterlySeries))dashedSeries.push(quarterlySeries);
           const target=financialTargetValue(quarterRow?.sourceRows||[],key);
           targetValues.push({x:month,series:quarterlySeries,value:key==='rate'||target===null?target:target/quarterMonths.length});
@@ -250,7 +250,7 @@ function CategoryCard({category,filters,onDrill}:AnalysisProps&{category:string}
   };
   const supported=filters.product===BYTEGRAPH||tos;
   return <div className="income-category-card">
-    <div className="income-category-heading"><div className="income-category-controls"><span className="income-category-title">{resourceCategoryLabel(category)}</span><span className="income-category-heading-divider" aria-hidden/><div className="income-unit-select"><MultiFilter addBefore="收入计费单元" size="mini" value={units} options={candidates} onChange={setUnits}/></div><Button type="text" className="income-formula-link" icon={<IconFx width="16" height="16"/>} disabled={!supported||!selectedRows.length} onClick={()=>onDrill('pricing','pricing-item-formula',{categories:[category],units:units===null?candidates:units,areas:Array.from(new Set(selectedRows.map(row=>row.area))),regions:null})}>{supported?'定价公式分析':'暂无定价公式'}</Button></div></div>
+    <div className="income-category-heading"><div className="income-category-controls"><span className="income-category-title">{resourceCategoryLabel(category)}</span><div className="income-unit-select"><MultiFilter addBefore="收入计费单元" size="default" value={units} options={candidates} onChange={setUnits}/></div><Button type="text" className="income-formula-link" icon={<IconFx width="16" height="16"/>} disabled={!supported||!selectedRows.length} onClick={()=>onDrill('pricing','pricing-item-formula',{categories:[category],units:units===null?candidates:units,areas:Array.from(new Set(selectedRows.map(row=>row.area))),regions:null})}>{supported?'定价公式分析':'暂无定价公式'}</Button></div></div>
     <div className="income-category-dashed-divider"/>
     <div className="income-category-body">
       <section className="income-category-subsection">
@@ -310,7 +310,8 @@ export default function IncomeTab({filters,onDrill}:AnalysisProps) {
         />;
       })}</div><div className="analysis-chart-grid income-product-trends">{metrics.map(metric=>{
         const targetSeries=[...(filters.targets.includes('月度目标值')?['月度目标']:[]),...(filters.targets.includes('季度目标值')?['季度目标']:[])];
-        return <AnalysisChart key={metric.key} title={`${filters.month} ${metric.label}实际值 ${valueText(metric.key,current[metric.key])}`} values={productTrend(filters,metric.key)} dashedSeries={targetSeries} seriesColorIndexes={PRODUCT_TREND_COLOR_INDEXES} percent={metric.key==='rate'} unit={metric.key==='rate'?'%':'人民币'} height={250}/>;
+        const chartLabel=metric.key==='profit'?'利润':metric.label;
+        return <AnalysisChart key={metric.key} title={chartLabel} values={productTrend(filters,metric.key)} dashedSeries={targetSeries} seriesColorIndexes={PRODUCT_TREND_COLOR_INDEXES} percent={metric.key==='rate'} unit={metric.key==='rate'?'%':'人民币'} height={250}/>;
       })}</div></>}
     </Section>
     <Section title="计费项收支" id="charge-income-expense" blue>

@@ -17,7 +17,7 @@ export function useTableTrend<T extends { id: string }>(rows: T[], scope: string
   return {
     view: current.view,
     selected,
-    range: (key: string) => current.ranges[key] ?? 10,
+    range: (key: string) => current.ranges[key] ?? 5,
     setRange: (key: string, range: number | 'all') => {
       if (!selected) setState({ ...current, ranges: { ...current.ranges, [key]: range } });
     },
@@ -32,9 +32,9 @@ export function TrendRangeControl({ range, rankingLabel, onChange }: {
   onChange: (range: number | 'all') => void;
 }) {
   return <div className="analysis-trend-range">
-      <span>{rankingLabel}Top</span>
-      <Select size="mini" aria-label={`${rankingLabel}Top N`} value={String(range)} style={{ width: 76 }}
-        options={['5', '10', '20', 'all'].map(value => ({ value, label: value === 'all' ? '全部' : value }))}
+      <span>{rankingLabel === '成本合计' ? '成本合计' : '偏差'}：</span>
+      <Select size="mini" className="analysis-trend-range-select" aria-label={`${rankingLabel}Top N`} value={String(range)} style={{ width: 88 }}
+        options={['5', '10', '20', 'all'].map(value => ({ value, label: value === 'all' ? '全部' : `Top ${value}` }))}
         onChange={value => onChange(value === 'all' ? 'all' : Number(value))} />
   </div>;
 }

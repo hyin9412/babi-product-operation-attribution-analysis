@@ -1,12 +1,11 @@
 // References: none — PRD cost-pricing behavior retained; standard Pagination and Alert follow project design rules.
 import React, { useEffect, useMemo, useState } from 'react';
 import { Alert, Button, DatePicker, Drawer, Tabs } from '@byted-babi/babi-design';
-import { Tag as VeTag } from '@tod-m/materials/ve-o';
 import { getSmoothStepPath, Position } from '@xyflow/react';
 import Popover from './AnalysisPopover';
 import { IconInfoCircle } from '@arco-design/iconbox-react-ve-o-design';
 import { TopologyCanvasShell } from '../app/component/topology-canvas-shell';
-import MetricTopologyNode, { type MetricTopologyNodeProps, type MetricTopologyTarget } from './MetricTopologyNode';
+import MetricTopologyNode, { METRIC_SOURCE_OFFSET, type MetricTopologyNodeProps, type MetricTopologyTarget } from './MetricTopologyNode';
 import CalculationOperatorNode, { type CalculationOperator } from './CalculationOperatorNode';
 import ConstantTopologyNode from './ConstantTopologyNode';
 import BracketExpressionNode, { type BracketExpressionItem } from './BracketExpressionNode';
@@ -109,12 +108,16 @@ function PriceComparisonChart({title,filters,cadence,items,selected,range,onRang
   const values=priceComparisonTrends(filters,cadence,chartItems,isTos);
   const series=unique(values.map(value=>value.series));
   const legendItems=unique(series.map(name=>name.split(', ')[0]));
+  const singleItem=legendItems.length===1;
   const singleItemDrill=!!selected&&legendItems.length===1;
   return <AnalysisChart key={`${cadence}-${selected?.id||'all'}-${range}`} title={title} values={values} unit="人民币" legendReset
     titleExtra={selected?undefined:<TrendRangeControl range={range} rankingLabel="偏差" onChange={onRangeChange}/>}
     percentSeries={series.filter(name=>name.endsWith('偏差幅度'))}
     dashedSeries={series.filter(name=>!name.endsWith('测算单价'))}
-    seriesColorIndexes={Object.fromEntries(series.map(name=>[name,singleItemDrill&&name.endsWith('偏差幅度')?1:legendItems.indexOf(name.split(', ')[0])]))}/>;
+    seriesColorIndexes={Object.fromEntries(series.map(name=>[name,
+      singleItem&&name.endsWith('目标单价')&&cadence!=='annual'?(cadence==='month'?1:2):
+      singleItemDrill&&name.endsWith('偏差幅度')?1:legendItems.indexOf(name.split(', ')[0])
+    ]))}/>;
 }
 
 interface FormulaTargets {
@@ -283,7 +286,7 @@ function formulaMetricProps(node:FormulaNode,{row,expanded,toggle,onTrend,onDeta
 }
 
 function FormulaCard({node,context}:{node:FormulaNode;context:FormulaRenderContext}) {
-  return <MetricTopologyNode {...formulaMetricProps(node,context)}/>;
+  return <MetricTopologyNode nodeId={node.id} {...formulaMetricProps(node,context)}/>;
 }
 
 const FORMULA_NODE_WIDTH=300;
@@ -296,26 +299,26 @@ const FORMULA_GROUP_EXTRA_HEIGHT=34;
 type ParsedFormulaItem=FormulaExpressionItem<FormulaNode>;
 type FormulaItemSize={width:number;height:number};
 type FormulaExpressionEntry={item:ParsedFormulaItem;cellX:number;cellWidth:number;visualX:number;visualY:number;size:FormulaItemSize};
-type FormulaMetricAnchor={node:FormulaNode;centerX:number;topY:number};
+type FormulaMetricAnchor={node:FormulaNode;itemId:string;centerX:number;topY:number};
 type FormulaExpressionLayout={width:number;height:number;entries:FormulaExpressionEntry[];anchors:FormulaMetricAnchor[]};
 type FormulaCanvasExpression={id:string;items:ParsedFormulaItem[];layout:FormulaExpressionLayout;x:number;y:number};
-type FormulaCanvasEdge={id:string;type:'smoothstep';source:string;target:string;sourceX:number;sourceY:number;targetX:number;targetY:number;centerY:number};
+type FormulaCanvasEdge={id:string;type:'smoothstep';source:string;sourceHandle:'bottom';target:string;sourceX:number;sourceY:number;targetX:number;targetY:number;centerY:number};
 type FormulaHorizontalEdge={id:string;type:'straight';source:string;target:string;sourceHandle:'right';targetHandle:'left';sourceX:number;targetX:number;y:number};
 const formulaCanvasItemId=(expressionId:string,itemId:string)=>`${expressionId}-${itemId}`;
 
-function formulaSequenceSize(items:ParsedFormulaItem[],nodeHeight:number):FormulaItemSize {
-  const sizes=items.map(item=>formulaItemVisualSize(item,nodeHeight));
+function formulaSequenceSize(items:ParsedFormulaItem[],nodeHeight:number,inBracket=false):FormulaItemSize {
+  const sizes=items.map(item=>formulaItemVisualSize(item,nodeHeight,inBracket));
   return {
     width:sizes.reduce((sum,size)=>sum+size.width,0)+Math.max(0,sizes.length-1)*FORMULA_ITEM_GAP,
     height:Math.max(0,...sizes.map(size=>size.height)),
   };
 }
 
-function formulaItemVisualSize(item:ParsedFormulaItem,nodeHeight:number):FormulaItemSize {
+function formulaItemVisualSize(item:ParsedFormulaItem,nodeHeight:number,inBracket=false):FormulaItemSize {
   if(item.type==='metric')return {width:FORMULA_NODE_WIDTH,height:nodeHeight};
-  if(item.type==='operator')return {width:46,height:46};
+  if(item.type==='operator')return inBracket?{width:32,height:32}:{width:46,height:46};
   if(item.type==='constant')return {width:Math.max(32,String(item.value).length*8+22),height:32};
-  const content=formulaSequenceSize(item.items,nodeHeight);
+  const content=formulaSequenceSize(item.items,nodeHeight,item.type==='expression');
   const labelWidth=item.type==='function'?Math.max(88,formatFunctionNodeLabel(item.name).length*12+54):104;
   return {
     width:Math.max(labelWidth,content.width+FORMULA_GROUP_PADDING),
@@ -335,16 +338,16 @@ function formulaItemBlockWidth(item:ParsedFormulaItem,expanded:Set<string>,nodeH
   return visual;
 }
 
-function visualMetricAnchors(items:ParsedFormulaItem[],originX:number,originY:number,nodeHeight:number):FormulaMetricAnchor[] {
+function visualMetricAnchors(items:ParsedFormulaItem[],originX:number,originY:number,nodeHeight:number,inBracket=false):FormulaMetricAnchor[] {
   const anchors:FormulaMetricAnchor[]=[];
-  const rowHeight=formulaSequenceSize(items,nodeHeight).height;
+  const rowHeight=formulaSequenceSize(items,nodeHeight,inBracket).height;
   let cursor=originX;
   items.forEach(item=>{
-    const size=formulaItemVisualSize(item,nodeHeight);
+    const size=formulaItemVisualSize(item,nodeHeight,inBracket);
     const topY=originY+(rowHeight-size.height)/2;
-    if(item.type==='metric')anchors.push({node:item.node,centerX:cursor+FORMULA_NODE_WIDTH/2,topY});
+    if(item.type==='metric')anchors.push({node:item.node,itemId:item.id,centerX:cursor+FORMULA_NODE_WIDTH/2,topY});
     if(item.type==='expression'||item.type==='function') {
-      anchors.push(...visualMetricAnchors(item.items,cursor+17,topY+1+formulaGroupTopPadding(item.items),nodeHeight));
+      anchors.push(...visualMetricAnchors(item.items,cursor+17,topY+1+formulaGroupTopPadding(item.items),nodeHeight,item.type==='expression'));
     }
     cursor+=size.width+FORMULA_ITEM_GAP;
   });
@@ -362,9 +365,9 @@ function buildFormulaExpressionLayout(items:ParsedFormulaItem[],expanded:Set<str
     const visualX=cursor+(cellWidth-size.width)/2;
     const visualY=(height-size.height)/2;
     entries.push({item,cellX:cursor,cellWidth,visualX,visualY,size});
-    if(item.type==='metric')anchors.push({node:item.node,centerX:visualX+FORMULA_NODE_WIDTH/2,topY:visualY});
+    if(item.type==='metric')anchors.push({node:item.node,itemId:item.id,centerX:visualX+FORMULA_NODE_WIDTH/2,topY:visualY});
     if(item.type==='expression'||item.type==='function') {
-      anchors.push(...visualMetricAnchors(item.items,visualX+17,visualY+1+formulaGroupTopPadding(item.items),nodeHeight));
+      anchors.push(...visualMetricAnchors(item.items,visualX+17,visualY+1+formulaGroupTopPadding(item.items),nodeHeight,item.type==='expression'));
     }
     cursor+=cellWidth+FORMULA_ITEM_GAP;
   });
@@ -379,28 +382,30 @@ function buildFormulaExpressionLayout(items:ParsedFormulaItem[],expanded:Set<str
   return {width:Math.max(0,cursor-(items.length?FORMULA_ITEM_GAP:0)),height,entries,anchors};
 }
 
-function bracketItem(item:ParsedFormulaItem,context:FormulaRenderContext):BracketExpressionItem {
-  if(item.type==='metric')return {id:item.id,type:'metric',content:<MetricTopologyNode {...formulaMetricProps(item.node,context)}/>};
-  if(item.type==='constant')return {id:item.id,type:'constant',value:item.value};
-  if(item.type==='operator')return {id:item.id,type:'operator',operator:item.operator};
-  if(item.type==='expression')return {id:item.id,type:'expression',items:item.items.map(child=>bracketItem(child,context))};
-  return {id:item.id,type:'function',content:formulaExpressionItem(item,context,item.id)};
+function bracketItem(item:ParsedFormulaItem,context:FormulaRenderContext,expressionId:string):BracketExpressionItem {
+  const id=formulaCanvasItemId(expressionId,item.id);
+  if(item.type==='metric')return {id,type:'metric',content:<MetricTopologyNode nodeId={id} {...formulaMetricProps(item.node,context)}/>};
+  if(item.type==='constant')return {id,type:'constant',value:item.value};
+  if(item.type==='operator')return {id,type:'operator',operator:item.operator};
+  if(item.type==='expression')return {id,type:'expression',items:item.items.map(child=>bracketItem(child,context,expressionId))};
+  return {id,type:'function',content:formulaExpressionItem(item,context,id,expressionId)};
 }
 
-function functionItem(item:ParsedFormulaItem,context:FormulaRenderContext):FunctionFormulaItem {
-  if(item.type==='metric')return {id:item.id,type:'metric',metric:formulaMetricProps(item.node,context)};
-  if(item.type==='constant')return {id:item.id,type:'constant',value:item.value};
-  if(item.type==='operator')return {id:item.id,type:'operator',operator:item.operator};
-  if(item.type==='expression')return {id:item.id,type:'expression',expression:{items:item.items.map(child=>bracketItem(child,context))}};
-  return {id:item.id,type:'function',name:item.name,items:item.items.map(child=>functionItem(child,context))};
+function functionItem(item:ParsedFormulaItem,context:FormulaRenderContext,expressionId:string):FunctionFormulaItem {
+  const id=formulaCanvasItemId(expressionId,item.id);
+  if(item.type==='metric')return {id,type:'metric',metric:{nodeId:id,...formulaMetricProps(item.node,context)}};
+  if(item.type==='constant')return {id,type:'constant',value:item.value};
+  if(item.type==='operator')return {id,type:'operator',operator:item.operator};
+  if(item.type==='expression')return {id,type:'expression',expression:{nodeId:id,items:item.items.map(child=>bracketItem(child,context,expressionId))}};
+  return {id,type:'function',name:item.name,items:item.items.map(child=>functionItem(child,context,expressionId))};
 }
 
-function formulaExpressionItem(item:ParsedFormulaItem,context:FormulaRenderContext,nodeId?:string) {
+function formulaExpressionItem(item:ParsedFormulaItem,context:FormulaRenderContext,nodeId:string,expressionId:string) {
   if(item.type==='metric')return <MetricTopologyNode nodeId={nodeId} {...formulaMetricProps(item.node,context)}/>;
   if(item.type==='constant')return <ConstantTopologyNode value={item.value}/>;
   if(item.type==='operator')return <CalculationOperatorNode nodeId={nodeId} operator={item.operator}/>;
-  if(item.type==='expression')return <BracketExpressionNode nodeId={nodeId} items={item.items.map(child=>bracketItem(child,context))}/>;
-  return <FunctionTopologyNode nodeId={nodeId} name={item.name} variant="formula" items={item.items.map(child=>functionItem(child,context))}/>;
+  if(item.type==='expression')return <BracketExpressionNode nodeId={nodeId} items={item.items.map(child=>bracketItem(child,context,expressionId))}/>;
+  return <FunctionTopologyNode nodeId={nodeId} name={item.name} variant="formula" items={item.items.map(child=>functionItem(child,context,expressionId))}/>;
 }
 
 function buildFormulaCanvas(root:FormulaNode,expanded:Set<string>,targetCount:number) {
@@ -410,7 +415,7 @@ function buildFormulaCanvas(root:FormulaNode,expanded:Set<string>,targetCount:nu
   const horizontalEdges:FormulaHorizontalEdge[]=[];
   const visited=new Set<string>();
 
-  const placeExpression=(node:FormulaNode,parentCenterX:number,parentY:number,path:string)=>{
+  const placeExpression=(node:FormulaNode,parentCenterX:number,parentY:number,path:string,sourceNodeId:string)=>{
     if(!expanded.has(node.id)||visited.has(`${path}:${node.id}`))return;
     visited.add(`${path}:${node.id}`);
     const items=parseFormulaExpression(node);
@@ -439,21 +444,23 @@ function buildFormulaCanvas(root:FormulaNode,expanded:Set<string>,targetCount:nu
       edges.push({
         id:`${path}-${node.id}-${entry.item.id}`,
         type:'smoothstep',
-        source:node.id,
+        source:sourceNodeId,
+        sourceHandle:'bottom',
         target:formulaCanvasItemId(expressionId,entry.item.id),
         sourceX:parentCenterX,
-        sourceY:parentY+nodeHeight,
+        sourceY:parentY+nodeHeight+METRIC_SOURCE_OFFSET,
         targetX:x+entry.visualX+entry.size.width/2,
         targetY:y+entry.visualY,
         centerY:y-FORMULA_LEVEL_GAP/2,
       });
     });
     layout.anchors.forEach(anchor=>{
-      placeExpression(anchor.node,x+anchor.centerX,y+anchor.topY,`${path}-${node.id}`);
+      const cardId=formulaCanvasItemId(expressionId,anchor.itemId);
+      placeExpression(anchor.node,x+anchor.centerX,y+anchor.topY,cardId,cardId);
     });
   };
 
-  placeExpression(root,0,0,'root');
+  placeExpression(root,0,0,'root',root.id);
   const minX=Math.min(-FORMULA_NODE_WIDTH/2,...expressions.map(item=>item.x));
   const maxX=Math.max(FORMULA_NODE_WIDTH/2,...expressions.map(item=>item.x+item.layout.width));
   const maxY=Math.max(nodeHeight,...expressions.map(item=>item.y+item.layout.height));
@@ -488,7 +495,7 @@ function FormulaExpressionRow({expression,context}:{expression:FormulaCanvasExpr
       data-node-id={formulaCanvasItemId(expression.id,entry.item.id)}
       key={entry.item.id}
     >
-      {formulaExpressionItem(entry.item,context,formulaCanvasItemId(expression.id,entry.item.id))}
+      {formulaExpressionItem(entry.item,context,formulaCanvasItemId(expression.id,entry.item.id),expression.id)}
     </div>)}
   </div>;
 }
@@ -535,28 +542,6 @@ export function FormulaCanvas({tree,row,expanded,toggle,onTrend,onDetails=()=>{}
         data-source-handle={edge.sourceHandle}
         data-target-handle={edge.targetHandle}
       />)}
-      {graph.edges.map(edge=>{
-        const [path]=getSmoothStepPath({
-          sourceX:edge.sourceX,
-          sourceY:edge.sourceY,
-          sourcePosition:Position.Bottom,
-          targetX:edge.targetX,
-          targetY:edge.targetY,
-          targetPosition:Position.Top,
-          centerY:edge.centerY,
-          borderRadius:16,
-        });
-        return <path
-          key={edge.id}
-          d={path}
-          className="formula-canvas-edge"
-          data-source={edge.source}
-          data-target={edge.target}
-          data-type={edge.type}
-          data-beam-y={edge.centerY}
-          markerEnd="url(#formula-canvas-connector-end)"
-        />;
-      })}
     </g>
     <g className="formula-canvas-nodes">
       <foreignObject x={graph.rootX} y={graph.rootY} width={FORMULA_NODE_WIDTH} height={graph.nodeHeight}>
@@ -573,6 +558,32 @@ export function FormulaCanvas({tree,row,expanded,toggle,onTrend,onDetails=()=>{}
       >
         <FormulaExpressionRow expression={expression} context={context}/>
       </foreignObject>)}
+    </g>
+    {/* SVG paints in document order: drill-down edges must cross group frames. */}
+    <g className="formula-canvas-edges formula-canvas-drill-edges" data-z-index="10">
+      {graph.edges.map(edge=>{
+        const [path]=getSmoothStepPath({
+          sourceX:edge.sourceX,
+          sourceY:edge.sourceY,
+          sourcePosition:Position.Bottom,
+          targetX:edge.targetX,
+          targetY:edge.targetY,
+          targetPosition:Position.Top,
+          centerY:edge.centerY,
+          borderRadius:16,
+        });
+        return <path
+          key={edge.id}
+          d={path}
+          className="formula-canvas-edge"
+          data-source={edge.source}
+          data-source-handle={edge.sourceHandle}
+          data-target={edge.target}
+          data-type={edge.type}
+          data-beam-y={edge.centerY}
+          markerEnd="url(#formula-canvas-connector-end)"
+        />;
+      })}
     </g>
   </TopologyCanvasShell>;
 }
@@ -815,9 +826,16 @@ export default function PricingTab({ filters, topologyOnly = false }: AnalysisPr
       </div>
       {!tree ? <EmptyState text={rows.length === 0 ? '当前公式链路筛选组合暂无可用于公式归因的指标数据' : '当前计费单元暂无已接入的定价公式链路，不使用 CPU 公式替代'}/> : <>
         <div className="pricing-formula-container"><FormulaCanvas tree={tree} row={formulaRow!} expanded={expanded} toggle={toggle} onTrend={showTrend} onDetails={setDetailNode} targets={filters.targets}/></div>
-        <div id="pricing-metric-trend" className="pricing-metric-panel"><div className="analysis-toolbar"><h3>指标趋势</h3></div>
+        <div id="pricing-metric-trend" className="pricing-metric-panel">
+          <div className="pricing-metric-panel-heading">
+            <h3>指标趋势</h3>
+            <span className="pricing-metric-detail-label pricing-scope-tag" aria-label="当前指标分析范围" title={isTos ? `${activeUnit} / ${activeArea}` : `${activeUnit} / ${activeArea} / ${activeRegion}`}>
+              <span className="pricing-metric-detail-label-prefix">{isTos ? '收入计费单元&大区' : '收入计费单元&售卖区域'}</span>
+              <span className="pricing-metric-detail-label-text">{isTos ? `${activeUnit} / ${activeArea}` : `${activeUnit} / ${activeArea} / ${activeRegion}`}</span>
+            </span>
+          </div>
+          <div className="pricing-metric-panel-body">
           <div className="pricing-trend-controls">
-            <Select addBefore={isTos ? '收入计费单元&大区' : '收入计费单元&售卖区域'} className="pricing-scope-select" disabled value={isTos ? `${activeUnit} / ${activeArea}` : `${activeUnit} / ${activeArea} / ${activeRegion}`} options={[isTos ? `${activeUnit} / ${activeArea}` : `${activeUnit} / ${activeArea} / ${activeRegion}`]} aria-label="当前指标分析范围"/>
             <div className="pricing-month-range"><DatePicker.RangePicker mode="month" format="YYYY-MM" value={trendMonthRange} onChange={setTrendMonthRange} allowClear={false} placeholder={['开始月份', '结束月份']} aria-label="指标趋势月份范围"/></div>
             <Select addBefore="指标" className="pricing-metric-select" defaultActiveFirstOption={false} showSearch={nodes.length > SELECT_SEARCH_THRESHOLD} placeholder={getSelectPlaceholder(nodes.length > SELECT_SEARCH_THRESHOLD)} value={selectedNode?.id} options={nodes.map(node => ({ value: node.id, label: node.title }))} onChange={setMetric}/>
             <div role="group" aria-label="趋势时间粒度"><Tabs className="pricing-pipeline-tabs" type="capsule" size="default" activeTab={timeGrain} onChange={key => setTimeGrain(key as 'month' | 'day')}><Tabs.TabPane key="month" title="按月"/><Tabs.TabPane key="day" title="按日"/></Tabs></div>
@@ -827,6 +845,7 @@ export default function PricingTab({ filters, topologyOnly = false }: AnalysisPr
             <AnalysisChart key={`${metric}-${activeUnit}-${activeArea}-${activeRegion}`} title={selectedNode?.title || '公式指标月度趋势'} values={metricTrendValues} dashedSeries={['月度目标', '季度目标', '年度目标']} dottedSeries={['年度目标']} percent={selectedNode?.type === 'ratio'} unit={selectedNode?.unit || ''} height={270}/>
             <SourceTable columns={metricColumns} data={sortRows(monthlyFormulaRows, metricSort)} pagination={sourcePaginationProps(monthlyFormulaRows.length)} width={metricColumns.reduce((sum, column) => sum + (column.width || 150), 0)} onChange={(_pagination:any, sorter:any) => setMetricSort(stateFromSorter(sorter, { key: 'deviation', order: 'descend' }))} noDataElement={<EmptyState text="当前全局筛选结果下暂无可展示的组合维度月度趋势明细" compact size={60}/>}/>
           </>}
+          </div>
         </div>
       </>}
     </Section>
@@ -834,9 +853,8 @@ export default function PricingTab({ filters, topologyOnly = false }: AnalysisPr
       title={<div className="pricing-metric-detail-drawer-title">
         <span>查看指标详细数据</span>
         {detailNode ? <span className="pricing-metric-detail-label" title={detailNode.title}>
-          <VeTag.TagPro mode="label" label="指标">
-            <span className="pricing-metric-detail-label-text">{detailNode.title}</span>
-          </VeTag.TagPro>
+          <span className="pricing-metric-detail-label-prefix">指标</span>
+          <span className="pricing-metric-detail-label-text">{detailNode.title}</span>
         </span> : null}
       </div>}
       visible={!!detailNode}

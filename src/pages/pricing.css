@@ -139,8 +139,12 @@
   height: calc(100vh - 300px);
   min-height: 0;
 }
-.analysis-page .pricing-formula-flow .topology-canvas-shell-title {
-  font-weight: 600;
+.analysis-page .pricing-formula-flow .topology-canvas-shell-title,
+.analysis-page .pricing-metric-panel .pricing-metric-panel-heading > h3 {
+  color: var(--color-text-1);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 22px;
 }
 .pricing-metric-detail-drawer-title {
   display: flex;
@@ -148,22 +152,41 @@
   align-items: center;
   gap: 8px;
 }
+.pricing-metric-detail-drawer-title > span:first-child {
+  flex-shrink: 0;
+}
 .pricing-metric-detail-label {
   display: inline-flex;
+  flex: 0 1 auto;
+  align-items: center;
   min-width: 0;
   max-width: 520px;
-  height: 20px;
+  height: 24px;
   margin: 0;
+  color: #42464e;
+  font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 22px;
+  letter-spacing: .003em;
+  vertical-align: middle;
 }
-.pricing-metric-detail-label .vod-tag-label-wrap {
-  min-width: 0;
-  max-width: 100%;
+.pricing-metric-detail-label-prefix,
+.pricing-metric-detail-label-text {
+  box-sizing: border-box;
+  height: 24px;
+  padding: 1px 8px;
+  box-shadow: 0 0 0 1px #eaedf1, 0 1px 1px rgba(0, 0, 0, .05);
 }
-.pricing-metric-detail-label .vod-tag-label {
+.pricing-metric-detail-label-prefix {
   flex: 0 0 auto;
+  background: #f6f8fa;
+  border-radius: 4px 0 0 4px;
 }
 .pricing-metric-detail-label-text {
   min-width: 0;
+  background: #fff;
+  border-radius: 0 4px 4px 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -290,19 +313,42 @@
 }
 .analysis-page .pricing-metric-panel {
   background: var(--color-bg-1);
-  padding-top: 16px;
   margin-top: 16px;
   scroll-margin-top: 250px;
 }
-.analysis-page .pricing-metric-panel .analysis-toolbar { flex-wrap: wrap; }
-.analysis-page .pricing-metric-panel > .analysis-chart { margin-bottom: 16px; }
+.analysis-page .pricing-metric-panel-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border: 1px solid #eaedf1;
+  border-radius: 8px 8px 0 0;
+}
+.analysis-page .pricing-metric-panel .pricing-metric-panel-heading > h3 {
+  flex-shrink: 0;
+}
+.analysis-page .pricing-scope-tag {
+  max-width: 100%;
+}
+.analysis-page .pricing-metric-panel-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 16px;
+  gap: 16px;
+  background: var(--topology-canvas-bg);
+  border: solid #eaedf1;
+  border-width: 0 1px 1px;
+  border-radius: 0 0 8px 8px;
+}
 .analysis-page .pricing-metric-panel h3 { font-size: 14px; font-weight: 500; line-height: 22px; color: var(--color-text-1); margin: 0; }
 .analysis-page .pricing-trend-controls {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 0;
 }
 .analysis-page .pricing-trend-controls > .arco-select-wrapper {
   width: auto;
@@ -317,9 +363,6 @@
 .analysis-page .pricing-month-range .arco-picker {
   width: 260px;
   max-width: 100%;
-}
-.analysis-page .pricing-trend-controls > .pricing-scope-select {
-  width: 300px;
 }
 .analysis-page .pricing-trend-controls > .pricing-metric-select {
   width: 300px;

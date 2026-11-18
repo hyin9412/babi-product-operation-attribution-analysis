@@ -3,19 +3,21 @@ import { Handle, Position, useNodeId } from '@xyflow/react';
 
 // The formula SVG canvas has no React Flow node context. Keep the same
 // anchor contract there, and use the native Handle inside React Flow nodes.
-export function TopologyHandle({ nodeId, id, position, type, borderWidth = 0 }: {
+export function TopologyHandle({ nodeId, id, position, type, borderWidth = 0, centered = false, offsetY = 0 }: {
   nodeId?: string;
   id: string;
   position: Position;
   type: 'source' | 'target';
   borderWidth?: number;
+  centered?: boolean;
+  offsetY?: number;
 }) {
   const flowNodeId = useNodeId();
   const style: React.CSSProperties = {
     position: 'absolute',
-    top: position === Position.Top ? -borderWidth : '50%',
-    left: position === Position.Left ? -borderWidth : position === Position.Top ? '50%' : 'auto',
-    right: position === Position.Right ? -borderWidth : 'auto',
+    top: centered ? `calc(50% + ${offsetY}px)` : position === Position.Top ? -borderWidth : position === Position.Bottom ? '100%' : '50%',
+    left: centered || position === Position.Top || position === Position.Bottom ? '50%' : position === Position.Left ? -borderWidth : 'auto',
+    right: !centered && position === Position.Right ? -borderWidth : 'auto',
     width: 0,
     height: 0,
     minWidth: 0,
