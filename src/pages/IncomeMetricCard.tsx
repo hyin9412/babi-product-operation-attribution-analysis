@@ -68,11 +68,16 @@ const formulaNumber=(value:number,unit:'%'|'pp')=>
   `${value.toLocaleString('zh-CN',{maximumFractionDigits:6})}${unit==='pp'?'%':' 元'}`;
 
 function deviationFormula(period:string,actualLabel:string,actual:number|null,target:number|null,deviation:number|null,unit:'%'|'pp') {
-  const formula=`${period}偏差 =（${actualLabel} - ${period}目标值）/ |${period}目标值| × 100%`;
+  const isRate=unit==='pp';
+  const formula=isRate
+    ?`${period}目标累计偏差 = ${actualLabel} - ${period}目标值`
+    :`${period}偏差 =（${actualLabel} - ${period}目标值）/ |${period}目标值| × 100%`;
   const available=actual!==null&&target!==null&&Number.isFinite(actual)&&Number.isFinite(target)&&target!==0&&deviation!==null&&Number.isFinite(deviation);
   return <div className="income-metric-formula-details">
     {formula}{available
-      ?` = (${formulaNumber(actual,unit)} - ${formulaNumber(target,unit)}) / |${formulaNumber(target,unit)}| × 100% ≈ ${formatChange(deviation,'%')}`
+      ?isRate
+        ?` = ${formulaNumber(actual,unit)} - ${formulaNumber(target,unit)} ≈ ${formatChange(deviation,unit)}`
+        :` = (${formulaNumber(actual,unit)} - ${formulaNumber(target,unit)}) / |${formulaNumber(target,unit)}| × 100% ≈ ${formatChange(deviation,'%')}`
       :` = -（实际值 ${actual!==null&&Number.isFinite(actual)?formulaNumber(actual,unit):'-'}，目标值 ${target!==null&&Number.isFinite(target)?formulaNumber(target,unit):'-'}；数据缺失或目标值为 0，无法计算偏差）`}
   </div>;
 }
@@ -104,7 +109,7 @@ function rateFormula(profit:number|null,cost:number|null,result:number|null) {
   </div>;
 }
 
-function FormulaValue({content,children,disabled=false}:{content:React.ReactNode;children:React.ReactNode;disabled?:boolean}) {
+export function FormulaValue({content,children,disabled=false}:{content:React.ReactNode;children:React.ReactNode;disabled?:boolean}) {
   return <Popover className="income-metric-formula-popover" content={content} disabled={disabled} trigger="hover" unmountOnExit><span className="income-metric-formula-value">{children}</span></Popover>;
 }
 
@@ -197,10 +202,10 @@ export default function IncomeMetricCard({
       </div>
     </div>
     {showTargets&&<div className="income-metric-targets">
-      {showMonthly&&<TargetComparisonRow label="月度目标" value={monthlyTarget} deviation={monthlyDeviation} unit="%" formula={deviationFormula('月度','当月实际值',targetSummary.monthlyActual,targetSummary.monthlyTarget,monthlyDeviation,changeUnit)}/>}
-      {showQuarterly&&<TargetComparisonRow label="季度目标" value={quarterlyTarget} deviation={quarterlyDeviation} unit="%" formula={deviationFormula('季度','本季度截至当前账期累计实际值',targetSummary.quarterlyActual,targetSummary.quarterlyTarget,quarterlyDeviation,changeUnit)}/>}
+      {showMonthly&&<TargetComparisonRow label="月度目标" value={monthlyTarget} deviation={monthlyDeviation} unit={changeUnit} formula={deviationFormula('月度','当月实际值',targetSummary.monthlyActual,targetSummary.monthlyTarget,monthlyDeviation,changeUnit)}/>}
+      {showQuarterly&&<TargetComparisonRow label="季度目标" value={quarterlyTarget} deviation={quarterlyDeviation} unit={changeUnit} formula={deviationFormula('季度','本季度截至当前账期累计实际值',targetSummary.quarterlyActual,targetSummary.quarterlyTarget,quarterlyDeviation,changeUnit)}/>}
       {showAnnual&&(changeUnit==='pp'
-        ?<TargetComparisonRow label="年度目标" value={annualTarget} deviation={annualTargetShare} unit="%" formula={rateAnnualDeviationFormula(targetSummary.yearToDateActual,targetSummary.annualTarget,annualTargetShare,changeUnit)}/>
+        ?<TargetComparisonRow label="年度目标" value={annualTarget} deviation={annualDeviation} unit={changeUnit} formula={deviationFormula('年度','1月至当前账期累计实际利润率',targetSummary.yearToDateActual,targetSummary.annualTarget,annualDeviation,'pp')}/>
         :<>
           <TargetValueRow label="年度目标" value={annualTarget}/>
           <TargetValueRow label="1月至今累计实际值" value={yearToDateActual}/>

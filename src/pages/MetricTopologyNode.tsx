@@ -1,6 +1,8 @@
 import React from 'react';
 import { IconLineChart } from '@arco-design/iconbox-react-ve-o-design';
 import Popover from './AnalysisPopover';
+import { FormulaValue } from './IncomeMetricCard';
+import './income.css';
 import expandIcon from '../app/static/icon/下级节点_展开.svg';
 import collapseIcon from '../app/static/icon/下级节点_收起.svg';
 import './metric-topology-node.css';
@@ -16,6 +18,7 @@ export type MetricTopologyTarget = {
   value: string;
   deviation: string;
   deviationValue?: number | null;
+  deviationFormula?: React.ReactNode;
 };
 
 export type MetricTopologyNodeProps = {
@@ -109,7 +112,11 @@ export default function MetricTopologyNode({
           {targets.map(target => <div className="metric-topology-node-target numeric" key={target.id}>
             <span>{target.label}：<b>{target.value || '-'}</b></span>
             <i aria-hidden />
-            <span>偏差：<b className={deviationTone(target.deviationValue)}>{target.deviation || '-'}</b></span>
+            <span>偏差：<b className={deviationTone(target.deviationValue)}>
+              <FormulaValue content={target.deviationFormula} disabled={!target.deviationFormula}>
+                {target.deviation || '-'}
+              </FormulaValue>
+            </b></span>
           </div>)}
         </>}
       </div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Select } from '@byted-babi/babi-design';
+import { Button, InputNumber } from '@byted-babi/babi-design';
 import { Alert, Button as VeButton, Tabs } from '@tod-m/materials/ve-o';
 import Popover from './AnalysisPopover';
 import { OverflowText } from './analysisUI';
@@ -31,11 +31,26 @@ export function TrendRangeControl({ range, rankingLabel, onChange }: {
   range: number | 'all'; rankingLabel: string;
   onChange: (range: number | 'all') => void;
 }) {
+  const [draft, setDraft] = useState<number | undefined>(range === 'all' ? undefined : range);
+  const commit = () => {
+    if (draft == null || !Number.isFinite(draft)) {
+      setDraft(range === 'all' ? undefined : range);
+      return;
+    }
+    const next = Math.min(2147483647, Math.max(1, Math.round(draft)));
+    setDraft(next);
+    if (next !== range) onChange(next);
+  };
   return <div className="analysis-trend-range">
-      <span>{rankingLabel === '成本合计' ? '成本合计' : '偏差'}：</span>
-      <Select size="mini" className="analysis-trend-range-select" aria-label={`${rankingLabel}Top N`} value={String(range)} style={{ width: 88 }}
-        options={['5', '10', '20', 'all'].map(value => ({ value, label: value === 'all' ? '全部' : `Top ${value}` }))}
-        onChange={value => onChange(value === 'all' ? 'all' : Number(value))} />
+      <span>{rankingLabel}</span>
+      <Popover content="选择TopN">
+        <span style={{ display: 'inline-flex' }}>
+          <InputNumber size="small" className="analysis-trend-range-input" aria-label={`${rankingLabel}Top N`}
+            placeholder="请选择 TopN" value={draft} min={1} max={2147483647} precision={0}
+            style={{ width: 70 }} onChange={setDraft} onBlur={commit}
+            onKeyDown={event => { if ((event as KeyboardEvent).key === 'Enter') commit(); }} />
+        </span>
+      </Popover>
   </div>;
 }
 
@@ -54,10 +69,10 @@ export function TrendDrillIcon({ label, onClick, disabled = false, disabledReaso
   disabled?: boolean;
   disabledReason?: string;
 }) {
-  return <Popover content={disabled && disabledReason ? disabledReason : '查看该计费项的月度趋势'}>
+  return <Popover content={disabled && disabledReason ? disabledReason : '查看月趋势'}>
     <span className="analysis-trend-drill-trigger">
       <Button type="text" size="mini" shape="square" className="analysis-trend-drill" disabled={disabled}
-        aria-label={disabled && disabledReason ? `${label}：${disabledReason}` : `查看 ${label} 的月度趋势`}
+        aria-label={disabled && disabledReason ? `${label}：${disabledReason}` : `查看 ${label} 月趋势`}
         icon={<IconLineChart width="16" height="16" />} onClick={event => { event.stopPropagation(); onClick(); }} />
     </span>
   </Popover>;

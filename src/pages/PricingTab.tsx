@@ -51,6 +51,8 @@ interface PriceTrendItem {
   unit: string;
   area: string;
   region: string;
+  monthPrice: number|null;
+  annualPrice: number|null;
   monthDeviation: number|null;
   quarterDeviation: number|null;
   annualDeviation: number|null;
@@ -77,10 +79,10 @@ function priceTrendItems(rows:AnalysisRow[],isTos:boolean):PriceTrendItem[] {
       const actual=weightedPrice(group,row=>cadence==='annual'?row.cumulativePrice:normalizedPrice(row));
       return metricDeviation(actual,weightedPrice(group,row=>targetPrice(row,cadence)),'price');
     };
-    return {id,unit:first.unit,area:first.area,region:isTos?'':first.region,monthDeviation:deviation('month'),quarterDeviation:deviation('quarter'),annualDeviation:deviation('annual')};
+    return {id,unit:first.unit,area:first.area,region:isTos?'':first.region,monthPrice:weightedPrice(group,normalizedPrice),annualPrice:weightedPrice(group,row=>row.cumulativePrice),monthDeviation:deviation('month'),quarterDeviation:deviation('quarter'),annualDeviation:deviation('annual')};
   });
 }
-function priceComparisonTrends(filters:AnalysisFilters,cadence:PriceCadence,items:PriceTrendItem[],isTos:boolean):ChartValue[] {
+function priceComparisonTrends(filters:AnalysisFilters,cadence:PriceCadence,items:PriceTrendItem[],isTos:boolean,includeTargets=true):ChartValue[] {
   const selectedIds=new Set(items.map(item=>item.id));
   return monthList(filters.month).flatMap(month=>{
     const groups=new Map<string,AnalysisRow[]>();
@@ -92,9 +94,11 @@ function priceComparisonTrends(filters:AnalysisFilters,cadence:PriceCadence,item
     return Array.from(groups.values()).flatMap(rows=>{
       const item=priceDimensionLabel(rows[0],isTos);
       const actual=weightedPrice(rows,row=>cadence==='annual'?row.cumulativePrice:normalizedPrice(row));
+      const actualPoint={x:month,series:`${item}, ${cadence==='annual'?'累计测算单价':'测算单价'}`,value:actual};
+      if(!includeTargets)return [actualPoint];
       const target=weightedPrice(rows,row=>targetPrice(row,cadence));
       return [
-        {x:month,series:`${item}, ${cadence==='annual'?'累计测算单价':'测算单价'}`,value:actual},
+        actualPoint,
         {x:month,series:`${item}, 目标单价`,value:target},
         {x:month,series:`${item}, ${cadence==='annual'?'累计偏差幅度':'偏差幅度'}`,value:metricDeviation(actual,target,'price')},
       ];
@@ -103,15 +107,16 @@ function priceComparisonTrends(filters:AnalysisFilters,cadence:PriceCadence,item
 }
 
 function PriceComparisonChart({title,filters,cadence,items,selected,range,onRangeChange,isTos}:{title:string;filters:AnalysisFilters;cadence:PriceCadence;items:PriceTrendItem[];selected?:PriceTrendItem;range:number|'all';onRangeChange:(range:number|'all')=>void;isTos:boolean}) {
+  const includeTargets=filters.targets.length>0;
   const deviationKey=`${cadence}Deviation` as const;
-  const chartItems=rankedTrendRows(items,range,row=>Math.abs(row[deviationKey]??NaN),selected);
-  const values=priceComparisonTrends(filters,cadence,chartItems,isTos);
+  const chartItems=rankedTrendRows(items,range,row=>includeTargets?Math.abs(row[deviationKey]??NaN):row[cadence==='annual'?'annualPrice':'monthPrice'],selected);
+  const values=priceComparisonTrends(filters,cadence,chartItems,isTos,includeTargets);
   const series=unique(values.map(value=>value.series));
   const legendItems=unique(series.map(name=>name.split(', ')[0]));
   const singleItem=legendItems.length===1;
   const singleItemDrill=!!selected&&legendItems.length===1;
   return <AnalysisChart key={`${cadence}-${selected?.id||'all'}-${range}`} title={title} values={values} unit="人民币" legendReset
-    titleExtra={selected?undefined:<TrendRangeControl range={range} rankingLabel="偏差" onChange={onRangeChange}/>}
+    titleExtra={selected?undefined:<TrendRangeControl range={range} rankingLabel={includeTargets?'偏差':cadence==='annual'?'年度累计测算单价':'月度测算单价'} onChange={onRangeChange}/>}
     percentSeries={series.filter(name=>name.endsWith('偏差幅度'))}
     dashedSeries={series.filter(name=>!name.endsWith('测算单价'))}
     seriesColorIndexes={Object.fromEntries(series.map(name=>[name,
@@ -234,8 +239,32 @@ function formulaTarget(node:FormulaNode,row:AnalysisRow,cadence:'month'|'quarter
   return prototypeTargetValue(node.value,row,`${cadence}-formula-${node.id}`,cadence==='annual'?.94:.92,cadence==='annual'?1.08:1.1);
 }
 const formatFormulaTarget=(node:FormulaNode,value:number|null)=>formatNode({...node,value});
-const formulaDeviation=(node:FormulaNode,target:number|null)=>metricDeviation(node.value,target,node.type==='ratio'?'rate':'price');
-const formulaDeviationText=(value:number|null)=>value===null||!Number.isFinite(value)?'—':`${value>0?'+':''}${value.toFixed(2)}%`;
+const formulaDeviation=(node:FormulaNode,target:number|null,cadence:PriceCadence)=>{
+  if(cadence==='annual'&&node.type==='ratio') {
+    return node.value===null||target===null||!Number.isFinite(node.value)||!Number.isFinite(target)
+      ?null:(node.value-target)*100;
+  }
+  return metricDeviation(node.value,target,node.type==='ratio'?'rate':'price');
+};
+const formulaDeviationText=(value:number|null,unit='%')=>value===null||!Number.isFinite(value)?'—':`${value>0?'+':''}${value.toFixed(2)}${unit}`;
+function topologyDeviationFormula(node:FormulaNode,target:number|null,cadence:PriceCadence,deviation:number|null) {
+  const period={month:'月度',quarter:'季度',annual:'年度'}[cadence];
+  const isAnnualRatio=cadence==='annual'&&node.type==='ratio';
+  const formula=isAnnualRatio
+    ?'年度目标偏差 = 月度实际值 - 年度目标值'
+    :`${period}${cadence==='annual'?'目标':''}偏差 =（当月实际值 - ${period}目标值）/ |${period}目标值| × 100%`;
+  const formatOperand=(value:number|null)=>{
+    if(value===null||!Number.isFinite(value))return '-';
+    const number=(node.type==='ratio'?value*100:value).toLocaleString('zh-CN',{maximumFractionDigits:10});
+    return `${number}${node.type==='ratio'?'%':node.unit?` ${node.unit}`:''}`;
+  };
+  const actualText=formatOperand(node.value),targetText=formatOperand(target);
+  return <div className="income-metric-formula-details">
+    {formula}{deviation!==null&&Number.isFinite(deviation)
+      ?` = ${isAnnualRatio?`${actualText} - ${targetText}`:`(${actualText} - ${targetText}) / |${targetText}| × 100%`} ≈ ${formulaDeviationText(deviation,isAnnualRatio?'pp':'%')}`
+      :` = -（实际值 ${actualText}，目标值 ${targetText}；${!isAnnualRatio&&target===0?'目标值为 0':'数据缺失'}，无法计算偏差）`}
+  </div>;
+}
 const supportsMetricTrend = (node: FormulaNode) => node.id !== 'quantity' && node.id !== 'requestCount';
 // Reference page: ByteGraph supports additive metrics; TOS supports every non-ratio metric.
 const supportsDailyAverage = (node: FormulaNode | undefined, isTos: boolean) =>
@@ -260,13 +289,14 @@ function formulaMetricProps(node:FormulaNode,{row,expanded,toggle,onTrend,onDeta
     ...(targets.includes('季度目标值')?[{id:'quarter' as const,label:'季度目标',target:quarterlyTarget}]:[]),
     ...(targets.includes('年度目标值')?[{id:'annual' as const,label:'年度目标',target:annualTarget}]:[]),
   ].map(item=>{
-    const deviation=formulaDeviation(node,item.target);
+    const deviation=formulaDeviation(node,item.target,item.id);
     return {
       id:item.id,
       label:item.label,
       value:formatFormulaTarget(node,item.target),
-      deviation:formulaDeviationText(deviation),
+      deviation:formulaDeviationText(deviation,item.id==='annual'&&node.type==='ratio'?'pp':'%'),
       deviationValue:deviation,
+      deviationFormula:topologyDeviationFormula(node,item.target,item.id,deviation),
     };
   });
   return {
@@ -610,7 +640,6 @@ export default function PricingTab({ filters, topologyOnly = false }: AnalysisPr
   const quarterlyTargets = filters.targets.includes('季度目标值');
   const annualTargets = filters.targets.includes('年度目标值');
   const hasTargets = filters.targets.length > 0;
-  const targetDisabledReason = '请在全局筛选先选择目标值';
   const availableUnits = unique(rows.map(row => row.unit));
   const activeUnit = availableUnits.includes(formulaUnit) ? formulaUnit : availableUnits[0] || '';
   const availableAreas = unique(rows.filter(row => row.unit === activeUnit).map(row => row.area));
@@ -753,8 +782,6 @@ export default function PricingTab({ filters, topologyOnly = false }: AnalysisPr
     const item=trendItemByDimension.get(priceDimensionKey(row,isTos));
     return <span className="analysis-trend-dimension">{text}{item&&<TrendDrillIcon
       label={priceDimensionLabel(item,isTos)}
-      disabled={!hasTargets}
-      disabledReason={targetDisabledReason}
       onClick={()=>priceTrendView.drill(item)}
     />}</span>;
   };
@@ -780,8 +807,12 @@ export default function PricingTab({ filters, topologyOnly = false }: AnalysisPr
     ] : []),
     { title: '计费方式', width: 135, className: 'pricing-billing-method', render: () => <span className="pricing-nowrap pricing-billing-method-text">按加和量日结</span> },
   ];
-  const priceTrendColumns=[monthlyTargets,quarterlyTargets,annualTargets].filter(Boolean).length;
+  const priceTrendColumns=hasTargets?[monthlyTargets,quarterlyTargets,annualTargets].filter(Boolean).length:2;
   const priceTrend = <div className="analysis-chart-grid" data-testid="pricing-price-trends" style={{gridTemplateColumns:`repeat(${Math.max(1,priceTrendColumns)},minmax(0,1fr))`}}>
+    {!hasTargets && <>
+      <PriceComparisonChart title="月度测算单价趋势" filters={filters} cadence="month" items={trendItems} selected={priceTrendView.selected} range={priceTrendView.range('month')} onRangeChange={value=>priceTrendView.setRange('month',value)} isTos={isTos}/>
+      <PriceComparisonChart title="年度累计测算单价趋势" filters={filters} cadence="annual" items={trendItems} selected={priceTrendView.selected} range={priceTrendView.range('annual')} onRangeChange={value=>priceTrendView.setRange('annual',value)} isTos={isTos}/>
+    </>}
     {monthlyTargets && <PriceComparisonChart title="月度目标偏差趋势" filters={filters} cadence="month" items={trendItems} selected={priceTrendView.selected} range={priceTrendView.range('month')} onRangeChange={value=>priceTrendView.setRange('month',value)} isTos={isTos}/>}
     {quarterlyTargets && <PriceComparisonChart title="季度目标偏差趋势" filters={filters} cadence="quarter" items={trendItems} selected={priceTrendView.selected} range={priceTrendView.range('quarter')} onRangeChange={value=>priceTrendView.setRange('quarter',value)} isTos={isTos}/>}
     {annualTargets && <PriceComparisonChart title="年度累计单价与偏差趋势" filters={filters} cadence="annual" items={trendItems} selected={priceTrendView.selected} range={priceTrendView.range('annual')} onRangeChange={value=>priceTrendView.setRange('annual',value)} isTos={isTos}/>}
@@ -811,7 +842,6 @@ export default function PricingTab({ filters, topologyOnly = false }: AnalysisPr
   return <>
     {!topologyOnly && <section id="pricing-item-income" className="analysis-section pricing-target-gap-section">
       <TableTrendView title="单价目标差距" sectionTitle label="单价目标差距" view={priceTrendView.view} onChange={priceTrendView.setView}
-        trendDisabled={!hasTargets} trendDisabledReason={targetDisabledReason}
         selectedLabel={priceTrendView.selected?priceDimensionLabel(priceTrendView.selected,isTos):undefined}
         onClearSelection={priceTrendView.clearSelection}
         table={rows.length === 0 ? <EmptyState text="当前筛选组合暂无线上单价数据"/> : <SourceTable key={filterKey} columns={priceColumns} data={sortedPrices} pagination={sourcePaginationProps(sortedPrices.length)} width={priceColumns.reduce((sum, column) => sum + (column.width || 150), 0)} onChange={(_pagination:any, sorter:any) => setPriceSort(stateFromSorter(sorter, { key: 'monthDeviation', order: 'descend' }))}/>}

@@ -8,9 +8,9 @@ import {
   annualTargetValue, financialMetricValue, financialTargetSummary, financialTargetValue,
   metricDeviation, quarterMonthList, chartSeriesName,
 } from './analysisData';
-import { AnalysisChart, ChartValue, DataTable, EmptyState, Fold, MultiFilter, Note, OverflowText, Section, SourceTable, SourceTableSummary, sourcePaginationProps, tableAmount, tablePercent, trendMonthLabel, trendPercent } from './analysisUI';
+import { AnalysisChart, ChartValue, DataTable, EmptyState, Fold, MultiFilter, Note, OverflowText, Section, SourceTable, SourceTableSummary, sourcePaginationProps, tableAmount, tablePercent, TrendValue, trendMonthLabel, trendPercent } from './analysisUI';
 import CostAnalysis from './CostAnalysis';
-import IncomeMetricCard, { IncomeMetricValueParts } from './IncomeMetricCard';
+import IncomeMetricCard, { FormulaValue, IncomeMetricValueParts } from './IncomeMetricCard';
 import TableTrendView, { TrendDrillIcon, TrendRangeControl, rankedTrendRows, useTableTrend } from './TableTrendView';
 import './income.css';
 
@@ -26,6 +26,24 @@ const resourceCategoryLabel=(category:string)=>category==='计算'?'计算资源
 const mergedHeaderDivider = '1px solid #EAEDF1';
 const valueText = (key:Metric, value:number|null|undefined) => key==='rate' ? percent(value) : amount(value);
 const tableValue = (key:Metric, value:number|null|undefined) => key==='rate' ? tablePercent(value) : tableAmount(value);
+const accumulatedField = (key:Metric) => key==='rate'?'accumulatedRate':`accumulated${key.charAt(0).toUpperCase()+key.slice(1)}`;
+function targetDeviationValue(key:Metric,period:'month'|'quarter'|'year',value:number|null|undefined,row:Record<string,unknown>) {
+  const annual=period==='year';
+  const rateDifference=annual&&key==='rate';
+  const displayed=annual&&!rateDifference?tablePercent(value):<TrendValue value={value} unit={rateDifference?'pp':'%'}/>;
+  if(typeof value!=='number'||!Number.isFinite(value))return '-';
+  const actual=row[annual?accumulatedField(key):key];
+  const target=row[`${key}${period==='month'?'Monthly':period==='quarter'?'Quarter':'Year'}Target`];
+  if(typeof actual!=='number'||typeof target!=='number'||!Number.isFinite(actual)||!Number.isFinite(target))return displayed;
+  const number=(v:number)=>`${v.toLocaleString('zh-CN',{maximumFractionDigits:6})}${key==='rate'?'%':' 元'}`;
+  const label=period==='month'?'月度':'季度';
+  const formula=annual
+    ?rateDifference
+      ?`年度目标累计偏差 = 1 月至当前账期累计实际值 - 年度目标值 = ${number(actual)} - ${number(target)}`
+      :`年度目标累计占比 = 1 月至当前账期累计实际值 / 年度目标值 × 100% = ${number(actual)} / ${number(target)} × 100%`
+    :`${label}偏差 =（当月实际值 - ${label}目标值）/ |${label}目标值| × 100% = (${number(actual)} - ${number(target)}) / |${number(target)}| × 100%`;
+  return <FormulaValue content={<div className="income-metric-formula-details">{formula}</div>}>{displayed}</FormulaValue>;
+}
 const chartInsight=(values:ChartValue[],key:Metric,month:string)=>{
   const points=values.filter((point):point is ChartValue&{value:number}=>point.value!==null&&Number.isFinite(point.value));
   const peak=points.reduce<(ChartValue&{value:number})|null>((result,point)=>!result||point.value>=result.value?point:result,null);
@@ -61,7 +79,6 @@ function targetFields(currentRows:AnalysisRow[],quarterRows:AnalysisRow[],annual
   return metrics.reduce<Record<string,number|null>>((fields,{key})=>{
     const prefix=key;
     const actual=financialMetricValue(currentRows,key);
-    const quarterActual=financialMetricValue(quarterRows,key);
     const yearToDateActual=financialMetricValue(yearToDateRows,key);
     const monthlyTarget=financialTargetValue(currentRows,key);
     const quarterlyTarget=financialTargetValue(quarterRows,key);
@@ -69,9 +86,12 @@ function targetFields(currentRows:AnalysisRow[],quarterRows:AnalysisRow[],annual
     fields[`${prefix}MonthlyTarget`]=monthlyTarget;
     fields[`${prefix}MonthlyDeviation`]=metricDeviation(actual,monthlyTarget,key);
     fields[`${prefix}QuarterTarget`]=quarterlyTarget;
-    fields[`${prefix}QuarterDeviation`]=metricDeviation(quarterActual,quarterlyTarget,key);
+    fields[`${prefix}QuarterDeviation`]=metricDeviation(actual,quarterlyTarget,key);
     fields[`${prefix}YearTarget`]=yearTarget;
-    if(key==='rate')fields.rateYearDeviation=metricDeviation(yearToDateActual,yearTarget,key);
+    if(key==='rate'){
+      fields.accumulatedRate=yearToDateActual;
+      fields.rateYearDeviation=yearToDateActual===null||yearTarget===null?null:yearToDateActual-yearTarget;
+    }
     else fields[`${prefix}YearDeviation`]=yearToDateActual===null||yearTarget===null||yearTarget===0?null:yearToDateActual/yearTarget*100;
     return fields;
   },{});
@@ -143,30 +163,33 @@ function CategoryCard({category,filters,onDrill}:AnalysisProps&{category:string}
     return key===(tos?'area':'region')?<span className="analysis-trend-dimension">{text}<TrendDrillIcon label={dimensionLabel(row)} onClick={()=>trendView.drill(row)}/></span>:text;
   }});
   const columns:any[]=[dimension('unit','原始收入计费单元'),dimension('area','大区'),...(!tos?[dimension('region','收入售卖区域')]:[])];
-  const flatFields:{field:string;render:(value:any)=>React.ReactNode;width:number}[]=[];
+  const flatFields:{field:string;render:(value:any,row:Record<string,unknown>)=>React.ReactNode;width:number}[]=[];
   const groups:Metric[]=metrics.map(metric=>metric.key);
   groups.forEach(key=>{
     const label=metrics.find(metric=>metric.key===key)!.label;
+    const monthlyDeviation=(value:number|null,row:Record<string,unknown>)=>targetDeviationValue(key,'month',value,row);
+    const quarterlyDeviation=(value:number|null,row:Record<string,unknown>)=>targetDeviationValue(key,'quarter',value,row);
+    const yearlyDeviation=(value:number|null,row:Record<string,unknown>)=>targetDeviationValue(key,'year',value,row);
     const children:any[]=[{title:'实际值',dataIndex:key,width:146,align:'right',sorter:true,sortOrder:sort.field===key?sort.direction:undefined,render:(value:number|null)=><span className={value===null?'muted-value':'income-actual'}>{tableValue(key,value)}</span>}];
     flatFields.push({field:key,render:value=>tableValue(key,value),width:146});
     if(monthTargets){
-      children.push({title:'月度目标',dataIndex:`${key}MonthlyTarget`,width:146,align:'right',render:(value:number|null)=>tableValue(key,value)},{title:'月度偏差',dataIndex:`${key}MonthlyDeviation`,width:130,align:'right',render:trendPercent});
-      flatFields.push({field:`${key}MonthlyTarget`,render:value=>tableValue(key,value),width:146},{field:`${key}MonthlyDeviation`,render:trendPercent,width:130});
+      children.push({title:'月度目标',dataIndex:`${key}MonthlyTarget`,width:146,align:'right',render:(value:number|null)=>tableValue(key,value)},{title:'月度偏差',dataIndex:`${key}MonthlyDeviation`,width:130,align:'right',render:monthlyDeviation});
+      flatFields.push({field:`${key}MonthlyTarget`,render:value=>tableValue(key,value),width:146},{field:`${key}MonthlyDeviation`,render:monthlyDeviation,width:130});
     }
     if(quarterTargets){
-      children.push({title:'季度目标',dataIndex:`${key}QuarterTarget`,width:146,align:'right',render:(value:number|null)=>tableValue(key,value)},{title:'季度偏差',dataIndex:`${key}QuarterDeviation`,width:130,align:'right',render:trendPercent});
-      flatFields.push({field:`${key}QuarterTarget`,render:value=>tableValue(key,value),width:146},{field:`${key}QuarterDeviation`,render:trendPercent,width:130});
+      children.push({title:'季度目标',dataIndex:`${key}QuarterTarget`,width:146,align:'right',render:(value:number|null)=>tableValue(key,value)},{title:'季度偏差',dataIndex:`${key}QuarterDeviation`,width:130,align:'right',render:quarterlyDeviation});
+      flatFields.push({field:`${key}QuarterTarget`,render:value=>tableValue(key,value),width:146},{field:`${key}QuarterDeviation`,render:quarterlyDeviation,width:130});
     }
     if(yearTargets){
       children.push({title:'年度目标',dataIndex:`${key}YearTarget`,width:146,align:'right',render:(value:number|null)=>tableValue(key,value)});
       flatFields.push({field:`${key}YearTarget`,render:value=>tableValue(key,value),width:146});
       if(key!=='rate'){
-        const accumulatedKey=`accumulated${key.charAt(0).toUpperCase()+key.slice(1)}`;
-        children.push({title:'1月至今累计实际值',dataIndex:accumulatedKey,width:182,align:'right',sorter:true,sortOrder:sort.field===accumulatedKey?sort.direction:undefined,render:tableAmount},{title:'年度目标累积占比',dataIndex:`${key}YearDeviation`,width:162,align:'right',render:tablePercent});
-        flatFields.push({field:accumulatedKey,render:tableAmount,width:182},{field:`${key}YearDeviation`,render:tablePercent,width:162});
+        const accumulatedKey=accumulatedField(key);
+        children.push({title:'1月至今累计实际值',dataIndex:accumulatedKey,width:182,align:'right',sorter:true,sortOrder:sort.field===accumulatedKey?sort.direction:undefined,render:tableAmount},{title:'年度目标累积占比',dataIndex:`${key}YearDeviation`,width:162,align:'right',render:yearlyDeviation});
+        flatFields.push({field:accumulatedKey,render:tableAmount,width:182},{field:`${key}YearDeviation`,render:yearlyDeviation,width:162});
       }else{
-        children.push({title:'年度偏差',dataIndex:'rateYearDeviation',width:174,align:'right',render:trendPercent});
-        flatFields.push({field:'rateYearDeviation',render:trendPercent,width:174});
+        children.push({title:'1月至今累计值',dataIndex:'accumulatedRate',width:182,align:'right',render:tablePercent},{title:'年度目标累计偏差',dataIndex:'rateYearDeviation',width:174,align:'right',render:yearlyDeviation});
+        flatFields.push({field:'accumulatedRate',render:tablePercent,width:182},{field:'rateYearDeviation',render:yearlyDeviation,width:174});
       }
     }
     children.forEach(column=>{
@@ -181,7 +204,7 @@ function CategoryCard({category,filters,onDrill}:AnalysisProps&{category:string}
   const tableWidth=widths.unit+widths.area+(!tos?widths.region:0)+flatFields.reduce((sum,column)=>sum+column.width,0);
   const summaryCurrent=scopeTotal(selectedRows),summaryAnnual=scopeTotal(accumulatedRows);
   const summaryValues={...summaryCurrent,accumulatedIncome:summaryAnnual.income,accumulatedCost:summaryAnnual.cost,accumulatedProfit:summaryAnnual.profit,...targetFields(selectedRows,quarterRows.flatMap(row=>row.sourceRows),annualRows.flatMap(row=>row.sourceRows),accumulatedRows)};
-  const summaryCells=flatFields.reduce<{field:string;render:(value:any)=>React.ReactNode;colSpan:number}[]>((cells,column)=>{
+  const summaryCells=flatFields.reduce<{field:string;render:(value:any,row:Record<string,unknown>)=>React.ReactNode;colSpan:number}[]>((cells,column)=>{
     const previous=cells[cells.length-1];
     if(column.field==='missing'&&previous?.field==='missing'){
       previous.colSpan+=1;
@@ -193,7 +216,7 @@ function CategoryCard({category,filters,onDrill}:AnalysisProps&{category:string}
   const summary=()=> <SourceTableSummary fixed="top">
     <SourceTableSummary.Row className="analysis-summary-row">
       <SourceTableSummary.Cell colSpan={tos?2:3} className="analysis-summary-label">总计</SourceTableSummary.Cell>
-      {summaryCells.map((cell,index)=><SourceTableSummary.Cell key={index} colSpan={cell.colSpan} className="analysis-summary-number">{cell.render((summaryValues as any)[cell.field])}</SourceTableSummary.Cell>)}
+      {summaryCells.map((cell,index)=><SourceTableSummary.Cell key={index} colSpan={cell.colSpan} className="analysis-summary-number">{cell.render((summaryValues as any)[cell.field],summaryValues)}</SourceTableSummary.Cell>)}
     </SourceTableSummary.Row>
   </SourceTableSummary>;
   const comboTrends=(key:Metric,trendCombos:DisplayRow[])=>{
@@ -276,20 +299,57 @@ export default function IncomeTab({filters,onDrill}:AnalysisProps) {
   useEffect(()=>setCategories(null),[filters]);
   const activeCategories=categories===null?candidates:categories;
   const selectedCategories=activeCategories.filter(category=>candidates.includes(category));
-  const categoryTrends=(key:Metric):ChartValue[]=>monthList(filters.month).flatMap(month=>selectedCategories.map(category=>({x:month,series:category,value:scopeTotal(getRows({...filters,categories:[category]},month))[key]})));
+  const categoryTrends=(key:Metric)=>{
+    const months=monthList(filters.month);
+    const actualValues:ChartValue[]=[];
+    const values:ChartValue[]=[];
+    const dashedSeries:string[]=[];
+    const seriesColorIndexes:Record<string,number>={};
+    const targetLabels=[
+      ...(filters.targets.includes('月度目标值')?['月度目标']:[]),
+      ...(filters.targets.includes('季度目标值')?['季度目标']:[]),
+      ...(filters.targets.includes('年度目标值')?['年度目标']:[]),
+    ];
+    selectedCategories.forEach((category,categoryIndex)=>{
+      const categoryFilters={...filters,categories:[category]};
+      const actual=months.map(month=>({x:month,series:category,value:scopeTotal(getRows(categoryFilters,month))[key]}));
+      actualValues.push(...actual);
+      values.push(...actual);
+      seriesColorIndexes[category]=categoryIndex;
+      const annualTarget=targetLabels.includes('年度目标')
+        ?annualTargetValue(monthList('2026-09').flatMap(month=>getRows(categoryFilters,month)),key)
+        :null;
+      targetLabels.forEach((label,targetIndex)=>{
+        const series=chartSeriesName([category],label);
+        dashedSeries.push(series);
+        seriesColorIndexes[series]=selectedCategories.length===1?targetIndex+1:categoryIndex;
+        values.push(...months.map(month=>{
+          let value=annualTarget;
+          if(label==='月度目标')value=financialTargetValue(getRows(categoryFilters,month),key);
+          if(label==='季度目标'){
+            const quarterMonths=quarterMonthList(month);
+            const target=financialTargetValue(quarterMonths.flatMap(quarterMonth=>getRows(categoryFilters,quarterMonth)),key);
+            value=key==='rate'||target===null?target:target/quarterMonths.length;
+          }
+          return {x:month,series,value};
+        }));
+      });
+    });
+    return {actualValues,values,dashedSeries,seriesColorIndexes};
+  };
   const categoryTrendChart=(metric:{key:Metric;label:string})=>{
-    const values=categoryTrends(metric.key),insight=chartInsight(values,metric.key,filters.month);
-    return <AnalysisChart key={metric.key} title={metric.label} values={values} percent={metric.key==='rate'} unit={metric.key==='rate'?'%':'人民币'} summary={insight.summary} moreInfo={insight.moreInfo} annotationPoint={insight.annotationPoint}/>;
+    const trend=categoryTrends(metric.key),insight=chartInsight(trend.actualValues,metric.key,filters.month);
+    return <AnalysisChart key={metric.key} title={metric.label} values={trend.values} dashedSeries={trend.dashedSeries} seriesColorIndexes={trend.seriesColorIndexes} percent={metric.key==='rate'} unit={metric.key==='rate'?'%':'人民币'} summary={insight.summary} moreInfo={insight.moreInfo} annotationPoint={insight.annotationPoint}/>;
   };
   const yearToDate=scopeTotal(monthList(filters.month).flatMap(month=>getRows(filters,month)));
   return <div className="income-tab">
     <Section title="商品收支" id="product-income-expense" blue>
-      {filters.product===TOS&&<Note tone="warning">对象存储 TOS 的成本仅支持“计费单元 × 大区”。海外当前只能查看收入，不使用 CN 成本推断海外利润。</Note>}
+      {filters.product===TOS&&<Note tone="warning">{filters.product}的成本归集到大区，暂未下拆售卖区域</Note>}
       {!rows.length?<EmptyState/>:<><div className="kpi-grid income-metric-grid">{metrics.map(metric=>{
         const key=metric.key,change=difference(current[key],previous?.[key]??null,key==='rate');
         const target=financialTargetSummary(filters,key as FinancialMetric);
-        const monthlyTotalVal = key === 'rate' ? amount(current.income) : undefined;
-        const ytdTotalVal = key === 'rate' ? amount(yearToDate.income) : undefined;
+        const monthlyTotalVal = key === 'rate' ? percent(current.rate) : undefined;
+        const ytdTotalVal = key === 'rate' ? percent(yearToDate.rate) : undefined;
         return <IncomeMetricCard
           key={key}
           title={metric.label}

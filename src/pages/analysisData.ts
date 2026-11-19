@@ -81,10 +81,10 @@ export function financialTargetValue(rows:AnalysisRow[],key:FinancialMetric):num
   const profit=comparable.reduce((sum,row)=>sum+(rowTarget(row,'profit')||0),0);
   return key==='cost'?cost:key==='profit'?profit:cost?profit/cost*100:null;
 }
-export const metricDeviation=(actual:number|null,target:number|null,_key:FinancialMetric|'price')=>
+export const metricDeviation=(actual:number|null,target:number|null,key:FinancialMetric|'price')=>
   actual===null||target===null||!Number.isFinite(actual)||!Number.isFinite(target)||target===0
     ?null
-    :(actual-target)/Math.abs(target)*100;
+    :key==='rate'?actual-target:(actual-target)/Math.abs(target)*100;
 export const quarterMonthList=(month:string)=>{
   const current=Number(month.slice(-2)),start=Math.floor((current-1)/3)*3+1;
   return Array.from({length:current-start+1},(_,index)=>`${month.slice(0,5)}${String(start+index).padStart(2,'0')}`);
