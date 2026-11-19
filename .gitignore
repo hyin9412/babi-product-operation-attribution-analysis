@@ -5,3 +5,5 @@ dist/
 .vite/
 .dbg/
 *.log
+.vercel
+.env*

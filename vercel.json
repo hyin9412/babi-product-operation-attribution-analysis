@@ -4,7 +4,7 @@
   "buildCommand": "",
   "rewrites": [
     {
-      "source": "/((?!assets/).*)",
+      "source": "/((?!assets/|docs/|topology-flow-preview\\.html$).*)",
       "destination": "/index.html"
     }
   ]

@@ -7,12 +7,13 @@ const root = path.dirname(fileURLToPath(import.meta.url));
 
 export default mergeConfig(appConfig, defineConfig({
   base: './',
+  publicDir: false,
   css: { preprocessorMaxWorkers: 0 },
   build: {
-    outDir: path.join(root, 'docs/assets/topology-flow'),
+    outDir: path.join(root, 'dist'),
     emptyOutDir: false,
     rollupOptions: {
-      input: path.join(root, 'docs/topology-flow-preview.html'),
+      input: path.join(root, 'topology-flow-preview.html'),
     },
   },
 }));

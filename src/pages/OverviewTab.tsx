@@ -1,12 +1,13 @@
 // References: none — newly built from PRD section 3 and its four overview screenshots.
 import React, {useMemo} from 'react';
+import {Tag} from '@byted-babi/babi-design';
 import {IconP0, IconP1, IconP3, IconP4, IconP5} from '@arco-design/iconbox-react-ve-o-design';
 import {
   AnalysisProps, AnalysisRow, DrillFocus, TOS, BYTEGRAPH,
   getRows, totals, areaNames, amount, percent,
-  metricDeviation, prototypeTargetValue,
+  metricDeviation, prototypeTargetValue, monthList, financialMetricValue, financialTargetValue,
 } from './analysisData';
-import {Section, EmptyState, AnalysisChart, DataTable, QuickLink, TrendValue, tableAmount, tablePercent, trendPercent} from './analysisUI';
+import {Section, EmptyState, AnalysisChart, DataTable, QuickLink, TrendValue, SemanticMetricCard, tableAmount, tablePercent, trendPercent} from './analysisUI';
 import AIDataInterpretation from './AIDataInterpretation';
 import './overview.css';
 
@@ -84,11 +85,26 @@ export default function OverviewTab({filters,onDrill}:AnalysisProps) {
   const supported=filters.product===TOS||filters.product===BYTEGRAPH;
   const rows=useMemo(()=>getRows(filters),[filters]);
   const comparableRows=rows.filter(row=>row.cost!==null);
+  const current=totals(comparableRows);
+  const hasComparable=comparableRows.length>0;
   const previousMonth=Number(filters.month.slice(-2))>1 ? `2026-${String(Number(filters.month.slice(-2))-1).padStart(2,'0')}` : null;
   const previousRows=previousMonth?getRows(filters,previousMonth):[];
   const negativeAreas=splitRows(comparableRows,row=>row.area)
     .filter(([,areaRows])=>totals(areaRows).profit<0)
     .map(([area])=>area);
+  const hasMonthlyTarget=filters.targets.includes('月度目标值');
+  const profitPoints=monthList(filters.month).slice(-2).map(month=>{
+    const monthRows=getRows(filters,month).filter(row=>row.cost!==null);
+    return hasMonthlyTarget?metricDeviation(financialMetricValue(monthRows,'profit'),financialTargetValue(monthRows,'profit'),'profit'):null;
+  });
+  const previousDeviation=profitPoints.length>=2?profitPoints[profitPoints.length-2]:null;
+  const latestDeviation=profitPoints.length?profitPoints[profitPoints.length-1]:null;
+  const deviationDelta=latestDeviation===null||previousDeviation===null?null:latestDeviation-previousDeviation;
+  const trendTone=deviationDelta===null?'neutral':deviationDelta>0.5?'green':deviationDelta<-0.5?'red':'blue';
+  const trendText=deviationDelta===null?'趋势待补':deviationDelta>0.5?'目标差距收窄':deviationDelta<-0.5?'目标差距扩大':'目标差距持平';
+  const conclusionTag=!rows.length?{text:'暂不能判断',color:'gold'}:
+    isTos&&rows.some(row=>row.cost===null||!Number.isFinite(row.cost))?{text:'需要治理',color:'red'}:
+    {text:'基本符合但需关注',color:'blue'};
   // References: none — TOS only compares known CN costs, never distributes costs by sales region.
   const operatingGroups:OperatingGroup[]=splitRows(isTos?comparableRows:rows,row=>isTos?row.unit:`${row.area}|${row.region}`).map(([id,group])=>{
     const total=totals(group), costAvailable=group.some(row=>row.cost!==null);
@@ -179,6 +195,36 @@ export default function OverviewTab({filters,onDrill}:AnalysisProps) {
     ? ['Request 负偏差优先治理、Storage/StorageEC 为 P1 观察。']
     : ['US Storage/MEM 负偏差优先治理'];
   return <>
+    <Section title={<span className="conclusion-title">商品经营结论<Tag size="small" color={conclusionTag.color} bordered={false} className={`conclusion-status-tag conclusion-status-tag-${conclusionTag.color}`}>{conclusionTag.text}</Tag></span>} id="overview-conclusion">
+      <div className="conclusion-grid">
+        <SemanticMetricCard
+          title="经营状态"
+          tone={!hasComparable?'neutral':current.profit>=0?'green':'red'}
+          text={hasComparable?(current.profit>=0?'整体盈利':'整体亏损'):'暂无可比成本'}
+          noteFields={hasComparable?[{label:'利润',value:amount(current.profit)},{label:'成本利润率',value:percent(current.rate)}]:undefined}
+          description={!hasComparable?'当前范围暂无完整收入与成本数据':undefined}
+        />
+        <SemanticMetricCard
+          title="主要风险"
+          tone={negativeAreas.length?'red':'neutral'}
+          text={negativeAreas.length?`${negativeAreas.length} 个亏损大区`:'版本与公式待核验'}
+          description={negativeAreas.length?negativeAreas.slice(0,3).map(area=>areaNames[area]||area).join('、'):rows.length?'无亏损大区':'当前筛选无数据'}
+        />
+        <SemanticMetricCard
+          title="目标差距趋势"
+          tone={trendTone}
+          text={trendText}
+          noteFields={deviationDelta===null?undefined:[{label:'最近一期利润月度偏差',value:<TrendValue value={latestDeviation}/>} ]}
+          description={deviationDelta===null?(hasMonthlyTarget?'最近两期目标偏差不可比':'未选择月度目标值'):undefined}
+        />
+        <SemanticMetricCard
+          title="动作边界"
+          tone="blue"
+          text="暂不直接调价"
+          description="年度累计偏差持续扩大并越界后再评审"
+        />
+      </div>
+    </Section>
     <Section title="经营现状" id="overview-operating">
       <AIDataInterpretation context="经营现状" items={operatingItems}/>
       {/* Financial and price charts share the operating summary below. */}
