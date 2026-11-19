@@ -608,6 +608,9 @@ html.analysis-scroll body { height: auto !important; min-height: 100vh; overflow
 .analysis-page .analysis-chart-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); column-gap: 16px; row-gap: 16px; margin-top: 16px; }
 .analysis-page .analysis-chart-grid.income-cost-trend-grid { grid-template-columns: minmax(0,1fr); }
 .analysis-page .analysis-chart-grid.three { grid-template-columns: repeat(3,minmax(0,1fr)); }
+@media (min-width: 1440px) {
+  .analysis-page .analysis-chart-grid:has(> :nth-child(4):last-child) { grid-template-columns: repeat(4,minmax(0,1fr)); }
+}
 .analysis-page .analysis-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 16px; }
 .analysis-page .analysis-toolbar .arco-select { width: 276px; }
 /* References: none — Figma 5324:123773; scoped to shared analysis multi-select menus. */
