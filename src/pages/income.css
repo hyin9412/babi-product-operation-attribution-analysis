@@ -229,6 +229,9 @@
   white-space: nowrap;
   cursor: help;
 }
+.analysis-page .income-metric-primary .income-metric-formula-value {
+  line-height: 33px;
+}
 .income-metric-formula-popover {
   width: 320px;
   max-width: calc(100vw - 32px);

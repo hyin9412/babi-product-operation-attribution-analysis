@@ -19,7 +19,7 @@ type DisplayRow = { id: string; unit: string; area: string; region: string; inco
 const metrics: {key: Metric; label: string}[] = [
   { key:'rate', label:'成本利润率' },
   { key:'income', label:'收入' },
-  { key:'cost', label:'总资源成本' },
+  { key:'cost', label:'成本' },
   { key:'profit', label:'利润' },
 ];
 const resourceCategoryLabel=(category:string)=>category==='计算'?'计算资源':category==='存储'?'存储资源':category;
@@ -288,6 +288,8 @@ export default function IncomeTab({filters,onDrill}:AnalysisProps) {
       {!rows.length?<EmptyState/>:<><div className="kpi-grid income-metric-grid">{metrics.map(metric=>{
         const key=metric.key,change=difference(current[key],previous?.[key]??null,key==='rate');
         const target=financialTargetSummary(filters,key as FinancialMetric);
+        const monthlyTotalVal = key === 'rate' ? amount(current.income) : undefined;
+        const ytdTotalVal = key === 'rate' ? amount(yearToDate.income) : undefined;
         return <IncomeMetricCard
           key={key}
           title={metric.label}
@@ -296,7 +298,7 @@ export default function IncomeTab({filters,onDrill}:AnalysisProps) {
           monthOverMonth={change}
           lastYearValue="-"
           yearOverYear={null}
-          changeUnit={key==='rate'?'PP':'%'}
+          changeUnit={key==='rate'?'pp':'%'}
           selectedTargets={filters.targets}
           targetSummary={target}
           monthlyTarget={valueText(key,target.monthlyTarget)}
@@ -307,6 +309,10 @@ export default function IncomeTab({filters,onDrill}:AnalysisProps) {
           yearToDateActual={valueText(key,target.yearToDateActual)}
           annualTargetShare={target.annualTargetShare}
           annualDeviation={target.annualDeviation}
+          rateProfit={key==='rate'?current.profit:undefined}
+          rateCost={key==='rate'?current.cost:undefined}
+          monthlyTotal={monthlyTotalVal}
+          yearToDateTotal={ytdTotalVal}
         />;
       })}</div><div className="analysis-chart-grid income-product-trends">{metrics.map(metric=>{
         const targetSeries=[...(filters.targets.includes('月度目标值')?['月度目标']:[]),...(filters.targets.includes('季度目标值')?['季度目标']:[])];
