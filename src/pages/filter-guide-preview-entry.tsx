@@ -94,7 +94,7 @@ function FilterGuidePreview() {
   };
   const selectionName = (values: string[] | null) => values === null ? '全部' : values.length ? values.map(value => areaNames[value] ?? value).join('、') : '未选择';
   const summary = [
-    ['账期', applied.month], ['商品名称', applied.product],
+    ['商品名称', applied.product], ['账期', applied.month],
     ['收入计费单元类别', selectionName(applied.categories)],
     ['收入计费单元', selectionName(applied.units)],
     ['大区', selectionName(applied.areas)],
@@ -138,8 +138,8 @@ function FilterGuidePreview() {
         <div className="filter-caliber">{['日正式+月正式', '人民币', '纯资源'].map(text => <Tag key={text} size="small" bordered className="filter-caliber-tag">{text}</Tag>)}</div>
       </div>
       {expanded ? <div className="filter-grid pricing-filters">
-        <Field label="账期" required><AnalysisSelect aria-label="账期" value={draft.month} options={months} onChange={value => update('month', value)} /></Field>
         <Field label="商品名称" required><AnalysisSelect aria-label="商品名称" showSearch value={draft.product} options={products} onChange={value => update('product', value)} /></Field>
+        <Field label="账期" required><AnalysisSelect aria-label="账期" value={draft.month} options={months} onChange={value => update('month', value)} /></Field>
         {multi('收入计费单元类别', 'categories', categories)}
         {multi('收入计费单元', 'units', units)}
         {multi('大区', 'areas', areas)}
