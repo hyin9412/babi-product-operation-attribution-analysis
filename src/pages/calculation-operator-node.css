@@ -3,7 +3,8 @@
   display: block;
   width: 46px;
   height: 46px;
-  pointer-events: none;
+  pointer-events: auto;
+  cursor: default;
 }
 
 .calculation-operator-node img {

@@ -100,16 +100,19 @@ export function TopologyCanvasShell({
   );
 
   const fitView = useCallback(() => {
-    const rect = svgRef.current?.getBoundingClientRect();
+    const svg = svgRef.current;
+    // Modal entry transforms affect boundingClientRect, but not SVG layout size.
+    const width = svg?.clientWidth;
+    const height = svg?.clientHeight;
 
-    if (!rect?.width || !rect?.height) {
+    if (!width || !height) {
       return;
     }
 
     const nextScale = clamp(
       Math.min(
-        (rect.width - fitPadding * 2) / canvasWidth,
-        (rect.height - fitPadding * 2) / canvasHeight
+        (width - fitPadding * 2) / canvasWidth,
+        (height - fitPadding * 2) / canvasHeight
       ),
       minZoom,
       maxZoom
@@ -117,8 +120,8 @@ export function TopologyCanvasShell({
 
     updateViewport({
       scale: nextScale,
-      x: (rect.width - canvasWidth * nextScale) / 2,
-      y: (rect.height - canvasHeight * nextScale) / 2,
+      x: (width - canvasWidth * nextScale) / 2,
+      y: (height - canvasHeight * nextScale) / 2,
     });
   }, [canvasHeight, canvasWidth, fitPadding, maxZoom, minZoom, updateViewport]);
 
@@ -161,7 +164,7 @@ export function TopologyCanvasShell({
     return () => {
       resizeObserver.disconnect();
     };
-  }, [fitView]);
+  }, [fitView, isFullscreen]);
 
   const handlePointerDown = (event: ReactPointerEvent<SVGSVGElement>) => {
     if (event.button !== 0) {

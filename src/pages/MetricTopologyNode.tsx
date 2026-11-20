@@ -41,14 +41,33 @@ function OverflowPopover({
   children,
   className,
   content,
+  overflowOnly = false,
 }: {
   children: React.ReactNode;
   className: string;
   content: React.ReactNode;
+  overflowOnly?: boolean;
 }) {
-  return <Popover content={content}>
+  const textRef = React.useRef<HTMLDivElement>(null);
+  const [overflowing, setOverflowing] = React.useState(false);
+  React.useEffect(() => {
+    if (!overflowOnly) return;
+    const element = textRef.current;
+    if (!element) return;
+    const check = () => setOverflowing(
+      element.clientWidth > 0 && (
+        element.scrollWidth > element.clientWidth + 1 ||
+        element.scrollHeight > element.clientHeight + 1
+      )
+    );
+    check();
+    const observer = new ResizeObserver(check);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [children, overflowOnly]);
+  return <Popover content={content} disabled={overflowOnly && !overflowing}>
     <span className="metric-topology-node-popover-trigger">
-      <div className={className}>{children}</div>
+      <div ref={textRef} className={className} data-overflow={overflowOnly ? overflowing : undefined}>{children}</div>
     </span>
   </Popover>;
 }
@@ -82,7 +101,10 @@ export default function MetricTopologyNode({
     <FormulaSideHandles nodeId={nodeId} />
     <div className="metric-topology-node-card">
       <header className="metric-topology-node-header">
-        <OverflowPopover className="metric-topology-node-name" content={displayName}>
+        <OverflowPopover className="metric-topology-node-name" content={<div>
+          <div>{displayName}</div>
+          <div>调用统一的指标解释卡片</div>
+        </div>}>
           {displayName}
         </OverflowPopover>
         {showTrend ? <Popover content="查看月趋势" position="top">
@@ -93,7 +115,7 @@ export default function MetricTopologyNode({
       </header>
 
       <div className="metric-topology-node-formula">
-        <OverflowPopover className="metric-topology-node-formula-text" content={displayFormula}>
+        <OverflowPopover className="metric-topology-node-formula-text" content={displayFormula} overflowOnly>
           {displayFormula}
         </OverflowPopover>
       </div>
@@ -102,7 +124,7 @@ export default function MetricTopologyNode({
         className={`metric-topology-node-values${hasMultipleRows ? ' is-multiple-rows' : ''}`}
         style={hasMultipleRows ? { '--metric-topology-values-height': `${46 + targets.length * 24}px` } as React.CSSProperties : undefined}
       >
-        {hasMultipleRows ? <button type="button" className="metric-topology-node-details" onClick={onViewDetails}>
+        {hasMultipleRows ? <button type="button" className="metric-topology-node-details" aria-label="请点击查看详细数据" onClick={onViewDetails}>
           请<span>点击</span>查看详细数据
         </button> : <>
           <div className="metric-topology-node-actual numeric">
@@ -113,7 +135,7 @@ export default function MetricTopologyNode({
             <span>{target.label}：<b>{target.value || '-'}</b></span>
             <i aria-hidden />
             <span>偏差：<b className={deviationTone(target.deviationValue)}>
-              <FormulaValue content={target.deviationFormula} disabled={!target.deviationFormula}>
+              <FormulaValue content={target.deviationFormula || `${target.label}偏差：${target.deviation || '-'}`}>
                 {target.deviation || '-'}
               </FormulaValue>
             </b></span>

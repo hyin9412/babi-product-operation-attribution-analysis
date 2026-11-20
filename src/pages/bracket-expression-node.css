@@ -1,4 +1,5 @@
 .bracket-expression-node {
+  cursor: default;
   position: relative;
   display: inline-flex;
   width: max-content;

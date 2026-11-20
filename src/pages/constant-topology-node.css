@@ -1,4 +1,5 @@
 .constant-topology-node {
+  cursor: default;
   display: inline-flex;
   width: max-content;
   min-width: 32px;

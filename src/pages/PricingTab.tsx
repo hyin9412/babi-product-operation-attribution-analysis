@@ -530,23 +530,18 @@ function FormulaExpressionRow({expression,context}:{expression:FormulaCanvasExpr
   </div>;
 }
 
-export function FormulaCanvas({tree,row,expanded,toggle,onTrend,onDetails=()=>{},targets}:{tree:FormulaNode;row:AnalysisRow;expanded:Set<string>;toggle:(id:string)=>void;onTrend:(id:string)=>void;onDetails?:(node:FormulaNode)=>void;targets:string[]}) {
+export function FormulaCanvas({tree,row,expanded,toggle,onTrend,onDetails=()=>{},detailsOpen=false,targets}:{tree:FormulaNode;row:AnalysisRow;expanded:Set<string>;toggle:(id:string)=>void;onTrend:(id:string)=>void;onDetails?:(node:FormulaNode)=>void;detailsOpen?:boolean;targets:string[]}) {
   const [fullscreen,setFullscreen]=useState(false);
   const canvasAnchorRef=useRef<HTMLDivElement>(null);
-  const pendingActionRef=useRef<{type:'trend';id:string}|{type:'details';node:FormulaNode}|null>(null);
+  const pendingActionRef=useRef<{type:'trend';id:string}|null>(null);
   const closeFullscreen=()=>setFullscreen(false);
   const handleTrend=(id:string)=>{
     if(!fullscreen){onTrend(id);return;}
     pendingActionRef.current={type:'trend',id};
     closeFullscreen();
   };
-  const handleDetails=(node:FormulaNode)=>{
-    if(!fullscreen){onDetails(node);return;}
-    pendingActionRef.current={type:'details',node};
-    closeFullscreen();
-  };
   const graph=useMemo(()=>buildFormulaCanvas(tree,expanded,targets.length),[tree,expanded,targets.length]);
-  const context={row,expanded,toggle,onTrend:handleTrend,onDetails:handleDetails,targets};
+  const context={row,expanded,toggle,onTrend:handleTrend,onDetails,targets};
   const canvas=<TopologyCanvasShell
     title="指标公式"
     className="pricing-formula-flow"
@@ -645,6 +640,8 @@ export function FormulaCanvas({tree,row,expanded,toggle,onTrend,onDetails=()=>{}
         ?React.cloneElement(modal as React.ReactElement<{'aria-label'?:string}>,{'aria-label':'指标公式'})
         :modal}
       visible={fullscreen}
+      focusLock={!detailsOpen}
+      escToExit={!detailsOpen}
       alignCenter
       unmountOnExit
       footer={null}
@@ -653,7 +650,6 @@ export function FormulaCanvas({tree,row,expanded,toggle,onTrend,onDetails=()=>{}
         const action=pendingActionRef.current;
         pendingActionRef.current=null;
         if(action?.type==='trend')onTrend(action.id);
-        else if(action?.type==='details')onDetails(action.node);
         else canvasAnchorRef.current?.querySelector<HTMLButtonElement>('button[aria-label="全屏"]')?.focus({preventScroll:true});
       }}
     >
@@ -899,7 +895,7 @@ export default function PricingTab({ filters, topologyOnly = false }: AnalysisPr
         <Select addBefore="收入售卖区域" defaultActiveFirstOption={false} showSearch={!isTos && availableRegions.length > SELECT_SEARCH_THRESHOLD} disabled={isTos} value={isTos ? undefined : activeRegion || undefined} options={availableRegions} placeholder={getSelectPlaceholder(!isTos && availableRegions.length > SELECT_SEARCH_THRESHOLD)} onChange={setFormulaRegion}/>
       </div>
       {!tree ? <EmptyState text={rows.length === 0 ? '当前公式链路筛选组合暂无可用于公式归因的指标数据' : '当前计费单元暂无已接入的定价公式链路，不使用 CPU 公式替代'}/> : <>
-        <div className="pricing-formula-container"><FormulaCanvas tree={tree} row={formulaRow!} expanded={expanded} toggle={toggle} onTrend={showTrend} onDetails={setDetailNode} targets={filters.targets}/></div>
+        <div className="pricing-formula-container"><FormulaCanvas tree={tree} row={formulaRow!} expanded={expanded} toggle={toggle} onTrend={showTrend} onDetails={setDetailNode} detailsOpen={!!detailNode} targets={filters.targets}/></div>
         <div id="pricing-metric-trend" className="pricing-metric-panel">
           <div className="pricing-metric-panel-heading">
             <h3>指标趋势</h3>
@@ -932,6 +928,8 @@ export default function PricingTab({ filters, topologyOnly = false }: AnalysisPr
         </span> : null}
       </div>}
       visible={!!detailNode}
+      zIndex={1051}
+      focusLock
       width={960}
       footer={null}
       onCancel={() => setDetailNode(null)}
