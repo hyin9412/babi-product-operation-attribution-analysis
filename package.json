@@ -5,7 +5,8 @@
   "packageManager": "pnpm@10.19.0",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
-    "build": "vite build && vite build --config vite.topology-preview.config.mts"
+    "build": "vite build && vite build --config vite.topology-preview.config.mts",
+    "build:vercel": "npm run build && node scripts/sync-vercel-build.mjs"
   },
   "dependencies": {
     "@arco-design/iconbox-react-babi": "0.0.157",

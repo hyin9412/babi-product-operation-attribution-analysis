@@ -90,7 +90,7 @@ function CostCategory({category,rows,filters,detailed,showChartInsights,embedded
    selected?goodsIndex:rowIndex,
   ]))):undefined;
   const insight=showChartInsights?chartInsight(values,filters.month,title):null;
-  return <AnalysisChart key={`${title}-${selected?.id}`} title={title} legendReset titleExtra={selected?undefined:<TrendRangeControl range={range} rankingLabel="实际值" onChange={value=>trendView.setRange(title,value)}/>} values={values} seriesColorIndexes={seriesColorIndexes} unit="人民币" summary={insight?.summary} moreInfo={insight?.moreInfo} annotationPoint={insight?.annotationPoint}/>;
+  return <AnalysisChart key={`${title}-${selected?.id}`} title={title} legendReset titleExtra={selected?undefined:<TrendRangeControl range={range} rankingLabel="成本合计" onChange={value=>trendView.setRange(title,value)}/>} values={values} seriesColorIndexes={seriesColorIndexes} unit="人民币" summary={insight?.summary} moreInfo={insight?.moreInfo} annotationPoint={insight?.annotationPoint}/>;
  };
  const tableWidth=dimensions.reduce((sum,column)=>sum+column.width,0)+capacityColumns.reduce((sum,column)=>sum+column.width,0)+180+goods.length*180;
  const incomeTrendTitle=tos?'收入计费单元 × 大区 × 成本商品月趋势':'收入计费单元 × 大区 × 收入售卖区域 × 成本商品月趋势';

@@ -84,6 +84,7 @@ export default defineConfig({
       { find: '@babi/tools', replacement: r('src/adapters/babiTools.tsx') },
       { find: /^@byted-babi\/babi-design$/, replacement: r('src/adapters/babiDesign.tsx') },
       { find: 'adapters', replacement: r('src/adapters') },
+      { find: '@src/static', replacement: r('src/app/static') },
       { find: '@src/util/perf', replacement: r('src/adapters/perf.ts') },
       { find: '@src/util/utils', replacement: r('src/adapters/utils.ts') },
       { find: 'APP/api-lib', replacement: r('src/adapters/api-lib') },

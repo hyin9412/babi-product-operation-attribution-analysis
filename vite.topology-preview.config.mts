@@ -16,6 +16,8 @@ export default mergeConfig(appConfig, defineConfig({
       input: {
         preview: path.join(root, 'topology-flow-preview.html'),
         playground: path.join(root, 'topology-playground.html'),
+        chartGuide: path.join(root, 'chart-guide-preview.html'),
+        filterGuide: path.join(root, 'filter-guide-preview.html'),
       },
     },
   },

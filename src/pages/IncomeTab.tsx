@@ -312,10 +312,11 @@ export default function IncomeTab({filters,onDrill}:AnalysisProps) {
     ];
     selectedCategories.forEach((category,categoryIndex)=>{
       const categoryFilters={...filters,categories:[category]};
-      const actual=months.map(month=>({x:month,series:category,value:scopeTotal(getRows(categoryFilters,month))[key]}));
+      const actualSeries=chartSeriesName([category],targetLabels.length?'实际值':undefined);
+      const actual=months.map(month=>({x:month,series:actualSeries,value:scopeTotal(getRows(categoryFilters,month))[key]}));
       actualValues.push(...actual);
       values.push(...actual);
-      seriesColorIndexes[category]=categoryIndex;
+      seriesColorIndexes[actualSeries]=categoryIndex;
       const annualTarget=targetLabels.includes('年度目标')
         ?annualTargetValue(monthList('2026-09').flatMap(month=>getRows(categoryFilters,month)),key)
         :null;

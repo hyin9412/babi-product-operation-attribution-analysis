@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, InputNumber } from '@byted-babi/babi-design';
 import { Alert, Button as VeButton, Tabs } from '@tod-m/materials/ve-o';
 import Popover from './AnalysisPopover';
@@ -8,7 +8,7 @@ import { IconDataTable, IconInfoCircleFill, IconLineChart } from '@arco-design/i
 export type AnalysisView = 'table' | 'trend';
 
 // A scope change invalidates both the view and the selected row immediately.
-export function useTableTrend<T extends { id: string }>(rows: T[], scope: string) {
+export function useTableTrend<T extends { id: string }>(rows: T[], scope: string, defaultRange: number | 'all' = 5) {
   type State = { scope: string; view: AnalysisView; id?: string; ranges: Record<string, number | 'all'> };
   const initial: State = { scope, view: 'table', ranges: {} };
   const [state, setState] = useState<State>(initial);
@@ -17,7 +17,7 @@ export function useTableTrend<T extends { id: string }>(rows: T[], scope: string
   return {
     view: current.view,
     selected,
-    range: (key: string) => current.ranges[key] ?? 5,
+    range: (key: string) => current.ranges[key] ?? defaultRange,
     setRange: (key: string, range: number | 'all') => {
       if (!selected) setState({ ...current, ranges: { ...current.ranges, [key]: range } });
     },
@@ -32,8 +32,13 @@ export function TrendRangeControl({ range, rankingLabel, onChange }: {
   onChange: (range: number | 'all') => void;
 }) {
   const [draft, setDraft] = useState<number | undefined>(range === 'all' ? undefined : range);
+  useEffect(() => setDraft(range === 'all' ? undefined : range), [range]);
   const commit = () => {
-    if (draft == null || !Number.isFinite(draft)) {
+    if (draft == null) {
+      if (range !== 'all') onChange('all');
+      return;
+    }
+    if (!Number.isFinite(draft)) {
       setDraft(range === 'all' ? undefined : range);
       return;
     }
@@ -42,11 +47,11 @@ export function TrendRangeControl({ range, rankingLabel, onChange }: {
     if (next !== range) onChange(next);
   };
   return <div className="analysis-trend-range">
-      <span>{rankingLabel}</span>
-      <Popover content="选择TopN">
+      <span>{rankingLabel} Top N</span>
+      <Popover content={`按${rankingLabel}从高到低展示前 N 个计费项；输入正整数，清空展示全部。失焦或按 Enter 生效。`}>
         <span style={{ display: 'inline-flex' }}>
-          <InputNumber size="small" className="analysis-trend-range-input" aria-label={`${rankingLabel}Top N`}
-            placeholder="请选择 TopN" value={draft} min={1} max={2147483647} precision={0}
+          <InputNumber size="small" className="analysis-trend-range-input" aria-label={`${rankingLabel} Top N`}
+            placeholder="全部" value={draft} min={1} max={2147483647} precision={0}
             style={{ width: 70 }} onChange={setDraft} onBlur={commit}
             onKeyDown={event => { if ((event as KeyboardEvent).key === 'Enter') commit(); }} />
         </span>

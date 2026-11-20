@@ -26,6 +26,7 @@ html.analysis-scroll body { height: auto !important; min-height: 100vh; overflow
 .analysis-page .analysis-section { position: relative; display: flow-root; padding: 0; background: var(--color-bg-1); border: 0; border-radius: 0; margin: 0; scroll-margin-top: var(--analysis-sticky-offset, 360px); min-width: 0; transition: opacity .18s ease; }
 .analysis-page .analysis-section + .analysis-section { margin-top: 32px; }
 .analysis-page .analysis-section > :last-child { margin-bottom: 0; }
+.analysis-page .analysis-section > .analysis-section-loading-icon { display: none; }
 .analysis-page.content-loading .analysis-section { pointer-events: none; }
 .analysis-page.content-loading .analysis-section::before {
   content: '';
@@ -37,22 +38,15 @@ html.analysis-scroll body { height: auto !important; min-height: 100vh; overflow
   opacity: 1;
   transition: opacity .18s ease;
 }
-.analysis-page.content-loading .analysis-section::after {
-  content: '';
+.analysis-page.content-loading .analysis-section > .analysis-section-loading-icon {
+  display: block;
   position: absolute;
-  left: 50%;
-  top: 50%;
+  left: calc(50% - 12px);
+  top: calc(50% - 12px);
   z-index: 9;
-  width: 28px;
-  height: 28px;
-  margin: -14px 0 0 -14px;
-  border: 2px solid rgba(var(--primary-6), .18);
-  border-top-color: rgb(var(--primary-6));
-  border-radius: 50%;
-  animation: analysis-section-loading-spin .8s linear infinite;
-}
-@keyframes analysis-section-loading-spin {
-  to { transform: rotate(360deg); }
+  width: 24px;
+  height: 24px;
+  pointer-events: none;
 }
 .analysis-page .section-blue { background: var(--color-bg-1); }
 .analysis-page .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
@@ -160,7 +154,7 @@ html.analysis-scroll body { height: auto !important; min-height: 100vh; overflow
 .analysis-page .analysis-chart-slot { flex: 1 1 auto; min-width: 0; min-height: 0; position: relative; overflow: hidden; }
 .analysis-page .analysis-chart-slot > div { width: 100%; height: 100%; min-width: 0; min-height: 0; }
 .analysis-page .analysis-chart-slot canvas,
-.analysis-page .analysis-chart-slot svg { display: block; width: 100% !important; height: 100% !important; }
+.analysis-page .analysis-chart-slot:not(.analysis-chart-empty-slot) svg { display: block; width: 100% !important; height: 100% !important; }
 .analysis-page .analysis-chart-empty-slot {
   display: flex;
   align-items: center;

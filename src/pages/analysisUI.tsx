@@ -7,13 +7,13 @@ import { Modal } from '@tod-m/materials/ve-o';
 import TableBlock from '@byted-babi/babi-design/es/TableBlock';
 import { Table as ArcoTable } from '@arco-design/web-react';
 import { IconDown, IconUp, IconRight, IconPageEmpty, IconEmptyChart, IconNoContent, IconQueryFailed } from '@arco-design/iconbox-react-babi';
-import { IconDown as FilterIconDown, IconRight as FilterIconRight, IconRichText, IconExitRichText } from '@arco-design/iconbox-react-ve-o-design';
+import { IconDown as FilterIconDown, IconRight as FilterIconRight, IconRichText, IconExitRichText, IconRunningInProgress } from '@arco-design/iconbox-react-ve-o-design';
 import { VChart } from '@visactor/react-vchart';
 import trendUpIcon from '../app/static/icon/环比icon正.svg';
 import trendDownIcon from '../app/static/icon/环比icon负.svg';
 import trendFlatIcon from '../app/static/icon/环比icon无变化.svg';
 import { percent } from './analysisData';
-export const Section=({title,children,id,subtitle,extra,blue=false}:{title:React.ReactNode;children:React.ReactNode;id?:string;subtitle?:React.ReactNode;extra?:React.ReactNode;blue?:boolean})=><section id={id} className={`analysis-section ${blue?'section-blue':''}`}><div className="section-heading"><h2>{title}</h2>{extra}</div>{subtitle&&<p className="section-subtitle">{subtitle}</p>}{children}</section>;
+export const Section=({title,children,id,subtitle,extra,blue=false}:{title:React.ReactNode;children:React.ReactNode;id?:string;subtitle?:React.ReactNode;extra?:React.ReactNode;blue?:boolean})=><section id={id} className={`analysis-section ${blue?'section-blue':''}`}><IconRunningInProgress className="analysis-section-loading-icon" width="24" height="24" aria-hidden="true"/><div className="section-heading"><h2>{title}</h2>{extra}</div>{subtitle&&<p className="section-subtitle">{subtitle}</p>}{children}</section>;
 export const Note=({children,tone='info'}:{children:React.ReactNode;tone?:'info'|'warning'|'error'})=><Alert className="analysis-note" type={tone} content={children}/>;
 export type SemanticCardTone = 'red' | 'blue' | 'green' | 'yellow' | 'neutral';
 export interface SemanticCardNoteField {
