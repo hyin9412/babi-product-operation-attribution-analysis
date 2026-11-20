@@ -139,6 +139,50 @@
   height: calc(100vh - 300px);
   min-height: 0;
 }
+.analysis-page .pricing-formula-flow > .topology-canvas-shell-header {
+  box-sizing: border-box;
+  height: 48px;
+  min-height: 48px;
+  flex-direction: row;
+  align-items: center;
+  padding: 0 16px;
+}
+.pricing-formula-canvas-placeholder {
+  height: calc(100vh - 300px);
+}
+.arco-modal.pricing-formula-fullscreen-modal {
+  display: inline-flex;
+  width: 95vw;
+  height: 95vh;
+  margin: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-direction: column;
+}
+.pricing-formula-fullscreen-modal > div[tabindex="-1"] {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  flex-direction: column;
+}
+.pricing-formula-fullscreen-modal .arco-modal-content {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+}
+.analysis-page.pricing-formula-fullscreen-page {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+}
+.pricing-formula-fullscreen-page .topology-canvas-shell {
+  border: 0;
+  border-radius: 0;
+}
 .analysis-page .pricing-formula-flow .topology-canvas-shell-title,
 .analysis-page .pricing-metric-panel .pricing-metric-panel-heading > h3 {
   color: var(--color-text-1);
@@ -318,10 +362,12 @@
 }
 .analysis-page .pricing-metric-panel-heading {
   display: flex;
-  flex-wrap: wrap;
+  box-sizing: border-box;
+  height: 48px;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 12px;
-  padding: 10px 16px;
+  padding: 0 16px;
   border: 1px solid #eaedf1;
   border-radius: 8px 8px 0 0;
 }
@@ -329,6 +375,7 @@
   flex-shrink: 0;
 }
 .analysis-page .pricing-scope-tag {
+  min-width: 0;
   max-width: 100%;
 }
 .analysis-page .pricing-metric-panel-body {

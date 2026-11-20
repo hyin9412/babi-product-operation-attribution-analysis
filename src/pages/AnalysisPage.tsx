@@ -26,6 +26,8 @@ export default function AnalysisPage(){
  const [pricingDraft,setPricingDraft]=useState<AnalysisFilters>(initialFilters);
  const [expanded,setExpanded]=useState(false);
  const [loading,setLoading]=useState(false);
+ const [queryAttempted,setQueryAttempted]=useState(false);
+ useEffect(()=>{setQueryAttempted(false);},[tab]);
  const stickyHeaderRef=useRef<HTMLDivElement>(null);
  // References: none — fixed page controls share one sticky surface; anchor offsets follow expanded/collapsed filter height.
  useEffect(()=>{const header=stickyHeaderRef.current;if(!header)return;const updateOffset=()=>header.parentElement?.style.setProperty('--analysis-sticky-offset',`${header.getBoundingClientRect().height+48}px`);updateOffset();const observer=new ResizeObserver(updateOffset);observer.observe(header);return()=>observer.disconnect();},[]);
@@ -40,6 +42,7 @@ export default function AnalysisPage(){
  useEffect(()=>{document.title='透明化分析 · BABI';document.documentElement.classList.add('analysis-scroll');return()=>document.documentElement.classList.remove('analysis-scroll');},[]);
  useEffect(()=>{const requested=params.get('tab') as AnalysisTab;if(requested&&requested!==tab&&requested in tabNames){setTab(requested);setExpanded(false);setDraft(initialFilters);setApplied(initialFilters);setPricing(initialFilters);setPricingDraft(initialFilters);}},[params]);
  const update=(key:keyof AnalysisFilters,value:any)=>{
+  setQueryAttempted(false);
   const current=filters;
   let next:AnalysisFilters={...current,[key]:value};
   if(key==='month'&&tab!=='pricing')next={...defaultFilters,month:value,trueUp:current.trueUp,sameProduct:current.sameProduct,targets:current.targets};
@@ -68,9 +71,10 @@ export default function AnalysisPage(){
    }
    return value==='';
   });
- const queryDisabled=!dirty||loading||missing.length>0;
+ const queryDisabled=!dirty||loading;
  const query=()=>{
   if(!dirty||loading)return;
+  setQueryAttempted(true);
   if(missing.length){Message.error({content:`请选择必填项：${missing.map(([,label])=>label).join('、')}`});return;}
   setLoading(true);const snapshot=normalizeAnalysisFilters({...filters});window.setTimeout(()=>{if(tab==='pricing')setPricing(snapshot);else setApplied(snapshot);updateUrl(tab,snapshot);setLoading(false);Message.success({content:'数据已更新'});},480);
  };
@@ -90,7 +94,7 @@ export default function AnalysisPage(){
    const searchable=key==='productLine'||key==='product'||options.length > SELECT_SEARCH_THRESHOLD;
    return <Field label={label} required><Select aria-label={label} aria-required defaultActiveFirstOption={false} showSearch={searchable} value={filters[key] as string} options={options} placeholder={getSelectPlaceholder(searchable)} onChange={value=>update(key,value)}/></Field>;
   };
- const multi=(label:string,key:keyof AnalysisFilters,options:string[],disabled=false)=> <Field label={label} required={key!=='targets'}><MultiFilter value={filters[key] as string[]|null} options={options} onChange={value=>update(key,value)} disabled={disabled} requiredLabel={key==='areas'||key==='regions'?label:undefined}/></Field>;
+ const multi=(label:string,key:keyof AnalysisFilters,options:string[],disabled=false)=> <Field label={label} required={key!=='targets'}><MultiFilter value={filters[key] as string[]|null} options={options} onChange={value=>update(key,value)} disabled={disabled} requiredLabel={key==='areas'||key==='regions'?label:undefined} showValidation={queryAttempted} allowClear={key!=='areas'&&key!=='regions'}/></Field>;
  const regionDisabled=filters.product===TOS || filters.areas?.length===0;
  const regionFilter=regionDisabled?<Field label="收入售卖区域" required><Popover content={filters.product===TOS?TOS_REGION_DISABLED_TIP:'请先选择售卖大区'} trigger="hover" position="top" unmountOnExit><span className="filter-disabled-popover-trigger"><Select defaultActiveFirstOption={false} disabled placeholder="请选择"/></span></Popover></Field>:multi('收入售卖区域','regions',regions);
  return <main className={`analysis-page${loading?' content-loading':''}`} aria-busy={loading}><div className="analysis-sticky-header" ref={stickyHeaderRef}><header className="analysis-page-header"><h1>透明化分析</h1><Tabs className="analysis-tabs" type="line" activeTab={tab} headerPadding={false} onChange={key=>changeTab(key as AnalysisTab)}>{(Object.keys(tabNames) as AnalysisTab[]).map(key=><Tabs.TabPane key={key} title={tabNames[key]}/>)}</Tabs><a href={`${import.meta.env.BASE_URL}docs/operation-conclusion-card-guide-topology.html`} target="_blank" rel="noopener noreferrer" style={{marginLeft:'auto',paddingLeft:16,color:'rgb(var(--primary-6))',fontSize:12,whiteSpace:'nowrap'}}>交互说明</a></header>

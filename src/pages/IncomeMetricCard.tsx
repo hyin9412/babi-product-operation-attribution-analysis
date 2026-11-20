@@ -30,8 +30,6 @@ export interface IncomeMetricCardProps {
   targetSummary: FinancialTargetSummary;
   rateProfit?: number | null;
   rateCost?: number | null;
-  monthlyTotal?: string;
-  yearToDateTotal?: string;
 }
 
 const formatChange = (value:number, unit:'%'|'pp') =>
@@ -79,6 +77,17 @@ function deviationFormula(period:string,actualLabel:string,actual:number|null,ta
         ?` = ${formulaNumber(actual,unit)} - ${formulaNumber(target,unit)} ≈ ${formatChange(deviation,unit)}`
         :` = (${formulaNumber(actual,unit)} - ${formulaNumber(target,unit)}) / |${formulaNumber(target,unit)}| × 100% ≈ ${formatChange(deviation,'%')}`
       :` = -（实际值 ${actual!==null&&Number.isFinite(actual)?formulaNumber(actual,unit):'-'}，目标值 ${target!==null&&Number.isFinite(target)?formulaNumber(target,unit):'-'}；数据缺失或目标值为 0，无法计算偏差）`}
+  </div>;
+}
+
+function rateTargetDeviationFormula(period:'月度'|'季度',actual:number|null,target:number|null,deviation:number|null) {
+  const available=actual!==null&&target!==null&&Number.isFinite(actual)&&Number.isFinite(target)&&target!==0&&deviation!==null&&Number.isFinite(deviation);
+  const percentNumber=(value:number)=>`${value.toLocaleString('zh-CN',{maximumFractionDigits:6})}%`;
+  return <div className="income-metric-formula-details">
+    {period}偏差 =（当月实际值 - {period}目标值）/ |{period}目标值| × 100%
+    {available
+      ?` = (${percentNumber(actual)} - ${percentNumber(target)}) / |${percentNumber(target)}| × 100% ≈ ${formatChange(deviation,'%')}`
+      :` = -（实际值 ${actual!==null&&Number.isFinite(actual)?percentNumber(actual):'-'}，目标值 ${target!==null&&Number.isFinite(target)?percentNumber(target):'-'}；数据缺失或目标值为 0，无法计算偏差）`}
   </div>;
 }
 
@@ -145,6 +154,24 @@ function TargetValueRow({label,value,formula}:{label:string;value:string;formula
   }]}/>;
 }
 
+function TargetDeviationRow({
+  label,
+  deviation,
+  unit,
+  formula,
+}:{
+  label:string;
+  deviation:number|null|undefined;
+  unit:'%'|'pp';
+  formula?:React.ReactNode;
+}) {
+  const deviationValue=<DeviationValue value={deviation} unit={unit}/>;
+  return <MetricFields fields={[{
+    label:`${label}：`,
+    value:formula?<FormulaValue content={formula}>{deviationValue}</FormulaValue>:deviationValue,
+  }]}/>;
+}
+
 export default function IncomeMetricCard({
   title,
   value,
@@ -165,8 +192,6 @@ export default function IncomeMetricCard({
   targetSummary,
   rateProfit=null,
   rateCost=null,
-  monthlyTotal,
-  yearToDateTotal,
 }:IncomeMetricCardProps) {
   const showMonthly=selectedTargets.includes('月度目标值');
   const showQuarterly=selectedTargets.includes('季度目标值');
@@ -189,8 +214,6 @@ export default function IncomeMetricCard({
         {value.unit&&<span className="income-metric-unit">{value.unit}</span>}
       </div>
       <div className="income-metric-comparisons">
-        {monthlyTotal&&<MetricFields fields={[{label:'当月合计值：',value:displayValue(monthlyTotal)}]}/>}
-        {yearToDateTotal&&<MetricFields fields={[{label:'当年1月至今累计值：',value:displayValue(yearToDateTotal)}]}/>}
         <MetricFields fields={[
           {label:'上月实际：',value:displayValue(previousValue)},
           {label:'环比：',value:<ChangeIndicator value={monthOverMonth} unit={changeUnit}/>},
@@ -202,10 +225,14 @@ export default function IncomeMetricCard({
       </div>
     </div>
     {showTargets&&<div className="income-metric-targets">
-      {showMonthly&&<TargetComparisonRow label="月度目标" value={monthlyTarget} deviation={monthlyDeviation} unit={changeUnit} formula={deviationFormula('月度','当月实际值',targetSummary.monthlyActual,targetSummary.monthlyTarget,monthlyDeviation,changeUnit)}/>}
-      {showQuarterly&&<TargetComparisonRow label="季度目标" value={quarterlyTarget} deviation={quarterlyDeviation} unit={changeUnit} formula={deviationFormula('季度','本季度截至当前账期累计实际值',targetSummary.quarterlyActual,targetSummary.quarterlyTarget,quarterlyDeviation,changeUnit)}/>}
+      {showMonthly&&<TargetComparisonRow label="月度目标" value={monthlyTarget} deviation={monthlyDeviation} unit={changeUnit==='pp'?'%':changeUnit} formula={changeUnit==='pp'?rateTargetDeviationFormula('月度',targetSummary.monthlyActual,targetSummary.monthlyTarget,monthlyDeviation):deviationFormula('月度','当月实际值',targetSummary.monthlyActual,targetSummary.monthlyTarget,monthlyDeviation,changeUnit)}/>}
+      {showQuarterly&&<TargetComparisonRow label="季度目标" value={quarterlyTarget} deviation={quarterlyDeviation} unit={changeUnit==='pp'?'%':changeUnit} formula={changeUnit==='pp'?rateTargetDeviationFormula('季度',targetSummary.monthlyActual,targetSummary.quarterlyTarget,quarterlyDeviation):deviationFormula('季度','本季度截至当前账期累计实际值',targetSummary.quarterlyActual,targetSummary.quarterlyTarget,quarterlyDeviation,changeUnit)}/>}
       {showAnnual&&(changeUnit==='pp'
-        ?<TargetComparisonRow label="年度目标" value={annualTarget} deviation={annualDeviation} unit={changeUnit} formula={deviationFormula('年度','1月至当前账期累计实际利润率',targetSummary.yearToDateActual,targetSummary.annualTarget,annualDeviation,'pp')}/>
+        ?<>
+          <TargetValueRow label="年度目标" value={annualTarget}/>
+          <TargetValueRow label="当年1月至今累计值" value={yearToDateActual}/>
+          <TargetDeviationRow label="年度目标累计偏差" deviation={annualDeviation} unit={changeUnit} formula={deviationFormula('年度','1月至当前账期累计实际利润率',targetSummary.yearToDateActual,targetSummary.annualTarget,annualDeviation,'pp')}/>
+        </>
         :<>
           <TargetValueRow label="年度目标" value={annualTarget}/>
           <TargetValueRow label="1月至今累计实际值" value={yearToDateActual}/>

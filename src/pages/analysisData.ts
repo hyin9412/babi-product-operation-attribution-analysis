@@ -85,6 +85,10 @@ export const metricDeviation=(actual:number|null,target:number|null,key:Financia
   actual===null||target===null||!Number.isFinite(actual)||!Number.isFinite(target)||target===0
     ?null
     :key==='rate'?actual-target:(actual-target)/Math.abs(target)*100;
+const relativeTargetDeviation=(actual:number|null,target:number|null)=>
+  actual===null||target===null||!Number.isFinite(actual)||!Number.isFinite(target)||target===0
+    ?null
+    :(actual-target)/Math.abs(target)*100;
 export const quarterMonthList=(month:string)=>{
   const current=Number(month.slice(-2)),start=Math.floor((current-1)/3)*3+1;
   return Array.from({length:current-start+1},(_,index)=>`${month.slice(0,5)}${String(start+index).padStart(2,'0')}`);
@@ -108,11 +112,11 @@ export function financialTargetSummary(filters:AnalysisFilters,key:FinancialMetr
   const annualTarget=annualTargetValue(annualRows,key);
   return {
     monthlyActual:actual,
-    quarterlyActual:quarterActual,
+    quarterlyActual:key==='rate'?actual:quarterActual,
     monthlyTarget,
-    monthlyDeviation:metricDeviation(actual,monthlyTarget,key),
+    monthlyDeviation:key==='rate'?relativeTargetDeviation(actual,monthlyTarget):metricDeviation(actual,monthlyTarget,key),
     quarterlyTarget,
-    quarterlyDeviation:metricDeviation(quarterActual,quarterlyTarget,key),
+    quarterlyDeviation:key==='rate'?relativeTargetDeviation(actual,quarterlyTarget):metricDeviation(quarterActual,quarterlyTarget,key),
     annualTarget,
     annualDeviation:metricDeviation(yearToDateActual,annualTarget,key),
     yearToDateActual,

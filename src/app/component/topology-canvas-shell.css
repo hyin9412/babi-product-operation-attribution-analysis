@@ -49,6 +49,20 @@
   white-space: nowrap;
 }
 
+.topology-canvas-shell-header-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 16px;
+}
+
+.topology-canvas-shell-header-actions .arco-btn.topology-canvas-shell-fullscreen {
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  padding: 0;
+}
+
 .topology-canvas-shell-legend {
   display: inline-flex;
   flex: 0 0 auto;
@@ -171,6 +185,10 @@
   .topology-canvas-shell-legend {
     flex-wrap: wrap;
     gap: 8px 12px;
+  }
+
+  .topology-canvas-shell-header-actions {
+    align-self: flex-end;
   }
 
   .topology-canvas-shell-controls {

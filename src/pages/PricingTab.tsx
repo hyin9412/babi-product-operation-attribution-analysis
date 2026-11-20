@@ -1,5 +1,6 @@
 // References: none — PRD cost-pricing behavior retained; standard Pagination and Alert follow project design rules.
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import Modal from '@tod-m/materials/ve-o/es/Modal';
 import { Alert, Button, DatePicker, Drawer, Tabs } from '@byted-babi/babi-design';
 import { getSmoothStepPath, Position } from '@xyflow/react';
 import Popover from './AnalysisPopover';
@@ -108,15 +109,14 @@ function priceComparisonTrends(filters:AnalysisFilters,cadence:PriceCadence,item
 
 function PriceComparisonChart({title,filters,cadence,items,selected,range,onRangeChange,isTos}:{title:string;filters:AnalysisFilters;cadence:PriceCadence;items:PriceTrendItem[];selected?:PriceTrendItem;range:number|'all';onRangeChange:(range:number|'all')=>void;isTos:boolean}) {
   const includeTargets=filters.targets.length>0;
-  const deviationKey=`${cadence}Deviation` as const;
-  const chartItems=rankedTrendRows(items,range,row=>includeTargets?Math.abs(row[deviationKey]??NaN):row[cadence==='annual'?'annualPrice':'monthPrice'],selected);
+  const chartItems=rankedTrendRows(items,range,row=>row[cadence==='annual'?'annualPrice':'monthPrice'],selected);
   const values=priceComparisonTrends(filters,cadence,chartItems,isTos,includeTargets);
   const series=unique(values.map(value=>value.series));
   const legendItems=unique(series.map(name=>name.split(', ')[0]));
   const singleItem=legendItems.length===1;
   const singleItemDrill=!!selected&&legendItems.length===1;
-  return <AnalysisChart key={`${cadence}-${selected?.id||'all'}-${range}`} title={title} values={values} unit="人民币" legendReset
-    titleExtra={selected?undefined:<TrendRangeControl range={range} rankingLabel={includeTargets?'偏差':cadence==='annual'?'年度累计测算单价':'月度测算单价'} onChange={onRangeChange}/>}
+  return <AnalysisChart key={`${cadence}-${selected?.id||'all'}`} title={title} values={values} unit="人民币" legendReset
+    titleExtra={selected?undefined:<TrendRangeControl range={range} rankingLabel="实际值" onChange={onRangeChange}/>}
     percentSeries={series.filter(name=>name.endsWith('偏差幅度'))}
     dashedSeries={series.filter(name=>!name.endsWith('测算单价'))}
     seriesColorIndexes={Object.fromEntries(series.map(name=>[name,
@@ -531,18 +531,34 @@ function FormulaExpressionRow({expression,context}:{expression:FormulaCanvasExpr
 }
 
 export function FormulaCanvas({tree,row,expanded,toggle,onTrend,onDetails=()=>{},targets}:{tree:FormulaNode;row:AnalysisRow;expanded:Set<string>;toggle:(id:string)=>void;onTrend:(id:string)=>void;onDetails?:(node:FormulaNode)=>void;targets:string[]}) {
+  const [fullscreen,setFullscreen]=useState(false);
+  const canvasAnchorRef=useRef<HTMLDivElement>(null);
+  const pendingActionRef=useRef<{type:'trend';id:string}|{type:'details';node:FormulaNode}|null>(null);
+  const closeFullscreen=()=>setFullscreen(false);
+  const handleTrend=(id:string)=>{
+    if(!fullscreen){onTrend(id);return;}
+    pendingActionRef.current={type:'trend',id};
+    closeFullscreen();
+  };
+  const handleDetails=(node:FormulaNode)=>{
+    if(!fullscreen){onDetails(node);return;}
+    pendingActionRef.current={type:'details',node};
+    closeFullscreen();
+  };
   const graph=useMemo(()=>buildFormulaCanvas(tree,expanded,targets.length),[tree,expanded,targets.length]);
-  const context={row,expanded,toggle,onTrend,onDetails,targets};
-  return <TopologyCanvasShell
+  const context={row,expanded,toggle,onTrend:handleTrend,onDetails:handleDetails,targets};
+  const canvas=<TopologyCanvasShell
     title="指标公式"
     className="pricing-formula-flow"
-    height="calc(100vh - 300px)"
+    height={fullscreen?'100%':'calc(100vh - 300px)'}
     minHeight={0}
     canvasWidth={graph.width}
     canvasHeight={graph.height}
     minZoom={.25}
     maxZoom={1.4}
     showLegend={false}
+    isFullscreen={fullscreen}
+    onToggleFullscreen={()=>fullscreen?closeFullscreen():setFullscreen(true)}
   >
     <defs>
       <marker
@@ -616,6 +632,34 @@ export function FormulaCanvas({tree,row,expanded,toggle,onTrend,onDetails=()=>{}
       })}
     </g>
   </TopologyCanvasShell>;
+  return <>
+    <div ref={canvasAnchorRef} className="pricing-formula-canvas-anchor">
+      {fullscreen?<div className="pricing-formula-canvas-placeholder" aria-hidden="true"/>:canvas}
+    </div>
+    <Modal
+      className="pricing-formula-fullscreen-modal"
+      style={{display:'inline-flex'}}
+      wrapStyle={{padding:0}}
+      closable={false}
+      modalRender={modal=>React.isValidElement(modal)
+        ?React.cloneElement(modal as React.ReactElement<{'aria-label'?:string}>,{'aria-label':'指标公式'})
+        :modal}
+      visible={fullscreen}
+      alignCenter
+      unmountOnExit
+      footer={null}
+      onCancel={closeFullscreen}
+      afterClose={()=>{
+        const action=pendingActionRef.current;
+        pendingActionRef.current=null;
+        if(action?.type==='trend')onTrend(action.id);
+        else if(action?.type==='details')onDetails(action.node);
+        else canvasAnchorRef.current?.querySelector<HTMLButtonElement>('button[aria-label="全屏"]')?.focus({preventScroll:true});
+      }}
+    >
+      {fullscreen&&<div className="analysis-page pricing-formula-fullscreen-page">{canvas}</div>}
+    </Modal>
+  </>;
 }
 
 export default function PricingTab({ filters, topologyOnly = false }: AnalysisProps & { topologyOnly?: boolean }) {

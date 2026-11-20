@@ -8,6 +8,9 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import Button from '@tod-m/materials/ve-o/es/Button';
+import { IconRichText, IconExitRichText } from '@arco-design/iconbox-react-ve-o-design';
+import Popover from '../../pages/AnalysisPopover';
 import zoomInIcon from '../static/icon/放大.svg';
 import zoomOutIcon from '../static/icon/缩小.svg';
 import fitViewIcon from '../static/icon/适配.svg';
@@ -41,6 +44,8 @@ export type TopologyCanvasShellProps = {
   iconBasePath?: string;
   children?: ReactNode;
   onViewportChange?: (viewport: TopologyCanvasViewport) => void;
+  isFullscreen?: boolean;
+  onToggleFullscreen?: () => void;
 };
 
 const DEFAULT_LEGEND_ITEMS: TopologyCanvasLegendItem[] = [
@@ -78,6 +83,8 @@ export function TopologyCanvasShell({
   iconBasePath,
   children,
   onViewportChange,
+  isFullscreen = false,
+  onToggleFullscreen,
 }: TopologyCanvasShellProps) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const lastPointRef = useRef<{ x: number; y: number } | null>(null);
@@ -208,6 +215,7 @@ export function TopologyCanvasShell({
     <section className={['topology-canvas-shell', className].filter(Boolean).join(' ')} style={rootStyle}>
       <header className="topology-canvas-shell-header">
         <div className="topology-canvas-shell-title">{title}</div>
+        <div className="topology-canvas-shell-header-actions">
         {showLegend ? (
           <div className="topology-canvas-shell-legend" aria-label="拓扑图图例">
             {legendItems.map((item) => (
@@ -218,6 +226,18 @@ export function TopologyCanvasShell({
             ))}
           </div>
         ) : null}
+        {onToggleFullscreen ? <Popover content={isFullscreen ? '退出全屏' : '全屏'} position="bottom">
+          <Button
+            className="topology-canvas-shell-fullscreen"
+            type="outline"
+            size="small"
+            shape="square"
+            aria-label={isFullscreen ? '退出全屏' : '全屏'}
+            icon={isFullscreen ? <IconExitRichText width="16" height="16" /> : <IconRichText width="16" height="16" />}
+            onClick={onToggleFullscreen}
+          />
+        </Popover> : null}
+        </div>
       </header>
 
       <div className="topology-canvas-shell-stage">

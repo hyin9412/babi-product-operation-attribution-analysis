@@ -162,7 +162,7 @@ function CategoryCard({category,filters,onDrill}:AnalysisProps&{category:string}
     const text=<OverflowText className="income-dimension-text">{value}</OverflowText>;
     return key===(tos?'area':'region')?<span className="analysis-trend-dimension">{text}<TrendDrillIcon label={dimensionLabel(row)} onClick={()=>trendView.drill(row)}/></span>:text;
   }});
-  const columns:any[]=[dimension('unit','原始收入计费单元'),dimension('area','大区'),...(!tos?[dimension('region','收入售卖区域')]:[])];
+  const columns:any[]=[dimension('unit','收入计费单元'),dimension('area','大区'),...(!tos?[dimension('region','收入售卖区域')]:[])];
   const flatFields:{field:string;render:(value:any,row:Record<string,unknown>)=>React.ReactNode;width:number}[]=[];
   const groups:Metric[]=metrics.map(metric=>metric.key);
   groups.forEach(key=>{
@@ -267,9 +267,9 @@ function CategoryCard({category,filters,onDrill}:AnalysisProps&{category:string}
   };
   const trendChart=(metric:{key:Metric;label:string})=>{
     const selected=trendView.selected,range=trendView.range(metric.key);
-    const combos=rankedTrendRows(displayRows,range,row=>{const value=row[`${metric.key}MonthlyDeviation`];return typeof value==='number'?Math.abs(value):null;},selected);
+    const combos=rankedTrendRows(displayRows,range,row=>row[metric.key],selected);
     const trend=comboTrends(metric.key,combos),insight=chartInsight(trend.actualValues,metric.key,filters.month);
-    return <AnalysisChart key={`${metric.key}-${selected?.id}-${range}`} title={metric.label} legendReset titleExtra={selected?undefined:<TrendRangeControl range={range} rankingLabel="偏差" onChange={value=>trendView.setRange(metric.key,value)}/>} values={trend.values} dashedSeries={trend.dashedSeries} seriesColorIndexes={trend.seriesColorIndexes} percent={metric.key==='rate'} unit={metric.key==='rate'?'%':'人民币'} summary={insight.summary} moreInfo={insight.moreInfo} annotationPoint={insight.annotationPoint}/>;
+    return <AnalysisChart key={`${metric.key}-${selected?.id}`} title={metric.label} legendReset titleExtra={selected?undefined:<TrendRangeControl range={range} rankingLabel="实际值" onChange={value=>trendView.setRange(metric.key,value)}/>} values={trend.values} dashedSeries={trend.dashedSeries} seriesColorIndexes={trend.seriesColorIndexes} percent={metric.key==='rate'} unit={metric.key==='rate'?'%':'人民币'} summary={insight.summary} moreInfo={insight.moreInfo} annotationPoint={insight.annotationPoint}/>;
   };
   const supported=filters.product===BYTEGRAPH||tos;
   return <div className="income-category-card">
@@ -341,15 +341,12 @@ export default function IncomeTab({filters,onDrill}:AnalysisProps) {
     const trend=categoryTrends(metric.key),insight=chartInsight(trend.actualValues,metric.key,filters.month);
     return <AnalysisChart key={metric.key} title={metric.label} values={trend.values} dashedSeries={trend.dashedSeries} seriesColorIndexes={trend.seriesColorIndexes} percent={metric.key==='rate'} unit={metric.key==='rate'?'%':'人民币'} summary={insight.summary} moreInfo={insight.moreInfo} annotationPoint={insight.annotationPoint}/>;
   };
-  const yearToDate=scopeTotal(monthList(filters.month).flatMap(month=>getRows(filters,month)));
   return <div className="income-tab">
     <Section title="商品收支" id="product-income-expense" blue>
       {filters.product===TOS&&<Note tone="warning">{filters.product}的成本归集到大区，暂未下拆售卖区域</Note>}
       {!rows.length?<EmptyState/>:<><div className="kpi-grid income-metric-grid">{metrics.map(metric=>{
         const key=metric.key,change=difference(current[key],previous?.[key]??null,key==='rate');
         const target=financialTargetSummary(filters,key as FinancialMetric);
-        const monthlyTotalVal = key === 'rate' ? percent(current.rate) : undefined;
-        const ytdTotalVal = key === 'rate' ? percent(yearToDate.rate) : undefined;
         return <IncomeMetricCard
           key={key}
           title={metric.label}
@@ -371,8 +368,6 @@ export default function IncomeTab({filters,onDrill}:AnalysisProps) {
           annualDeviation={target.annualDeviation}
           rateProfit={key==='rate'?current.profit:undefined}
           rateCost={key==='rate'?current.cost:undefined}
-          monthlyTotal={monthlyTotalVal}
-          yearToDateTotal={ytdTotalVal}
         />;
       })}</div><div className="analysis-chart-grid income-product-trends">{metrics.map(metric=>{
         const targetSeries=[...(filters.targets.includes('月度目标值')?['月度目标']:[]),...(filters.targets.includes('季度目标值')?['季度目标']:[])];

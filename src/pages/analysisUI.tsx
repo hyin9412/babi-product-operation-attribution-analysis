@@ -3,10 +3,11 @@ import React, {useState} from 'react';
 import { Alert, Button, Checkbox, Pagination, Select as BaseSelect, Tag } from '@byted-babi/babi-design';
 import type { SelectProps } from '@arco-design/web-react';
 import Popover from './AnalysisPopover';
+import { Modal } from '@tod-m/materials/ve-o';
 import TableBlock from '@byted-babi/babi-design/es/TableBlock';
 import { Table as ArcoTable } from '@arco-design/web-react';
 import { IconDown, IconUp, IconRight, IconPageEmpty, IconEmptyChart, IconNoContent, IconQueryFailed } from '@arco-design/iconbox-react-babi';
-import { IconDown as FilterIconDown, IconRight as FilterIconRight } from '@arco-design/iconbox-react-ve-o-design';
+import { IconDown as FilterIconDown, IconRight as FilterIconRight, IconRichText, IconExitRichText } from '@arco-design/iconbox-react-ve-o-design';
 import { VChart } from '@visactor/react-vchart';
 import trendUpIcon from '../app/static/icon/环比icon正.svg';
 import trendDownIcon from '../app/static/icon/环比icon负.svg';
@@ -187,16 +188,13 @@ const getFilterPopupContainer = (node:HTMLElement) => node.closest('.analysis-st
 export function FilterSummary({items,regions}:{items:string[][];regions?:string[]}) {
  return <div className="filter-summary">{items.map(([label,value])=>{const isRegionLabel=label.endsWith('售卖区域');return <Tag key={label} size="small" bordered={false} className="filter-summary-tag" data-testid={isRegionLabel?'filter-region-summary':undefined}><span className="filter-summary-label">{label}：</span>{isRegionLabel && regions!==undefined ? <Popover className="filter-region-popover" style={{width:'max-content',maxWidth:280}} title={`共 ${regions.length} 个${label}`} trigger="hover" position="bl" getPopupContainer={getFilterPopupContainer} unmountOnExit content={<div className="filter-region-details" data-testid="filter-region-details">{regions.length ? <ol className="filter-region-list">{regions.map(region=><li key={region}>{region}</li>)}</ol> : <span className="filter-region-empty">当前未选择{label}</span>}</div>}><Button type="text" size="mini" className="filter-region-count" data-testid="filter-region-count">共 {regions.length} 个</Button></Popover> : <span className="filter-summary-value">{value}</span>}</Tag>;})}</div>;
 }
-export function MultiFilter({value,options,onChange,disabled=false,addBefore,size='default',requiredLabel}:{value:string[]|null;options:string[];onChange:(value:string[])=>void;disabled?:boolean;addBefore?:React.ReactNode;size?:'mini'|'small'|'default'|'large';requiredLabel?:string}) {
+export function MultiFilter({value,options,onChange,disabled=false,addBefore,size='default',requiredLabel,showValidation=false,allowClear=true}:{value:string[]|null;options:string[];onChange:(value:string[])=>void;disabled?:boolean;addBefore?:React.ReactNode;size?:'mini'|'small'|'default'|'large';requiredLabel?:string;showValidation?:boolean;allowClear?:boolean}) {
  // References: none — Figma 5324:123773 menu presentation; existing option values and callbacks are unchanged.
  const selected = value === null ? options : value;
  const selectedCount = options.filter(option => selected.includes(option)).length;
  const allSelected = options.length > 0 && selectedCount === options.length;
- const [validated,setValidated]=useState(false);
- const popupVisible=React.useRef(false);
- const invalid=!!requiredLabel&&!disabled&&validated&&selectedCount===0;
- const changeSelection=(next:string[])=>{setValidated(false);onChange(next);};
- return <><AnalysisSelect addBefore={addBefore} size={size} defaultActiveFirstOption={false} mode="multiple" animation={false} allowClear showSearch={options.length > SELECT_SEARCH_THRESHOLD} value={selected} options={options} placeholder={getSelectPlaceholder(options.length > SELECT_SEARCH_THRESHOLD)} maxTagCount={1} disabled={disabled} status={invalid?'error':undefined} aria-invalid={invalid} onChange={changeSelection} onVisibleChange={visible=>{popupVisible.current=visible;if(!visible)setValidated(true);}} onBlur={()=>{if(!popupVisible.current)setValidated(true);}} dropdownRender={menu=><div className="analysis-multi-menu"><div className="analysis-multi-options">{menu}</div><div className="analysis-multi-footer" onMouseDown={event=>event.preventDefault()}><Checkbox checked={allSelected} indeterminate={selectedCount > 0 && !allSelected} disabled={disabled || options.length === 0} onChange={checked=>changeSelection(checked ? options : [])}>全部<span className="analysis-multi-total">（共 {options.length} ）</span></Checkbox></div></div>}/>{invalid&&<div className="analysis-filter-error" role="alert">请选择至少一个{requiredLabel}</div>}</>;
+ const invalid=!!requiredLabel&&!disabled&&showValidation&&selectedCount===0;
+ return <><AnalysisSelect addBefore={addBefore} size={size} defaultActiveFirstOption={false} mode="multiple" animation={false} allowClear={allowClear} showSearch={options.length > SELECT_SEARCH_THRESHOLD} value={selected} options={options} placeholder={getSelectPlaceholder(options.length > SELECT_SEARCH_THRESHOLD)} maxTagCount={1} disabled={disabled} status={invalid?'error':undefined} aria-invalid={invalid} onChange={onChange} dropdownRender={menu=><div className="analysis-multi-menu"><div className="analysis-multi-options">{menu}</div><div className="analysis-multi-footer" onMouseDown={event=>event.preventDefault()}><Checkbox checked={allSelected} indeterminate={selectedCount > 0 && !allSelected} disabled={disabled || options.length === 0} onChange={checked=>onChange(checked ? options : [])}>全部<span className="analysis-multi-total">（共 {options.length} ）</span></Checkbox></div></div>}/>{invalid&&<div className="analysis-filter-error" role="alert">请选择至少一个{requiredLabel}</div>}</>;
 }
 const textFromNode=(node:any):string=>{
  if(node===null||node===undefined||typeof node==='boolean')return '';
@@ -425,7 +423,9 @@ function ChartLegend({series,colors,dashedSeries,hidden,setHidden,exclude,isolat
 }
 export function AnalysisChart({title,titleExtra:providedTitleExtra,legendReset=false,values,type='line',unit='',percent:percentProp=false,percentSeries=[],dashedSeries=[],dottedSeries=[],seriesColorIndexes={},legendExclude=true,legendIsolate=true,summary,moreInfo,annotationPoint,height}:{title:string;titleExtra?:React.ReactNode;legendReset?:boolean;values:ChartValue[];type?:'line'|'bar';height?:number;unit?:string;percent?:boolean;percentSeries?:string[];dashedSeries?:string[];dottedSeries?:string[];seriesColorIndexes?:Record<string,number>;legendExclude?:boolean;legendIsolate?:boolean;summary?:React.ReactNode;moreInfo?:React.ReactNode[];annotationPoint?:ChartAnnotationPoint|null}) {
  const percent=percentProp||unit.trim()==='%';
+ const displayUnit=percent?'%':unit;
  const dualAxis=type==='line'&&percentSeries.length>0;
+ const [expanded,setExpanded]=useState(false);
  const [hidden,setHidden]=useState<string[]>([]); const series=Array.from(new Set(values.map(v=>v.series)));const filtered=values.filter(v=>v.value!==null&&!hidden.includes(v.series));
  const titleExtra=providedTitleExtra??(legendReset&&hidden.length>0?<></>:undefined);
  const chartInstance=React.useRef<any>(null);
@@ -447,6 +447,7 @@ export function AnalysisChart({title,titleExtra:providedTitleExtra,legendReset=f
   return ()=>document.removeEventListener('pointerdown',dismissOutside);
  },[clearPinnedTooltip]);
  React.useEffect(()=>{clearPinnedTooltip();},[values,hidden,clearPinnedTooltip]);
+ React.useEffect(()=>{clearPinnedTooltip();},[expanded,clearPinnedTooltip]);
  const handleTooltipClick=(params:any)=>{
   if(tooltipPinnedRef.current){clearPinnedTooltip();return;}
   const actual=tooltipDataRef.current;
@@ -489,6 +490,8 @@ export function AnalysisChart({title,titleExtra:providedTitleExtra,legendReset=f
   });
  };
  const spec:any={type,autoFit:true,padding:{top:0,right:0,bottom:0,left:0},data:[{id:'data',values:filtered}],xField:type==='bar'?['x','series']:'x',yField:'value',seriesField:'series',activePoint:type==='line',color:{type:'ordinal',domain:series,range:colors,specified:specifiedColors},animation:false,axes:[{orient:'left',type:'linear',min:0,zero:true,label:{space:6,style:{fontSize:10,fill:'#737a87',fontWeight:'normal',fillOpacity:1},formatMethod:(v:any)=>percent?`${Number(v).toFixed(0)}%`:Math.abs(Number(v))>=1e8?`${(Number(v)/1e8).toFixed(1)}亿`:Math.abs(Number(v))>=1e4?`${(Number(v)/1e4).toFixed(0)}万`:Number(v).toFixed(Math.abs(Number(v))<1?4:0)},grid:{visible:true,style:{stroke:'#e9eef6',lineWidth:1,strokeOpacity:1,lineDash:[2,2]}},domainLine:{visible:false},tick:{visible:false}},{orient:'bottom',type:'band',label:{space:6,style:{fontSize:10,fill:'#737a87',fontWeight:'normal',fillOpacity:1}},grid:{visible:false},domainLine:{visible:true,style:{stroke:'#dce4ef',lineWidth:1,strokeOpacity:1}},tick:{visible:false}}],crosshair:{trigger:'hover',triggerOff:'hover',followTooltip:false,xField:type==='line'?{visible:true,line:{type:'line',style:{stroke:'#C9CDD4',lineWidth:1,lineDash:[]}},label:{visible:false}}:{visible:true,line:{type:'rect'},label:{visible:false}},yField:{visible:false}},tooltip:{visible:true,renderMode:'html',className:'analysis-chart-tooltip',offset:{x:10,y:10},updateElement:updateTooltipRefs,mark:{content:[tooltipContent]},dimension:{content:[tooltipContent]},style:{panel:{backgroundColor:'#fff',padding:{top:8,right:12,bottom:8,left:12},border:{color:'#fff',width:0,radius:4},shadow:{x:0,y:4,blur:12,spread:0,color:'rgba(33,37,44,.1)'}},spaceRow:2,shape:{size:8,spacing:6},titleLabel:{fontSize:12,lineHeight:20,fontColor:'#808893',fontWeight:'normal',spacing:0},keyLabel:{fontSize:12,lineHeight:20,fontColor:'#808893',fontWeight:'normal',spacing:26},valueLabel:{fontSize:12,lineHeight:20,fontColor:'#555960',fontWeight:'bold',spacing:0}}},line:{style:{stroke:seriesColor,zIndex:1,lineWidth:2,strokeOpacity:1,lineCap:'round',lineJoin:'round',lineDash:(datum:any)=>dottedSeries.includes(datum.series)?[2,3]:dashedSeries.includes(datum.series)?[6,6]:[0,0]}},point:{visible:false,style:{zIndex:3,size:0,symbolType:'circle',fill:seriesColor,fillOpacity:1,stroke:'#fff',lineWidth:1},state:{dimension_hover:{visible:true,size:10,symbolType:'circle',fillOpacity:1,stroke:'#fff',lineWidth:1}}},bar:{style:{fill:seriesColor,cornerRadius:0,fillOpacity:1}},legends:[]};
+ const formatYAxisTick=spec.axes[0].label.formatMethod;
+ spec.axes[0].label.formatMethod=(value:any)=>percent?Number(value).toFixed(0):formatYAxisTick(value).replace(/^-?0\.0+$/,'0');
  // Public alwaysShow/hideTooltip APIs support both chart-click and outside dismissal.
  // CSS enables DOM scrolling without enterable's conflicting pointerleave handler.
  Object.assign(spec.tooltip,{trigger:'hover',lockAfterClick:false,enterable:false,transitionDuration:0});
@@ -502,7 +505,7 @@ export function AnalysisChart({title,titleExtra:providedTitleExtra,legendReset=f
   const percentageValues=filtered.filter(value=>percentSeries.includes(value.series));
   const leftAxis={...spec.axes[0],seriesIndex:[0],min:0};
   if(amountValues.some(value=>(value.value||0)<0))delete leftAxis.min;
-  const rightAxis={...spec.axes[0],orient:'right',seriesIndex:[1],grid:{visible:false},label:{...spec.axes[0].label,containerAlign:'right',formatMethod:(value:any)=>`${Number(value).toFixed(0)}%`}};
+  const rightAxis={...spec.axes[0],orient:'right',seriesIndex:[1],grid:{visible:false},label:{...spec.axes[0].label,containerAlign:'right',formatMethod:(value:any)=>Number(value).toFixed(0)}};
   delete rightAxis.min;
   spec.type='common';
   spec.data=[{id:'amount-data',values:amountValues},{id:'percentage-data',values:percentageValues}];
@@ -514,7 +517,25 @@ export function AnalysisChart({title,titleExtra:providedTitleExtra,legendReset=f
  }
  const hasChartData=values.some(v=>v.value!==null);
  const chartHeight=height??CHART_CARD_HEIGHT;
- const chart=<div className="analysis-chart" style={{height:CHART_CARD_HEIGHT}}><div className="chart-heading">{titleExtra?<div className="analysis-chart-title-row"><h3>{title}</h3><div className="analysis-chart-title-actions">{titleExtra}{hidden.length>0&&<Button type="text" size="mini" aria-label="重置图例" onClick={()=>setHidden([])}>重置图例</Button>}</div></div>:<h3>{title}</h3>}{dualAxis?<div className="chart-unit-row"><span className="chart-unit">单位：{unit}</span><span className="chart-unit chart-unit-right">单位：%</span></div>:unit&&!percent&&<span className="chart-unit">单位：{unit}</span>}</div>{hasChartData?<div className="analysis-chart-slot" style={{height:chartHeight}} role="img" aria-label={`${title}趋势图`}><VChart spec={spec} onReady={instance=>{chartInstance.current=instance;}} onPointerTap={handleTooltipClick}/></div>:<div className="analysis-chart-slot analysis-chart-empty-slot" style={{height:chartHeight}}><EmptyState text="暂无可用数据" kind="chart" size={80}/></div>}{hasChartData&&<ChartLegend series={series} colors={colors} dashedSeries={dashedSeries} hidden={hidden} setHidden={setHidden} exclude={legendExclude} isolate={legendIsolate}/>}</div>;
- return chart;
+ const chart=<div className="analysis-chart" style={{height:expanded?'100%':CHART_CARD_HEIGHT}}>
+  <div className="chart-heading">
+   <div className="analysis-chart-title-row"><h3>{title}</h3><div className="analysis-chart-title-actions">
+    {titleExtra}
+    {hidden.length>0&&<Button type="text" size="mini" aria-label="重置图例" onClick={()=>setHidden([])}>重置图例</Button>}
+    <Popover content={expanded?'退出全屏':'全屏'} getPopupContainer={()=>document.body}><span><Button type="outline" size="small" shape="square" className="analysis-chart-fullscreen-button" style={{width:28,height:28,minWidth:28,padding:0}} aria-label={`${expanded?'退出全屏':'全屏'}${title}`} icon={expanded?<IconExitRichText width="16" height="16"/>:<IconRichText width="16" height="16"/>} onClick={()=>setExpanded(!expanded)}/></span></Popover>
+   </div></div>
+   {dualAxis?<div className="chart-unit-row"><span className="chart-unit">单位：{unit}</span><span className="chart-unit chart-unit-right">单位：%</span></div>:displayUnit&&<span className="chart-unit">单位：{displayUnit}</span>}
+  </div>
+  {hasChartData?<div className="analysis-chart-slot" style={{height:chartHeight}} role="img" aria-label={`${title}趋势图`}><VChart spec={spec} onReady={instance=>{chartInstance.current=instance;}} onPointerTap={handleTooltipClick}/></div>:<div className="analysis-chart-slot analysis-chart-empty-slot" style={{height:chartHeight}}><EmptyState text="暂无可用数据" kind="chart" size={80}/></div>}
+  {hasChartData&&<ChartLegend series={series} colors={colors} dashedSeries={dashedSeries} hidden={hidden} setHidden={setHidden} exclude={legendExclude} isolate={legendIsolate}/>}
+ </div>;
+ return <>
+  <div className="analysis-chart-anchor">{expanded?<div className="analysis-chart" style={{height:CHART_CARD_HEIGHT}} aria-hidden="true"/>:chart}</div>
+  <Modal title={null} footer={null} closable={false} className="analysis-chart-expand-modal" visible={expanded} alignCenter unmountOnExit
+   style={{width:'95vw',height:'95vh',padding:0,border:0,borderRadius:8,overflow:'hidden'}}
+   onCancel={()=>setExpanded(false)}>
+   {expanded&&<div className="analysis-page analysis-chart-modal-page">{chart}</div>}
+  </Modal>
+ </>;
 }
 export const ExactValue=({value,children}:{value:number|null;children:React.ReactNode})=><OverflowText content={value===null?undefined:value.toLocaleString('zh-CN',{maximumFractionDigits:10})}>{children}</OverflowText>;

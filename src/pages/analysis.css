@@ -142,6 +142,10 @@ html.analysis-scroll body { height: auto !important; min-height: 100vh; overflow
 .analysis-page .analysis-two-col { display: grid; grid-template-columns: minmax(0,.82fr) minmax(0,1.45fr); column-gap: 16px; row-gap: 16px; align-items: stretch; margin: 16px 0; }
 .analysis-page .analysis-two-col.equal { grid-template-columns: repeat(2,minmax(0,1fr)); }
 .analysis-page .analysis-chart { display: flex; flex-direction: column; background: #fff; border: 1px solid #eaedf1; border-radius: 4px; padding: 16px; position: relative; min-width: 0; }
+.analysis-page .analysis-chart-anchor { min-width: 0; scroll-margin-top: var(--analysis-sticky-offset, 360px); }
+.analysis-chart-expand-modal .arco-modal-content { padding: 0; height: 95vh; border-radius: inherit; }
+.analysis-page.analysis-chart-modal-page { margin: 0; padding: 0; min-height: 0; height: 100%; }
+.analysis-chart-modal-page .analysis-chart { border: 0; border-radius: 8px; padding: 20px; }
 .analysis-page .chart-heading, .analysis-page .chart-legend { flex-shrink: 0; }
 .analysis-page .chart-heading { display: flow-root; margin-bottom: 12px; }
 .analysis-page .analysis-chart h3 { font-size: 14px; font-weight: 500; line-height: 22px; color: #0c0d0e; margin: 0; overflow-wrap: anywhere; }
