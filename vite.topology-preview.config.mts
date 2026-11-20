@@ -13,7 +13,10 @@ export default mergeConfig(appConfig, defineConfig({
     outDir: path.join(root, 'dist'),
     emptyOutDir: false,
     rollupOptions: {
-      input: path.join(root, 'topology-flow-preview.html'),
+      input: {
+        preview: path.join(root, 'topology-flow-preview.html'),
+        playground: path.join(root, 'topology-playground.html'),
+      },
     },
   },
 }));

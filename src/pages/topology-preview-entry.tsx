@@ -15,6 +15,7 @@ function TopologyPreview() {
   const [targets, setTargets] = useState<string[]>([...defaultFilters.targets]);
   const [model, setModel] = useState('rocketmq');
   return <main className="analysis-page topology-guide-preview">
+    <a href="./topology-playground.html" style={{ display: 'inline-block', marginBottom: 16 }}>打开拓扑图样式 Playground →</a>
     <div className="topology-guide-model-select">
       <Select
         addBefore="模型示例"

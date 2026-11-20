@@ -530,7 +530,7 @@ function FormulaExpressionRow({expression,context}:{expression:FormulaCanvasExpr
   </div>;
 }
 
-export function FormulaCanvas({tree,row,expanded,toggle,onTrend,onDetails=()=>{},detailsOpen=false,targets}:{tree:FormulaNode;row:AnalysisRow;expanded:Set<string>;toggle:(id:string)=>void;onTrend:(id:string)=>void;onDetails?:(node:FormulaNode)=>void;detailsOpen?:boolean;targets:string[]}) {
+export function FormulaCanvas({tree,row,expanded,toggle,onTrend,onDetails=()=>{},detailsOpen=false,targets,height,allowFullscreen=true}:{tree:FormulaNode;row:AnalysisRow;expanded:Set<string>;toggle:(id:string)=>void;onTrend:(id:string)=>void;onDetails?:(node:FormulaNode)=>void;detailsOpen?:boolean;targets:string[];height?:string;allowFullscreen?:boolean}) {
   const [fullscreen,setFullscreen]=useState(false);
   const canvasAnchorRef=useRef<HTMLDivElement>(null);
   const pendingActionRef=useRef<{type:'trend';id:string}|null>(null);
@@ -545,7 +545,7 @@ export function FormulaCanvas({tree,row,expanded,toggle,onTrend,onDetails=()=>{}
   const canvas=<TopologyCanvasShell
     title="指标公式"
     className="pricing-formula-flow"
-    height={fullscreen?'100%':'calc(100vh - 300px)'}
+    height={fullscreen?'100%':height || 'calc(100vh - 300px)'}
     minHeight={0}
     canvasWidth={graph.width}
     canvasHeight={graph.height}
@@ -553,7 +553,7 @@ export function FormulaCanvas({tree,row,expanded,toggle,onTrend,onDetails=()=>{}
     maxZoom={1.4}
     showLegend={false}
     isFullscreen={fullscreen}
-    onToggleFullscreen={()=>fullscreen?closeFullscreen():setFullscreen(true)}
+    onToggleFullscreen={allowFullscreen?()=>fullscreen?closeFullscreen():setFullscreen(true):undefined}
   >
     <defs>
       <marker
