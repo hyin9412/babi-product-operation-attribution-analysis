@@ -748,6 +748,7 @@ html.analysis-scroll body { height: auto !important; min-height: 100vh; overflow
 .analysis-page .analysis-view-tabs .arco-tabs-header { margin: 12px 0; }
 .analysis-page .analysis-view-tabs .arco-tabs-header-wrapper { justify-content: flex-start; }
 .analysis-page .analysis-view-tabs .arco-tabs-content { padding: 0; }
+.analysis-page .analysis-view-tabs .arco-tabs-pane { padding-bottom: 0; }
 .analysis-page .analysis-view-heading {
   display: flex;
   align-items: center;
