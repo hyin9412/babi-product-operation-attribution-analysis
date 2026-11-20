@@ -24,7 +24,17 @@ export default function AnalysisPage(){
  // References: none — user-requested pricing draft/query isolation; results and URL retain the last submitted filters.
  const [pricing,setPricing]=useState<AnalysisFilters>(initialFilters);
  const [pricingDraft,setPricingDraft]=useState<AnalysisFilters>(initialFilters);
- const [expanded,setExpanded]=useState(false);
+ const [expanded,setExpanded]=useState(true);
+ useEffect(()=>{
+  let previousY=window.scrollY;
+  const collapseOnScroll=()=>{
+   const currentY=window.scrollY;
+   if(currentY>previousY)setExpanded(false);
+   previousY=currentY;
+  };
+  window.addEventListener('scroll',collapseOnScroll,{passive:true});
+  return()=>window.removeEventListener('scroll',collapseOnScroll);
+ },[]);
  const [loading,setLoading]=useState(false);
  const [queryAttempted,setQueryAttempted]=useState(false);
  useEffect(()=>{setQueryAttempted(false);},[tab]);
@@ -40,7 +50,7 @@ export default function AnalysisPage(){
  const regions=(filters.areas===null?areas:filters.areas).flatMap(area=>areaRegions[area]||[]);
  const updateUrl=(nextTab:AnalysisTab,nextFilters:AnalysisFilters)=>{const next=normalizeAnalysisFilters(nextFilters);const query:Record<string,string>={tab:nextTab,product:next.product===TOS?'tos':next.product,month:next.month,targets:next.targets.join(',')};(['units','categories','areas','regions'] as const).forEach(key=>{if(next[key]!==null)query[key]=next[key]!.join(',');});setParams(query,{replace:true});};
  useEffect(()=>{document.title='透明化分析 · BABI';document.documentElement.classList.add('analysis-scroll');return()=>document.documentElement.classList.remove('analysis-scroll');},[]);
- useEffect(()=>{const requested=params.get('tab') as AnalysisTab;if(requested&&requested!==tab&&requested in tabNames){setTab(requested);setExpanded(false);setDraft(initialFilters);setApplied(initialFilters);setPricing(initialFilters);setPricingDraft(initialFilters);}},[params]);
+ useEffect(()=>{const requested=params.get('tab') as AnalysisTab;if(requested&&requested!==tab&&requested in tabNames){setTab(requested);setExpanded(true);setDraft(initialFilters);setApplied(initialFilters);setPricing(initialFilters);setPricingDraft(initialFilters);}},[params]);
  const update=(key:keyof AnalysisFilters,value:any)=>{
   setQueryAttempted(false);
   const current=filters;
@@ -55,7 +65,7 @@ export default function AnalysisPage(){
   next=normalizeAnalysisFilters(next);
   if(tab==='pricing')setPricingDraft(next);else setDraft(next);
  };
- const changeTab=(next:AnalysisTab)=>{if(next===tab||loading)return;setTab(next);setExpanded(false);if(next==='pricing'){const nextPricing=normalizeAnalysisFilters(applied);setPricing(nextPricing);setPricingDraft(nextPricing);updateUrl(next,nextPricing);}else updateUrl(next,applied);window.scrollTo({top:0,behavior:'smooth'});};
+ const changeTab=(next:AnalysisTab)=>{if(next===tab||loading)return;setTab(next);setExpanded(true);if(next==='pricing'){const nextPricing=normalizeAnalysisFilters(applied);setPricing(nextPricing);setPricingDraft(nextPricing);updateUrl(next,nextPricing);}else updateUrl(next,applied);window.scrollTo({top:0,behavior:'smooth'});};
   const requiredFields:[keyof AnalysisFilters,string][]=[['month','账期'],['product','商品名称'],['areas',tab==='pricing'?'大区':'售卖大区']];
   if(tab==='pricing')requiredFields.push(['categories','收入计费单元类别'],['units','收入计费单元']);
   else requiredFields.push(['trueUp','海外即时 True Up 账单'],['sameProduct','同商品过滤'],['productLine','部门收支_产品线名称']);
@@ -81,8 +91,8 @@ export default function AnalysisPage(){
  const onDrill=(nextTab:AnalysisTab,anchor:string,focus:DrillFocus={})=>{
   let next=normalizeAnalysisFilters({...applied,...focus});
   if(nextTab==='pricing'){if(next.product===TOS&&next.areas===null)next.areas=['cn'];setPricing(next);setPricingDraft(next);}else{setApplied(next);setDraft(next);}
-  setTab(nextTab);setExpanded(tab==='income'&&nextTab==='pricing'&&anchor==='pricing-item-formula');updateUrl(nextTab,next);
-  if(nextTab==='pricing'){window.scrollTo({top:0,behavior:'smooth'});}else{window.setTimeout(()=>{document.getElementById(anchor)?.scrollIntoView({behavior:'smooth',block:'start'});},180);}
+  setTab(nextTab);setExpanded(true);updateUrl(nextTab,next);
+  if(nextTab==='pricing'){window.scrollTo({top:0,behavior:'instant'});}else{window.setTimeout(()=>{document.getElementById(anchor)?.scrollIntoView({behavior:'smooth',block:'start'});},180);}
 };
  // References: none — all tabs summarize submitted filters, never pending draft selections.
  const summaryRegionOptions=(active.areas===null?areas:active.areas).flatMap(area=>areaRegions[area]||[]);

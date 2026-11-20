@@ -98,6 +98,7 @@ html.analysis-scroll body { height: auto !important; min-height: 100vh; overflow
 /* References: none — Figma 5325:124987 fixed-caliber outlined tags. */
 .analysis-page .filter-caliber { display: inline-flex; align-items: center; gap: 6px; margin-left: 12px; white-space: nowrap; }
 .analysis-page .filter-caliber-tag { min-width: 49px; height: 22px; padding: 0 5px; border: 1px solid #666e7c33; border-radius: 4px; background: transparent; color: #666e7c; font-size: 12px; font-weight: 500; line-height: 20px; letter-spacing: .04px; }
+.analysis-page { overflow-anchor: none; }
 .analysis-page .filter-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 12px; }
 .analysis-page .analysis-field { min-width: 0; }
 .analysis-page .analysis-field > label { display: block; color: var(--color-text-2); font-size: 14px; margin: 0 0 8px; }
