@@ -55,7 +55,7 @@ export default function AnalysisPage(){
   next=normalizeAnalysisFilters(next);
   if(tab==='pricing')setPricingDraft(next);else setDraft(next);
  };
- const changeTab=(next:AnalysisTab)=>{if(next===tab||loading)return;setTab(next);setExpanded(next==='pricing');if(next==='pricing'){const nextPricing=normalizeAnalysisFilters(applied);setPricing(nextPricing);setPricingDraft(nextPricing);updateUrl(next,nextPricing);}else updateUrl(next,applied);window.scrollTo({top:0,behavior:'smooth'});};
+ const changeTab=(next:AnalysisTab)=>{if(next===tab||loading)return;setTab(next);setExpanded(false);if(next==='pricing'){const nextPricing=normalizeAnalysisFilters(applied);setPricing(nextPricing);setPricingDraft(nextPricing);updateUrl(next,nextPricing);}else updateUrl(next,applied);window.scrollTo({top:0,behavior:'smooth'});};
   const requiredFields:[keyof AnalysisFilters,string][]=[['month','账期'],['product','商品名称'],['areas',tab==='pricing'?'大区':'售卖大区']];
   if(tab==='pricing')requiredFields.push(['categories','收入计费单元类别'],['units','收入计费单元']);
   else requiredFields.push(['trueUp','海外即时 True Up 账单'],['sameProduct','同商品过滤'],['productLine','部门收支_产品线名称']);
@@ -81,7 +81,7 @@ export default function AnalysisPage(){
  const onDrill=(nextTab:AnalysisTab,anchor:string,focus:DrillFocus={})=>{
   let next=normalizeAnalysisFilters({...applied,...focus});
   if(nextTab==='pricing'){if(next.product===TOS&&next.areas===null)next.areas=['cn'];setPricing(next);setPricingDraft(next);}else{setApplied(next);setDraft(next);}
-  setTab(nextTab);setExpanded(nextTab==='pricing');updateUrl(nextTab,next);
+  setTab(nextTab);setExpanded(tab==='income'&&nextTab==='pricing'&&anchor==='pricing-item-formula');updateUrl(nextTab,next);
   if(nextTab==='pricing'){window.scrollTo({top:0,behavior:'smooth'});}else{window.setTimeout(()=>{document.getElementById(anchor)?.scrollIntoView({behavior:'smooth',block:'start'});},180);}
 };
  // References: none — all tabs summarize submitted filters, never pending draft selections.

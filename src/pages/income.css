@@ -196,6 +196,7 @@
   min-width: 0;
   padding: 6px 8px;
   overflow: hidden;
+  border-radius: 8px;
   background: #fafbfc;
 }
 .analysis-page .income-metric-target-item {
