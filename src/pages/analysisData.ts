@@ -105,18 +105,17 @@ export function financialTargetSummary(filters:AnalysisFilters,key:FinancialMetr
   const yearToDateRows=monthList(filters.month).flatMap(month=>getRows(filters,month));
   const annualRows=monthList('2026-09').flatMap(month=>getRows(filters,month));
   const actual=financialMetricValue(currentRows,key);
-  const quarterActual=financialMetricValue(quarterRows,key);
   const yearToDateActual=financialMetricValue(yearToDateRows,key);
   const monthlyTarget=financialTargetValue(currentRows,key);
   const quarterlyTarget=financialTargetValue(quarterRows,key);
   const annualTarget=annualTargetValue(annualRows,key);
   return {
     monthlyActual:actual,
-    quarterlyActual:key==='rate'?actual:quarterActual,
+    quarterlyActual:actual,
     monthlyTarget,
     monthlyDeviation:key==='rate'?relativeTargetDeviation(actual,monthlyTarget):metricDeviation(actual,monthlyTarget,key),
     quarterlyTarget,
-    quarterlyDeviation:key==='rate'?relativeTargetDeviation(actual,quarterlyTarget):metricDeviation(quarterActual,quarterlyTarget,key),
+    quarterlyDeviation:key==='rate'?relativeTargetDeviation(actual,quarterlyTarget):metricDeviation(actual,quarterlyTarget,key),
     annualTarget,
     annualDeviation:metricDeviation(yearToDateActual,annualTarget,key),
     yearToDateActual,

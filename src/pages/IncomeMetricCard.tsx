@@ -226,12 +226,12 @@ export default function IncomeMetricCard({
     </div>
     {showTargets&&<div className="income-metric-targets">
       {showMonthly&&<TargetComparisonRow label="月度目标" value={monthlyTarget} deviation={monthlyDeviation} unit={changeUnit==='pp'?'%':changeUnit} formula={changeUnit==='pp'?rateTargetDeviationFormula('月度',targetSummary.monthlyActual,targetSummary.monthlyTarget,monthlyDeviation):deviationFormula('月度','当月实际值',targetSummary.monthlyActual,targetSummary.monthlyTarget,monthlyDeviation,changeUnit)}/>}
-      {showQuarterly&&<TargetComparisonRow label="季度目标" value={quarterlyTarget} deviation={quarterlyDeviation} unit={changeUnit==='pp'?'%':changeUnit} formula={changeUnit==='pp'?rateTargetDeviationFormula('季度',targetSummary.monthlyActual,targetSummary.quarterlyTarget,quarterlyDeviation):deviationFormula('季度','本季度截至当前账期累计实际值',targetSummary.quarterlyActual,targetSummary.quarterlyTarget,quarterlyDeviation,changeUnit)}/>}
+      {showQuarterly&&<TargetComparisonRow label="季度目标" value={quarterlyTarget} deviation={quarterlyDeviation} unit={changeUnit==='pp'?'%':changeUnit} formula={changeUnit==='pp'?rateTargetDeviationFormula('季度',targetSummary.monthlyActual,targetSummary.quarterlyTarget,quarterlyDeviation):deviationFormula('季度','当月实际值',targetSummary.quarterlyActual,targetSummary.quarterlyTarget,quarterlyDeviation,changeUnit)}/>}
       {showAnnual&&(changeUnit==='pp'
         ?<>
           <TargetValueRow label="年度目标" value={annualTarget}/>
-          <TargetValueRow label="当年1月至今累计值" value={yearToDateActual}/>
-          <TargetDeviationRow label="年度目标累计偏差" deviation={annualDeviation} unit={changeUnit} formula={deviationFormula('年度','1月至当前账期累计实际利润率',targetSummary.yearToDateActual,targetSummary.annualTarget,annualDeviation,'pp')}/>
+          <TargetValueRow label="1月至今累计值" value={yearToDateActual}/>
+          <TargetDeviationRow label="年度目标累计偏差" deviation={annualDeviation} unit={changeUnit} formula={deviationFormula('年度','1 月至当前账期累计实际值',targetSummary.yearToDateActual,targetSummary.annualTarget,annualDeviation,'pp')}/>
         </>
         :<>
           <TargetValueRow label="年度目标" value={annualTarget}/>
