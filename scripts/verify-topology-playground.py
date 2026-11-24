@@ -13,11 +13,13 @@ with sync_playwright() as p, tempfile.TemporaryDirectory() as temp:
     page.on("pageerror", lambda error: errors.append(str(error)))
     page.goto(f"{url}/topology-playground.html")
     page.wait_for_load_state("networkidle")
+    page.get_by_role("combobox", name="预览模型", exact=True).click()
+    page.get_by_role("option", name="样式示例 · 全部节点类型", exact=True).click()
     expect(page.get_by_role("button", name="清透蓝紫", exact=True)).to_be_visible()
     expect(page.locator(".vod-pageHeader-heading-title")).to_have_css("font-size", "18px")
     expect(page.locator(".vod-pageHeader-heading")).to_have_css("display", "flex")
     page.get_by_role("button", name="清透蓝紫", exact=True).click()
-    canvas = page.locator(".topology-canvas-shell-svg")
+    canvas = page.locator("#topology-editor-preview .topology-canvas-shell-svg")
     expect(canvas).to_have_css("background-color", "rgb(245, 248, 255)")
     viewport = canvas.locator(":scope > g")
     original_viewport = viewport.get_attribute("transform")
@@ -74,17 +76,17 @@ with sync_playwright() as p, tempfile.TemporaryDirectory() as temp:
     page.get_by_role("switch", name="使用虚线", exact=True).click()
     expect(page.locator(".formula-canvas-edge").first).to_have_css("stroke-dasharray", "6px, 4px")
     before_zoom = viewport.get_attribute("transform")
-    page.get_by_role("button", name="放大", exact=True).click()
+    page.locator("#topology-editor-preview").get_by_role("button", name="放大", exact=True).click()
     assert viewport.get_attribute("transform") != before_zoom
 
     # The original model still supports expansion and the original preview stays unstyled.
     page.get_by_role("combobox", name="预览模型", exact=True).click()
     page.get_by_role("option", name="RocketMQ · 原模型", exact=True).click()
-    expect(page.locator(".metric-topology-node")).to_have_count(3)
+    expect(page.locator("#topology-editor-preview .metric-topology-node")).to_have_count(3)
     page.get_by_role("button", name="全部展开", exact=True).click()
-    assert page.locator(".metric-topology-node").count() > 20
+    assert page.locator("#topology-editor-preview .metric-topology-node").count() > 20
     page.get_by_role("button", name="收起下层", exact=True).click()
-    expect(page.locator(".metric-topology-node")).to_have_count(3)
+    expect(page.locator("#topology-editor-preview .metric-topology-node")).to_have_count(3)
     page.get_by_role("button", name="清透蓝紫", exact=True).click()
     page.get_by_role("combobox", name="预览模型", exact=True).click()
     page.get_by_role("option", name="样式示例 · 全部节点类型", exact=True).click()

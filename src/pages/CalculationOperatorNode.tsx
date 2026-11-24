@@ -1,8 +1,8 @@
 import React from 'react';
-import addIcon from '../app/static/icon/计算式子_加.svg';
-import subtractIcon from '../app/static/icon/计算式子_减.svg';
-import multiplyIcon from '../app/static/icon/计算式子_乘.svg';
-import divideIcon from '../app/static/icon/计算式子_除.svg';
+import addIcon from '../app/static/icon/计算式子_加.svg?raw';
+import subtractIcon from '../app/static/icon/计算式子_减.svg?raw';
+import multiplyIcon from '../app/static/icon/计算式子_乘.svg?raw';
+import divideIcon from '../app/static/icon/计算式子_除.svg?raw';
 import './calculation-operator-node.css';
 import { FormulaSideHandles } from './GroupTargetHandle';
 
@@ -30,13 +30,16 @@ export default function CalculationOperatorNode({
 
   return (
     <span
-      className={['calculation-operator-node', className].filter(Boolean).join(' ')}
+      className={['calculation-operator-node', `is-${operator}`, className].filter(Boolean).join(' ')}
       role="img"
       aria-label={item.label}
       data-node-id={nodeId}
     >
       <FormulaSideHandles nodeId={nodeId} />
-      <img src={item.icon} alt="" draggable={false} />
+      <span className="calculation-operator-node-icon" aria-hidden dangerouslySetInnerHTML={{
+        // These are trusted local SVG assets. Change only the circle's fill.
+        __html: item.icon.replace('fill="#FCFDFE"', 'fill="var(--calculation-operator-background, #FCFDFE)"'),
+      }} />
     </span>
   );
 }

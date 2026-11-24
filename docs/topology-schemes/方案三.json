@@ -1,0 +1,125 @@
+{
+  "canvas": {
+    "background": "#fcfdfe",
+    "grid": "none",
+    "gridColor": "#d0d9e5",
+    "gridGap": 24,
+    "gridSize": 1,
+    "edge": "#d0d9e5",
+    "edgeWidth": 2,
+    "edgeDashed": false
+  },
+  "metric": {
+    "border": "#EBF1FF",
+    "background": "#EBF1FF",
+    "radius": 8,
+    "line": "solid",
+    "shadow": 0,
+    "text": {
+      "size": 14,
+      "color": "rgb(var(--primary-6))",
+      "weight": 500,
+      "font": "system"
+    },
+    "titleBackground": "#EBF1FF",
+    "appearance": "inset",
+    "width": 278,
+    "showStatusTag": false,
+    "dividerInset": 10,
+    "formulaGap": 8,
+    "formula": {
+      "size": 12,
+      "color": "var(--color-text-3)",
+      "weight": 400,
+      "font": "system"
+    },
+    "value": {
+      "size": 18,
+      "color": "#0c0d0e",
+      "weight": 500,
+      "font": "roboto"
+    },
+    "unit": {
+      "size": 13,
+      "color": "#0c0d0e",
+      "weight": 400,
+      "font": "system"
+    },
+    "target": {
+      "size": 12,
+      "color": "#737a87",
+      "weight": 400,
+      "font": "system"
+    },
+    "targetValue": {
+      "size": 12,
+      "color": "#737a87",
+      "weight": 500,
+      "font": "roboto"
+    },
+    "positive": "#00a32b",
+    "negative": "#ee3f38",
+    "divider": "#eaedf1"
+  },
+  "function": {
+    "border": "#F2EAFB",
+    "background": "#F2EAFB",
+    "radius": 8,
+    "line": "solid",
+    "shadow": 0,
+    "text": {
+      "size": 14,
+      "color": "#6E4C9F",
+      "weight": 500,
+      "font": "system"
+    },
+    "titleBackground": "#F2EAFB",
+    "metricBackground": "#F2EAFB",
+    "appearance": "inset"
+  },
+  "expression": {
+    "border": "#E4F3FC",
+    "background": "#E4F3FC",
+    "radius": 8,
+    "line": "solid",
+    "shadow": 0,
+    "text": {
+      "size": 14,
+      "color": "#24758E",
+      "weight": 500,
+      "font": "system"
+    },
+    "titleBackground": "#E4F3FC",
+    "appearance": "inset",
+    "icon": "dots"
+  },
+  "constant": {
+    "border": "#dde2e9",
+    "background": "#ffffff",
+    "radius": 8,
+    "line": "solid",
+    "shadow": 0,
+    "text": {
+      "size": 13,
+      "color": "#0c0d0e",
+      "weight": 500,
+      "font": "system"
+    },
+    "titleBackground": "#ffffff"
+  },
+  "operator": {
+    "border": "#dde2e9",
+    "background": "var(--color-bg-4)",
+    "radius": 16,
+    "line": "solid",
+    "shadow": 0,
+    "text": {
+      "size": 18,
+      "color": "#737a87",
+      "weight": 500,
+      "font": "system"
+    },
+    "titleBackground": "#ffffff",
+    "customBackground": true
+  }
+}

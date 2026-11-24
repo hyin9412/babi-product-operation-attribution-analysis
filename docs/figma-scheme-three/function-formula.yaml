@@ -1,0 +1,837 @@
+NAME: "商品经营透明化"
+
+GLOBAL_VARS:
+Violet/Tag背景色@violet-2:
+  - '#F2EAFB'
+layout_a074ae49:
+  mode: row
+  alignSelf: stretch
+  padding: 6px 12px
+  alignItems: center
+  gap: 6px
+  sizing:
+    horizontal: fill
+    vertical: hug
+layout_e4b6f33f:
+  mode: none
+  sizing:
+    horizontal: fixed
+    vertical: fixed
+  dimensions:
+    width: 16
+    height: 16
+fill_97d170e1: []
+Violet/常规@violet-6:
+  - '#6E4C9F'
+layout_177c5efc:
+  mode: none
+  sizing:
+    horizontal: hug
+    vertical: hug
+Body/body-3 medium:
+  fontFamily: PingFang SC
+  fontStyle: Medium
+  fontWeight: 500
+  fontSize: 14
+  lineHeight: 22px
+  letterSpacing: 0.003em
+  textAlignHorizontal: LEFT
+  textAlignVertical: CENTER
+Background/整体背景色 @color-bg-1:
+  - '#FFFFFF'
+Teal/Tag背景色@teal-2:
+  - '#E4F3FC'
+Teal/常规@teal-6:
+  - '#24758E'
+Primary Color/Tag背景色 @primary-2:
+  - '#EBF1FF'
+Body/body-2 medium:
+  fontFamily: PingFang SC
+  fontStyle: Medium
+  fontWeight: 500
+  fontSize: 13
+  lineHeight: 22px
+  letterSpacing: 0.003em
+  textAlignHorizontal: LEFT
+  textAlignVertical: CENTER
+layout_5c79c5b1:
+  mode: column
+  alignSelf: stretch
+  alignItems: stretch
+  sizing:
+    horizontal: fill
+    vertical: hug
+Body/body-1 regular:
+  fontFamily: PingFang SC
+  fontStyle: Regular
+  fontWeight: 400
+  fontSize: 12
+  lineHeight: 20px
+  letterSpacing: 0.003em
+  textAlignHorizontal: LEFT
+  textAlignVertical: TOP
+Text/次要信息 @color-text-3:
+  - '#737A87'
+Line/浅色描边 @color-border-2:
+  - '#EAEDF1'
+Text/强调正文标题 @color-text-1:
+  - '#0C0D0E'
+Body/body-2 regular:
+  fontFamily: PingFang SC
+  fontStyle: Regular
+  fontWeight: 400
+  fontSize: 13
+  lineHeight: 22px
+  letterSpacing: 0.003em
+  textAlignHorizontal: LEFT
+  textAlignVertical: TOP
+12/CN-Regular:
+  fontFamily: PingFang SC
+  fontStyle: Regular
+  fontWeight: 400
+  fontSize: 12
+  lineHeight: 20px
+  textAlignHorizontal: LEFT
+  textAlignVertical: TOP
+Fill/常规 白底悬浮 @color-fill-2:
+  - '#737A87'
+EN or Digital/body-1 regular:
+  fontFamily: Roboto
+  fontStyle: Regular
+  fontWeight: 400
+  fontSize: 12
+  lineHeight: 20px
+  letterSpacing: 0.003em
+  textAlignHorizontal: LEFT
+  textAlignVertical: TOP
+Red/悬浮 @danger-5:
+  - '#EE3F38'
+EN or Digital/body-1 regular (19:25498):
+  fontFamily: Roboto
+  fontStyle: Regular
+  fontWeight: 400
+  fontSize: 12
+  lineHeight: 20px
+  letterSpacing: 0.003em
+  textAlignHorizontal: CENTER
+  textAlignVertical: CENTER
+功能/成功色 Success/success-5（常规）:
+  - '#00A32B'
+fill_5ea0f4c4:
+  - '#00A32B'
+Background/浅 灰底 @color-bg-2:
+  - '#FCFDFE'
+shadow/Card 卡片/Base 基础卡片:
+  boxShadow: 0px 2px 6px 0px rgba(0, 0, 0, 0.05)
+layout_518bc48e:
+  mode: column
+  padding: 4px
+  justifyContent: center
+  alignItems: stretch
+  sizing:
+    horizontal: fixed
+    vertical: fixed
+  dimensions:
+    width: 32
+    height: 32
+Background/深 灰底 @color-bg-4:
+  - '#F6F8FA'
+
+ELEMENTS:
+EL-4709d636:
+  type: IMAGE-SVG
+  layout: layout_e4b6f33f
+  fills: fill_97d170e1
+EL-7d5b19a0:
+  type: INSTANCE
+  layout:
+    mode: column
+    alignItems: stretch
+    sizing:
+      horizontal: fixed
+      vertical: hug
+    dimensions:
+      width: 300
+  componentId: 5399:69637
+EL-828ec6cd:
+  type: FRAME
+  layout:
+    mode: column
+    alignSelf: stretch
+    padding: 0px 0px 1px
+    sizing:
+      horizontal: fill
+      vertical: hug
+  fills: Primary Color/Tag背景色 @primary-2
+  borderRadius: 8px
+EL-06f376e2:
+  type: FRAME
+  layout:
+    mode: column
+    alignSelf: stretch
+    padding: 0px 2px
+    alignItems: stretch
+    sizing:
+      horizontal: fill
+      vertical: hug
+  fills: Primary Color/Tag背景色 @primary-2
+  strokes: Primary Color/Tag背景色 @primary-2
+  strokeWeight: 1px
+  borderRadius: 8px
+EL-6e926975:
+  type: FRAME
+  layout:
+    mode: column
+    alignSelf: stretch
+    alignItems: stretch
+    gap: 2px
+    sizing:
+      horizontal: fill
+      vertical: hug
+EL-f8b1c27d:
+  type: FRAME
+  layout:
+    mode: row
+    alignSelf: stretch
+    padding: 6px 12px
+    alignItems: center
+    gap: 4px
+    sizing:
+      horizontal: fill
+      vertical: fixed
+    dimensions:
+      height: 32
+  fills: Primary Color/Tag背景色 @primary-2
+  borderRadius: 6px 6px 0px 0px
+EL-2a2db68a:
+  type: TEXT
+  layout:
+    mode: none
+    sizing:
+      horizontal: fill
+      vertical: hug
+  text: 指标名称指标名称
+  textStyle: Body/body-2 medium
+  fills:
+    - '#1664FF'
+EL-98d53912:
+  type: INSTANCE
+  layout:
+    mode: column
+    justifyContent: center
+    alignItems: center
+    sizing:
+      horizontal: hug
+      vertical: hug
+  componentId: 17:2602
+EL-39f11e00:
+  type: IMAGE-SVG
+  layout:
+    mode: none
+    sizing:
+      horizontal: fixed
+      vertical: fixed
+    dimensions:
+      width: 14
+      height: 14
+  fills: fill_97d170e1
+  componentId: 5039:112721
+EL-75c373c3:
+  type: FRAME
+  layout: layout_5c79c5b1
+  fills: Background/整体背景色 @color-bg-1
+  borderRadius: 8px
+EL-c5513a26:
+  type: FRAME
+  layout:
+    mode: column
+    alignSelf: stretch
+    padding: 8px 12px
+    alignItems: stretch
+    gap: 10px
+    sizing:
+      horizontal: fill
+      vertical: hug
+EL-1888270a:
+  type: TEXT
+  layout:
+    mode: none
+    sizing:
+      horizontal: fill
+      vertical: fixed
+    dimensions:
+      height: 40
+  text: '=bytegraph\_计算层资源\_单位成本 / bytegraph\_计算层资源\_综合\_售卖率 \* \( 1 + bytegraph\_其他成本\_加成\_比例 \) \* \( 1 + bytegraph\_计算层资源\_策略\_加成\_比例 \)'
+  textStyle: Body/body-1 regular
+  fills: Text/次要信息 @color-text-3
+EL-7bd24d40:
+  type: FRAME
+  layout:
+    mode: column
+    alignSelf: stretch
+    alignItems: center
+    gap: 10px
+    sizing:
+      horizontal: fill
+      vertical: hug
+EL-7c0c4e7d:
+  type: LINE
+  layout:
+    mode: none
+    sizing:
+      horizontal: fixed
+      vertical: fixed
+    dimensions:
+      width: 276
+      height: 0
+  strokes: Line/浅色描边 @color-border-2
+  strokeWeight: 1px
+  strokeDashes:
+    - 2
+    - 2
+  strokeAlign: CENTER
+EL-8b53a306:
+  type: FRAME
+  layout:
+    mode: column
+    alignSelf: stretch
+    padding: 8px 12px 16px
+    gap: 4px
+    sizing:
+      horizontal: fill
+      vertical: hug
+  borderRadius: 8px
+EL-2d0d42ff:
+  type: FRAME
+  layout:
+    mode: row
+    alignSelf: stretch
+    alignItems: center
+    gap: 2px
+    sizing:
+      horizontal: fill
+      vertical: hug
+EL-6a08b85c:
+  type: TEXT
+  layout: layout_177c5efc
+  text: '0.0338448634'
+  textStyle:
+    fontFamily: Roboto
+    fontStyle: Medium
+    fontWeight: 500
+    fontSize: 18
+    letterSpacing: 0.003em
+    textAlignHorizontal: LEFT
+    textAlignVertical: TOP
+  fills: Text/强调正文标题 @color-text-1
+EL-4d1e05f9:
+  type: TEXT
+  layout: layout_177c5efc
+  text: USD/核·日
+  textStyle: Body/body-2 regular
+  fills: Text/强调正文标题 @color-text-1
+EL-235879b0:
+  type: FRAME
+  layout:
+    mode: row
+    alignItems: center
+    gap: 8px
+    sizing:
+      horizontal: hug
+      vertical: hug
+EL-e2494a44:
+  type: FRAME
+  layout:
+    mode: row
+    alignItems: center
+    sizing:
+      horizontal: hug
+      vertical: hug
+EL-17c01285:
+  type: TEXT
+  layout: layout_177c5efc
+  text: 月度目标：
+  textStyle: 12/CN-Regular
+  fills: Fill/常规 白底悬浮 @color-fill-2
+EL-d9e11a8f:
+  type: TEXT
+  layout: layout_177c5efc
+  text: '0.0330325867'
+  textStyle:
+    fontFamily: Inter
+    fontStyle: Medium
+    fontWeight: 500
+    fontSize: 12
+    lineHeight: 20px
+    textAlignHorizontal: LEFT
+    textAlignVertical: TOP
+  fills: Fill/常规 白底悬浮 @color-fill-2
+EL-3ef69915:
+  type: LINE
+  layout:
+    mode: none
+    sizing:
+      horizontal: fixed
+      vertical: fixed
+    dimensions:
+      width: 0
+      height: 12
+  strokes: Line/浅色描边 @color-border-2
+  strokeWeight: 1px
+  strokeAlign: CENTER
+EL-b30de242:
+  type: TEXT
+  layout: layout_177c5efc
+  text: 偏差：
+  textStyle: 12/CN-Regular
+  fills: Fill/常规 白底悬浮 @color-fill-2
+EL-22c8aafc:
+  type: TEXT
+  layout: layout_177c5efc
+  text: +57.39%
+  textStyle: EN or Digital/body-1 regular
+  fills: Red/悬浮 @danger-5
+EL-53728dea:
+  type: LINE
+  layout:
+    mode: none
+    sizing:
+      horizontal: fixed
+      vertical: fixed
+    position: absolute
+    locationRelativeToParent:
+      x: 35
+      y: 18
+    dimensions:
+      width: 47
+      height: 0
+  strokes: Red/悬浮 @danger-5
+  strokeWeight: 1px
+  strokeDashes:
+    - 2
+    - 2
+  strokeAlign: CENTER
+EL-afd56a4b:
+  type: TEXT
+  layout: layout_177c5efc
+  text: 季度目标：
+  textStyle: 12/CN-Regular
+  fills: Fill/常规 白底悬浮 @color-fill-2
+EL-413aeddb:
+  type: TEXT
+  layout: layout_177c5efc
+  text: '-57.39%'
+  textStyle: EN or Digital/body-1 regular (19:25498)
+  fills: 功能/成功色 Success/success-5（常规）
+EL-82311bc1:
+  type: LINE
+  layout:
+    mode: none
+    sizing:
+      horizontal: fixed
+      vertical: fixed
+    position: absolute
+    locationRelativeToParent:
+      x: 36
+      y: 18
+    dimensions:
+      width: 44
+      height: 0
+  fills: fill_5ea0f4c4
+  strokes: fill_5ea0f4c4
+  strokeWeight: 1px
+  strokeDashes:
+    - 2
+    - 2
+  strokeAlign: CENTER
+EL-2b3b2551:
+  type: TEXT
+  layout: layout_177c5efc
+  text: 年度目标：
+  textStyle: 12/CN-Regular
+  fills: Fill/常规 白底悬浮 @color-fill-2
+EL-7946b2dd:
+  type: FRAME
+  layout:
+    mode: row
+    alignSelf: stretch
+    padding: 0px 10px
+    justifyContent: center
+    alignItems: flex-end
+    gap: 10px
+    sizing:
+      horizontal: fill
+      vertical: fixed
+    dimensions:
+      height: 14
+EL-bec8afdc:
+  type: INSTANCE
+  layout:
+    mode: column
+    padding: 4px
+    justifyContent: center
+    alignItems: center
+    sizing:
+      horizontal: fixed
+      vertical: fixed
+    dimensions:
+      width: 28
+      height: 28
+  fills: Background/浅 灰底 @color-bg-2
+  strokes: Line/浅色描边 @color-border-2
+  strokeWeight: 1px
+  effects: shadow/Card 卡片/Base 基础卡片
+  borderRadius: 20px
+  componentId: 5362:325730
+EL-3656c997:
+  type: IMAGE-SVG
+  layout: layout_e4b6f33f
+  fills: fill_97d170e1
+  componentId: 20:1331
+EL-555975e6:
+  type: IMAGE-SVG
+  layout:
+    mode: none
+    sizing:
+      horizontal: fill
+      vertical: fill
+  componentId: 17:8778
+EL-0e87df83:
+  type: FRAME
+  layout:
+    mode: row
+    padding: 0px 0px 8px
+    alignItems: flex-end
+    gap: 10px
+    sizing:
+      horizontal: hug
+      vertical: fixed
+    dimensions:
+      height: 255
+EL-53288cf7:
+  type: FRAME
+  layout:
+    mode: row
+    alignItems: center
+    gap: 10px
+    sizing:
+      horizontal: hug
+      vertical: fixed
+    dimensions:
+      height: 207
+EL-34489665:
+  type: FRAME
+  layout: layout_518bc48e
+  fills: Background/深 灰底 @color-bg-4
+  strokes:
+    - '#EAEDF1'
+  strokeWeight: 1px
+  borderRadius: 20px
+EL-7bd50d07:
+  type: FRAME
+  layout:
+    mode: column
+    padding: 40px 0px 0px
+    alignItems: stretch
+    gap: 10px
+    sizing:
+      horizontal: fixed
+      vertical: fixed
+    dimensions:
+      width: 300
+      height: 255
+EL-a9dd2e20:
+  type: INSTANCE
+  layout: layout_5c79c5b1
+  componentId: 5399:69637
+
+COMPONENTS:
+5396:56430:
+  id: 5396:56430
+  key: c848f0ca7282c14723567839e8408319436d1a8d
+  name: Property 1=Variant6
+  componentSetId: 5393:395226
+5399:69637:
+  id: 5399:69637
+  key: 9e39be456304546bb3df1dbdae480f47212493e6
+  name: Property 1=Variant8
+  componentSetId: 5393:394623
+177:70916:
+  id: 177:70916
+  key: ddcf7adb542fb07802ba07595f5cd3266726d4df
+  name: Type 类型=L3 三级标签, Theme 主题=Error 错误, Size 尺寸=Default 20, Icon 图标=False, Dropdown 下拉选择=False, State 状态=Default 默认, Disabled 禁用=False
+  componentSetId: 177:70351
+17:2602:
+  id: 17:2602
+  key: 40bcba1a149527226a37ef0db0a0d1193cb257ab
+  name: 尺寸=14
+  componentSetId: 17:2599
+5039:112721:
+  id: 5039:112721
+  key: ae458b4936895a298c7c1c7f555e0eb2592068fc
+  name: line-chart
+5362:325730:
+  id: 5362:325730
+  key: 0c473c0b0ecdf44c750e70049945e8747d29b348
+  name: Property 1=下级节点- 展开
+  componentSetId: 5362:325731
+20:1331:
+  id: 20:1331
+  key: b5d742195534e4a6615ffb5d208b22c7ede0cb4e
+  name: down
+5362:325839:
+  id: 5362:325839
+  key: 76ba7ce698cb012a6d1f4f1fb6efb71cb6bac928
+  name: Property 1=加
+  componentSetId: 5362:325842
+17:8778:
+  id: 17:8778
+  key: 147d819069e145dba0a357b2b4f45bbc2b87a754
+  name: plus
+
+COMPONENT_SETS:
+5393:395226:
+  id: 5393:395226
+  key: b857defa9bce9f37f35bd897acf8c375f1f5733e
+  name: 函数内为公式
+  description: ''
+5393:394623:
+  id: 5393:394623
+  key: 1235c24a1fffebcf63540310333d39e9c17f86c1
+  name: 节点指标
+  description: ''
+177:70351:
+  id: 177:70351
+  key: 03929d474a32cb373ef51950eef4f25970649ab0
+  name: Status Tag 状态标签
+  description: 分类：数据展示
+17:2599:
+  id: 17:2599
+  key: 7251342fa5761a7c3ea477616fe5849ceba80445
+  name: icon-wrapper
+  description: 图标包裹
+5362:325731:
+  id: 5362:325731
+  key: d60931f5c310cc06de211123fc719039bd45b2d8
+  name: 展开收起控制
+  description: ''
+5362:325842:
+  id: 5362:325842
+  key: 7d5fee4ecd611e0c64362b0c6c4d98508eb69363
+  name: 计算式子
+  description: ''
+
+NODES:
+[INSTANCE] "函数内为公式" #5396:38016 layout={"mode":"column","padding":"0px 0px 2px","alignItems":"center","sizing":{"horizontal":"hug","vertical":"hug"}} fills=Violet/Tag背景色@violet-2 borderRadius=8px componentId=5396:56430
+  [FRAME] "类别Tag" #I5396:38016;5396:56744 layout=layout_a074ae49 borderRadius="12px 12px 0px 0px"
+    [IMAGE-SVG] "Frame" #I5396:38016;5396:56745 template=EL-4709d636
+    [TEXT] #I5396:38016;5396:56751 layout=layout_177c5efc fills=Violet/常规@violet-6 textStyle="Body/body-3 medium" text="SUM 函数"
+  [FRAME] #I5396:38016;5396:57146 layout={"mode":"column","padding":"0px 2px","gap":"10px","sizing":{"horizontal":"hug","vertical":"hug"}}
+    [FRAME] "内容区" #I5396:38016;5396:56441 layout={"mode":"row","padding":"6px 8px","alignItems":"flex-end","gap":"16px","sizing":{"horizontal":"hug","vertical":"hug"}} fills="Background/整体背景色 @color-bg-1" borderRadius=8px
+      [FRAME] "括号表达式" #I5396:38016;5399:71399 layout={"mode":"column","sizing":{"horizontal":"hug","vertical":"hug"}} fills=Teal/Tag背景色@teal-2 borderRadius=8px
+        [FRAME] "类别Tag" #I5396:38016;5399:71400 layout=layout_a074ae49 fills=fill_97d170e1 borderRadius="8px 8px 0px 0px"
+          [IMAGE-SVG] "领域 1" #I5396:38016;5399:71401 template=EL-4709d636
+          [TEXT] #I5396:38016;5399:71403 layout=layout_177c5efc fills=Teal/常规@teal-6 textStyle="Body/body-3 medium" text="括号表达式"
+        [FRAME] "内容区" #I5396:38016;5399:71404 layout={"mode":"row","padding":"0px 2px 2px","gap":"16px","sizing":{"horizontal":"hug","vertical":"hug"}} fills=fill_97d170e1 borderRadius="0px 0px 8px 8px"
+          [FRAME] #I5396:38016;5399:71405 layout={"mode":"row","padding":"6px 8px","gap":"16px","sizing":{"horizontal":"hug","vertical":"fixed"},"dimensions":{"height":219}} fills=["#FFFFFF"] borderRadius=8px
+            [INSTANCE] "节点指标" #I5396:38016;5399:71780 template=EL-7d5b19a0
+              [FRAME] #I5396:38016;5399:71780;5399:69638 template=EL-828ec6cd
+                [FRAME] #I5396:38016;5399:71780;5399:69650 template=EL-06f376e2
+                  [FRAME] "标题行模块" #I5396:38016;5399:71780;5399:69651 template=EL-6e926975
+                    [FRAME] "标题行" #I5396:38016;5399:71780;5399:69652 template=EL-f8b1c27d
+                      [TEXT] #I5396:38016;5399:71780;5399:69653 template=EL-2a2db68a
+                      [INSTANCE] "月趋势" #I5396:38016;5399:71780;5399:69654 template=EL-98d53912
+                        [IMAGE-SVG] "icons" #I5396:38016;5399:71780;5399:69654;3120:88238 template=EL-39f11e00
+                  [FRAME] #I5396:38016;5399:71780;5399:69702 template=EL-75c373c3
+                    [FRAME] "计算公式模块" #I5396:38016;5399:71780;5399:69657 template=EL-c5513a26
+                      [TEXT] #I5396:38016;5399:71780;5399:69658 template=EL-1888270a
+                    [FRAME] #I5396:38016;5399:71780;5399:69703 template=EL-7bd24d40
+                      [LINE] #I5396:38016;5399:71780;5399:69704 template=EL-7c0c4e7d
+                    [FRAME] "数值模块" #I5396:38016;5399:71780;5399:69661 template=EL-8b53a306
+                      [FRAME] "实际值" #I5396:38016;5399:71780;5399:69662 template=EL-2d0d42ff
+                        [TEXT] #I5396:38016;5399:71780;5399:69663 template=EL-6a08b85c
+                        [TEXT] #I5396:38016;5399:71780;5399:69664 template=EL-4d1e05f9
+                      [FRAME] "目标" #I5396:38016;5399:71780;5399:69665 template=EL-235879b0
+                        [FRAME] "目标值" #I5396:38016;5399:71780;5399:69666 template=EL-e2494a44
+                          [TEXT] #I5396:38016;5399:71780;5399:69667 template=EL-17c01285
+                          [TEXT] #I5396:38016;5399:71780;5399:69668 template=EL-d9e11a8f
+                        [LINE] #I5396:38016;5399:71780;5399:69669 template=EL-3ef69915
+                        [FRAME] "偏差值" #I5396:38016;5399:71780;5399:69670 template=EL-e2494a44
+                          [TEXT] #I5396:38016;5399:71780;5399:69671 template=EL-b30de242
+                          [TEXT] #I5396:38016;5399:71780;5399:69672 template=EL-22c8aafc
+                          [LINE] #I5396:38016;5399:71780;5401:24928 template=EL-53728dea
+                      [FRAME] "目标" #I5396:38016;5399:71780;5399:69673 template=EL-235879b0
+                        [FRAME] "目标值" #I5396:38016;5399:71780;5399:69674 template=EL-e2494a44
+                          [TEXT] #I5396:38016;5399:71780;5399:69675 template=EL-afd56a4b
+                          [TEXT] #I5396:38016;5399:71780;5399:69676 template=EL-d9e11a8f
+                        [LINE] #I5396:38016;5399:71780;5399:69677 template=EL-3ef69915
+                        [FRAME] "偏差值" #I5396:38016;5399:71780;5399:69678 template=EL-e2494a44
+                          [TEXT] #I5396:38016;5399:71780;5399:69679 template=EL-b30de242
+                          [TEXT] #I5396:38016;5399:71780;5399:69680 template=EL-413aeddb
+                          [LINE] #I5396:38016;5399:71780;5401:24994 template=EL-82311bc1
+                      [FRAME] "目标" #I5396:38016;5399:71780;5399:69681 template=EL-235879b0
+                        [FRAME] "目标值" #I5396:38016;5399:71780;5399:69682 template=EL-e2494a44
+                          [TEXT] #I5396:38016;5399:71780;5399:69683 template=EL-2b3b2551
+                          [TEXT] #I5396:38016;5399:71780;5399:69684 template=EL-d9e11a8f
+                        [LINE] #I5396:38016;5399:71780;5399:69685 template=EL-3ef69915
+                        [FRAME] "偏差值" #I5396:38016;5399:71780;5399:69686 template=EL-e2494a44
+                          [TEXT] #I5396:38016;5399:71780;5399:69687 template=EL-b30de242
+                          [TEXT] #I5396:38016;5399:71780;5399:69688 template=EL-413aeddb
+                          [LINE] #I5396:38016;5399:71780;5401:25027 template=EL-82311bc1
+              [FRAME] "展开收起" #I5396:38016;5399:71780;5399:69689 template=EL-7946b2dd
+                [INSTANCE] "展开收起控制" #I5396:38016;5399:71780;5399:69690 template=EL-bec8afdc
+                  [IMAGE-SVG] "down" #I5396:38016;5399:71780;5399:69690;5362:325723 template=EL-3656c997
+            [FRAME] #I5396:38016;5399:71948 layout={"mode":"row","alignSelf":"stretch","alignItems":"center","gap":"10px","sizing":{"horizontal":"hug","vertical":"fill"}}
+              [INSTANCE] "计算式子" #I5396:38016;5399:71949 layout=layout_518bc48e fills="Background/深 灰底 @color-bg-4" strokes="Line/浅色描边 @color-border-2" strokeWeight=1px borderRadius=20px componentId=5362:325839
+                [IMAGE-SVG] "plus" #I5396:38016;5399:71949;5362:325783 template=EL-555975e6
+            [INSTANCE] "节点指标" #I5396:38016;5399:71612 template=EL-7d5b19a0
+              [FRAME] #I5396:38016;5399:71612;5399:69638 template=EL-828ec6cd
+                [FRAME] #I5396:38016;5399:71612;5399:69650 template=EL-06f376e2
+                  [FRAME] "标题行模块" #I5396:38016;5399:71612;5399:69651 template=EL-6e926975
+                    [FRAME] "标题行" #I5396:38016;5399:71612;5399:69652 template=EL-f8b1c27d
+                      [TEXT] #I5396:38016;5399:71612;5399:69653 template=EL-2a2db68a
+                      [INSTANCE] "月趋势" #I5396:38016;5399:71612;5399:69654 template=EL-98d53912
+                        [IMAGE-SVG] "icons" #I5396:38016;5399:71612;5399:69654;3120:88238 template=EL-39f11e00
+                  [FRAME] #I5396:38016;5399:71612;5399:69702 template=EL-75c373c3
+                    [FRAME] "计算公式模块" #I5396:38016;5399:71612;5399:69657 template=EL-c5513a26
+                      [TEXT] #I5396:38016;5399:71612;5399:69658 template=EL-1888270a
+                    [FRAME] #I5396:38016;5399:71612;5399:69703 template=EL-7bd24d40
+                      [LINE] #I5396:38016;5399:71612;5399:69704 template=EL-7c0c4e7d
+                    [FRAME] "数值模块" #I5396:38016;5399:71612;5399:69661 template=EL-8b53a306
+                      [FRAME] "实际值" #I5396:38016;5399:71612;5399:69662 template=EL-2d0d42ff
+                        [TEXT] #I5396:38016;5399:71612;5399:69663 template=EL-6a08b85c
+                        [TEXT] #I5396:38016;5399:71612;5399:69664 template=EL-4d1e05f9
+                      [FRAME] "目标" #I5396:38016;5399:71612;5399:69665 template=EL-235879b0
+                        [FRAME] "目标值" #I5396:38016;5399:71612;5399:69666 template=EL-e2494a44
+                          [TEXT] #I5396:38016;5399:71612;5399:69667 template=EL-17c01285
+                          [TEXT] #I5396:38016;5399:71612;5399:69668 template=EL-d9e11a8f
+                        [LINE] #I5396:38016;5399:71612;5399:69669 template=EL-3ef69915
+                        [FRAME] "偏差值" #I5396:38016;5399:71612;5399:69670 template=EL-e2494a44
+                          [TEXT] #I5396:38016;5399:71612;5399:69671 template=EL-b30de242
+                          [TEXT] #I5396:38016;5399:71612;5399:69672 template=EL-22c8aafc
+                          [LINE] #I5396:38016;5399:71612;5401:24928 template=EL-53728dea
+                      [FRAME] "目标" #I5396:38016;5399:71612;5399:69673 template=EL-235879b0
+                        [FRAME] "目标值" #I5396:38016;5399:71612;5399:69674 template=EL-e2494a44
+                          [TEXT] #I5396:38016;5399:71612;5399:69675 template=EL-afd56a4b
+                          [TEXT] #I5396:38016;5399:71612;5399:69676 template=EL-d9e11a8f
+                        [LINE] #I5396:38016;5399:71612;5399:69677 template=EL-3ef69915
+                        [FRAME] "偏差值" #I5396:38016;5399:71612;5399:69678 template=EL-e2494a44
+                          [TEXT] #I5396:38016;5399:71612;5399:69679 template=EL-b30de242
+                          [TEXT] #I5396:38016;5399:71612;5399:69680 template=EL-413aeddb
+                          [LINE] #I5396:38016;5399:71612;5401:24994 template=EL-82311bc1
+                      [FRAME] "目标" #I5396:38016;5399:71612;5399:69681 template=EL-235879b0
+                        [FRAME] "目标值" #I5396:38016;5399:71612;5399:69682 template=EL-e2494a44
+                          [TEXT] #I5396:38016;5399:71612;5399:69683 template=EL-2b3b2551
+                          [TEXT] #I5396:38016;5399:71612;5399:69684 template=EL-d9e11a8f
+                        [LINE] #I5396:38016;5399:71612;5399:69685 template=EL-3ef69915
+                        [FRAME] "偏差值" #I5396:38016;5399:71612;5399:69686 template=EL-e2494a44
+                          [TEXT] #I5396:38016;5399:71612;5399:69687 template=EL-b30de242
+                          [TEXT] #I5396:38016;5399:71612;5399:69688 template=EL-413aeddb
+                          [LINE] #I5396:38016;5399:71612;5401:25027 template=EL-82311bc1
+              [FRAME] "展开收起" #I5396:38016;5399:71612;5399:69689 template=EL-7946b2dd
+                [INSTANCE] "展开收起控制" #I5396:38016;5399:71612;5399:69690 template=EL-bec8afdc
+                  [IMAGE-SVG] "down" #I5396:38016;5399:71612;5399:69690;5362:325723 template=EL-3656c997
+      [FRAME] #I5396:38016;5399:71984 template=EL-0e87df83
+        [FRAME] #I5396:38016;5399:71963 template=EL-53288cf7
+          [FRAME] "计算式子" #I5396:38016;5396:56457 template=EL-34489665
+            [IMAGE-SVG] "plus" #I5396:38016;5396:56458 template=EL-555975e6
+      [FRAME] #I5396:38016;5396:57147 template=EL-7bd50d07
+        [INSTANCE] "节点指标" #I5396:38016;5396:56821 template=EL-a9dd2e20
+          [FRAME] #I5396:38016;5396:56821;5399:69638 template=EL-828ec6cd
+            [FRAME] #I5396:38016;5396:56821;5399:69650 template=EL-06f376e2
+              [FRAME] "标题行模块" #I5396:38016;5396:56821;5399:69651 template=EL-6e926975
+                [FRAME] "标题行" #I5396:38016;5396:56821;5399:69652 template=EL-f8b1c27d
+                  [TEXT] #I5396:38016;5396:56821;5399:69653 template=EL-2a2db68a
+                  [INSTANCE] "月趋势" #I5396:38016;5396:56821;5399:69654 template=EL-98d53912
+                    [IMAGE-SVG] "icons" #I5396:38016;5396:56821;5399:69654;3120:88238 template=EL-39f11e00
+              [FRAME] #I5396:38016;5396:56821;5399:69702 template=EL-75c373c3
+                [FRAME] "计算公式模块" #I5396:38016;5396:56821;5399:69657 template=EL-c5513a26
+                  [TEXT] #I5396:38016;5396:56821;5399:69658 template=EL-1888270a
+                [FRAME] #I5396:38016;5396:56821;5399:69703 template=EL-7bd24d40
+                  [LINE] #I5396:38016;5396:56821;5399:69704 template=EL-7c0c4e7d
+                [FRAME] "数值模块" #I5396:38016;5396:56821;5399:69661 template=EL-8b53a306
+                  [FRAME] "实际值" #I5396:38016;5396:56821;5399:69662 template=EL-2d0d42ff
+                    [TEXT] #I5396:38016;5396:56821;5399:69663 template=EL-6a08b85c
+                    [TEXT] #I5396:38016;5396:56821;5399:69664 template=EL-4d1e05f9
+                  [FRAME] "目标" #I5396:38016;5396:56821;5399:69665 template=EL-235879b0
+                    [FRAME] "目标值" #I5396:38016;5396:56821;5399:69666 template=EL-e2494a44
+                      [TEXT] #I5396:38016;5396:56821;5399:69667 template=EL-17c01285
+                      [TEXT] #I5396:38016;5396:56821;5399:69668 template=EL-d9e11a8f
+                    [LINE] #I5396:38016;5396:56821;5399:69669 template=EL-3ef69915
+                    [FRAME] "偏差值" #I5396:38016;5396:56821;5399:69670 template=EL-e2494a44
+                      [TEXT] #I5396:38016;5396:56821;5399:69671 template=EL-b30de242
+                      [TEXT] #I5396:38016;5396:56821;5399:69672 template=EL-22c8aafc
+                      [LINE] #I5396:38016;5396:56821;5401:24928 template=EL-53728dea
+                  [FRAME] "目标" #I5396:38016;5396:56821;5399:69673 template=EL-235879b0
+                    [FRAME] "目标值" #I5396:38016;5396:56821;5399:69674 template=EL-e2494a44
+                      [TEXT] #I5396:38016;5396:56821;5399:69675 template=EL-afd56a4b
+                      [TEXT] #I5396:38016;5396:56821;5399:69676 template=EL-d9e11a8f
+                    [LINE] #I5396:38016;5396:56821;5399:69677 template=EL-3ef69915
+                    [FRAME] "偏差值" #I5396:38016;5396:56821;5399:69678 template=EL-e2494a44
+                      [TEXT] #I5396:38016;5396:56821;5399:69679 template=EL-b30de242
+                      [TEXT] #I5396:38016;5396:56821;5399:69680 template=EL-413aeddb
+                      [LINE] #I5396:38016;5396:56821;5401:24994 template=EL-82311bc1
+                  [FRAME] "目标" #I5396:38016;5396:56821;5399:69681 template=EL-235879b0
+                    [FRAME] "目标值" #I5396:38016;5396:56821;5399:69682 template=EL-e2494a44
+                      [TEXT] #I5396:38016;5396:56821;5399:69683 template=EL-2b3b2551
+                      [TEXT] #I5396:38016;5396:56821;5399:69684 template=EL-d9e11a8f
+                    [LINE] #I5396:38016;5396:56821;5399:69685 template=EL-3ef69915
+                    [FRAME] "偏差值" #I5396:38016;5396:56821;5399:69686 template=EL-e2494a44
+                      [TEXT] #I5396:38016;5396:56821;5399:69687 template=EL-b30de242
+                      [TEXT] #I5396:38016;5396:56821;5399:69688 template=EL-413aeddb
+                      [LINE] #I5396:38016;5396:56821;5401:25027 template=EL-82311bc1
+          [FRAME] "展开收起" #I5396:38016;5396:56821;5399:69689 template=EL-7946b2dd
+            [INSTANCE] "展开收起控制" #I5396:38016;5396:56821;5399:69690 template=EL-bec8afdc
+              [IMAGE-SVG] "down" #I5396:38016;5396:56821;5399:69690;5362:325723 template=EL-3656c997
+      [FRAME] #I5396:38016;5399:71997 template=EL-0e87df83
+        [FRAME] #I5396:38016;5399:71974 template=EL-53288cf7
+          [FRAME] "计算式子" #I5396:38016;5396:56460 template=EL-34489665
+            [IMAGE-SVG] "plus" #I5396:38016;5396:56461 template=EL-555975e6
+      [FRAME] #I5396:38016;5396:57148 template=EL-7bd50d07
+        [INSTANCE] "节点指标" #I5396:38016;5396:56955 template=EL-a9dd2e20
+          [FRAME] #I5396:38016;5396:56955;5399:69638 template=EL-828ec6cd
+            [FRAME] #I5396:38016;5396:56955;5399:69650 template=EL-06f376e2
+              [FRAME] "标题行模块" #I5396:38016;5396:56955;5399:69651 template=EL-6e926975
+                [FRAME] "标题行" #I5396:38016;5396:56955;5399:69652 template=EL-f8b1c27d
+                  [TEXT] #I5396:38016;5396:56955;5399:69653 template=EL-2a2db68a
+                  [INSTANCE] "月趋势" #I5396:38016;5396:56955;5399:69654 template=EL-98d53912
+                    [IMAGE-SVG] "icons" #I5396:38016;5396:56955;5399:69654;3120:88238 template=EL-39f11e00
+              [FRAME] #I5396:38016;5396:56955;5399:69702 template=EL-75c373c3
+                [FRAME] "计算公式模块" #I5396:38016;5396:56955;5399:69657 template=EL-c5513a26
+                  [TEXT] #I5396:38016;5396:56955;5399:69658 template=EL-1888270a
+                [FRAME] #I5396:38016;5396:56955;5399:69703 template=EL-7bd24d40
+                  [LINE] #I5396:38016;5396:56955;5399:69704 template=EL-7c0c4e7d
+                [FRAME] "数值模块" #I5396:38016;5396:56955;5399:69661 template=EL-8b53a306
+                  [FRAME] "实际值" #I5396:38016;5396:56955;5399:69662 template=EL-2d0d42ff
+                    [TEXT] #I5396:38016;5396:56955;5399:69663 template=EL-6a08b85c
+                    [TEXT] #I5396:38016;5396:56955;5399:69664 template=EL-4d1e05f9
+                  [FRAME] "目标" #I5396:38016;5396:56955;5399:69665 template=EL-235879b0
+                    [FRAME] "目标值" #I5396:38016;5396:56955;5399:69666 template=EL-e2494a44
+                      [TEXT] #I5396:38016;5396:56955;5399:69667 template=EL-17c01285
+                      [TEXT] #I5396:38016;5396:56955;5399:69668 template=EL-d9e11a8f
+                    [LINE] #I5396:38016;5396:56955;5399:69669 template=EL-3ef69915
+                    [FRAME] "偏差值" #I5396:38016;5396:56955;5399:69670 template=EL-e2494a44
+                      [TEXT] #I5396:38016;5396:56955;5399:69671 template=EL-b30de242
+                      [TEXT] #I5396:38016;5396:56955;5399:69672 template=EL-22c8aafc
+                      [LINE] #I5396:38016;5396:56955;5401:24928 template=EL-53728dea
+                  [FRAME] "目标" #I5396:38016;5396:56955;5399:69673 template=EL-235879b0
+                    [FRAME] "目标值" #I5396:38016;5396:56955;5399:69674 template=EL-e2494a44
+                      [TEXT] #I5396:38016;5396:56955;5399:69675 template=EL-afd56a4b
+                      [TEXT] #I5396:38016;5396:56955;5399:69676 template=EL-d9e11a8f
+                    [LINE] #I5396:38016;5396:56955;5399:69677 template=EL-3ef69915
+                    [FRAME] "偏差值" #I5396:38016;5396:56955;5399:69678 template=EL-e2494a44
+                      [TEXT] #I5396:38016;5396:56955;5399:69679 template=EL-b30de242
+                      [TEXT] #I5396:38016;5396:56955;5399:69680 template=EL-413aeddb
+                      [LINE] #I5396:38016;5396:56955;5401:24994 template=EL-82311bc1
+                  [FRAME] "目标" #I5396:38016;5396:56955;5399:69681 template=EL-235879b0
+                    [FRAME] "目标值" #I5396:38016;5396:56955;5399:69682 template=EL-e2494a44
+                      [TEXT] #I5396:38016;5396:56955;5399:69683 template=EL-2b3b2551
+                      [TEXT] #I5396:38016;5396:56955;5399:69684 template=EL-d9e11a8f
+                    [LINE] #I5396:38016;5396:56955;5399:69685 template=EL-3ef69915
+                    [FRAME] "偏差值" #I5396:38016;5396:56955;5399:69686 template=EL-e2494a44
+                      [TEXT] #I5396:38016;5396:56955;5399:69687 template=EL-b30de242
+                      [TEXT] #I5396:38016;5396:56955;5399:69688 template=EL-413aeddb
+                      [LINE] #I5396:38016;5396:56955;5401:25027 template=EL-82311bc1
+          [FRAME] "展开收起" #I5396:38016;5396:56955;5399:69689 template=EL-7946b2dd
+            [INSTANCE] "展开收起控制" #I5396:38016;5396:56955;5399:69690 template=EL-bec8afdc
+              [IMAGE-SVG] "down" #I5396:38016;5396:56955;5399:69690;5362:325723 template=EL-3656c997

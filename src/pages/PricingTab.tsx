@@ -1,18 +1,18 @@
 // References: none — PRD cost-pricing behavior retained; standard Pagination and Alert follow project design rules.
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
 import Modal from '@tod-m/materials/ve-o/es/Modal';
 import { Alert, Button, DatePicker, Drawer, Tabs } from '@byted-babi/babi-design';
 import { getSmoothStepPath, Position } from '@xyflow/react';
 import Popover from './AnalysisPopover';
 import { IconInfoCircle } from '@arco-design/iconbox-react-ve-o-design';
-import { TopologyCanvasShell } from '../app/component/topology-canvas-shell';
+import { TopologyCanvasShell, type TopologyCanvasViewport } from '../app/component/topology-canvas-shell';
 import MetricTopologyNode, { METRIC_SOURCE_OFFSET, type MetricTopologyNodeProps, type MetricTopologyTarget } from './MetricTopologyNode';
 import CalculationOperatorNode, { type CalculationOperator } from './CalculationOperatorNode';
 import ConstantTopologyNode from './ConstantTopologyNode';
 import BracketExpressionNode, { type BracketExpressionItem } from './BracketExpressionNode';
 import FunctionTopologyNode, { formatFunctionNodeLabel, type FunctionFormulaItem } from './FunctionTopologyNode';
 import { parseFormulaExpression, type FormulaExpressionItem } from './formula-expression';
-import { FORMULA_GROUP_BASE_PADDING, formulaGroupTopPadding } from './formula-group-layout';
+import { FORMULA_GROUP_BASE_PADDING, formulaGroupTopPadding, formulaGroupBottomPadding, FormulaGroupContext, classicGroups, insetItemSize, insetSequence, type FormulaGroupStyle } from './formula-group-layout';
 import { AnalysisFilters, AnalysisProps, AnalysisRow, BYTEGRAPH, TOS, amount, getRows, metricDeviation, monthList, percent, priceFormat, prototypeTargetValue, quantityFormat, snapshot } from './analysisData';
 import { AnalysisChart, AnalysisSelect as Select, ChartValue, EmptyState, Fold, Note, OverflowText, Section, SELECT_SEARCH_THRESHOLD, SourceTable, getSelectPlaceholder, sourcePaginationProps, tableAmount, tablePercent, tablePrice, tableQuantity, trendPercent } from './analysisUI';
 import TableTrendView, { TrendDrillIcon, TrendRangeControl, rankedTrendRows, useTableTrend } from './TableTrendView';
@@ -130,7 +130,7 @@ interface FormulaTargets {
   quarter: number | null;
   annual: number | null;
 }
-export interface FormulaNode { id: string; title: string; formula: string; value: number | null; type: 'price' | 'amount' | 'ratio' | 'quantity'; unit: string; targets?: FormulaTargets; operator?: CalculationOperator; children?: FormulaNode[]; returnsMultipleRows?: boolean; }
+export interface FormulaNode { id: string; title: string; formula: string; value: number | null; type: 'price' | 'amount' | 'ratio' | 'quantity'; unit: string; status?: MetricTopologyNodeProps['status']; targets?: FormulaTargets; operator?: CalculationOperator; children?: FormulaNode[]; returnsMultipleRows?: boolean; }
 const DEMO_FORMULA_SCOPE = { unit: 'bytegraph.cpu', area: 'ap', region: 'ap-1' };
 const DEMO_ROOT_TREND: Record<string, { actual:number; month:number; quarter:number; annual:number }> = {
   '2026-01': {actual:.0428654670,month:.0416652339,quarter:.0416652339,annual:.0362600244},
@@ -301,6 +301,7 @@ function formulaMetricProps(node:FormulaNode,{row,expanded,toggle,onTrend,onDeta
   });
   return {
     name:node.title,
+    status:node.status,
     formula:node.formula,
     actualValue:formatNode(node),
     unit:node.unit,
@@ -330,74 +331,95 @@ type ParsedFormulaItem=FormulaExpressionItem<FormulaNode>;
 type FormulaItemSize={width:number;height:number};
 type FormulaExpressionEntry={item:ParsedFormulaItem;cellX:number;cellWidth:number;visualX:number;visualY:number;size:FormulaItemSize};
 type FormulaMetricAnchor={node:FormulaNode;itemId:string;centerX:number;topY:number};
-type FormulaExpressionLayout={width:number;height:number;entries:FormulaExpressionEntry[];anchors:FormulaMetricAnchor[]};
-type FormulaCanvasExpression={id:string;items:ParsedFormulaItem[];layout:FormulaExpressionLayout;x:number;y:number};
+type FormulaExpressionLayout={width:number;height:number;reference:number;entries:FormulaExpressionEntry[];anchors:FormulaMetricAnchor[]};
+type FormulaCanvasExpression={id:string;level:number;items:ParsedFormulaItem[];layout:FormulaExpressionLayout;x:number;y:number};
 type FormulaCanvasEdge={id:string;type:'smoothstep';source:string;sourceHandle:'bottom';target:string;sourceX:number;sourceY:number;targetX:number;targetY:number;centerY:number};
 type FormulaHorizontalEdge={id:string;type:'straight';source:string;target:string;sourceHandle:'right';targetHandle:'left';sourceX:number;targetX:number;y:number};
 const formulaCanvasItemId=(expressionId:string,itemId:string)=>`${expressionId}-${itemId}`;
 
-function formulaSequenceSize(items:ParsedFormulaItem[],nodeHeight:number,inBracket=false):FormulaItemSize {
-  const sizes=items.map(item=>formulaItemVisualSize(item,nodeHeight,inBracket));
+function formulaSequenceSize(items:ParsedFormulaItem[],nodeHeight:number,inBracket=false,nodeWidth=FORMULA_NODE_WIDTH,groups=classicGroups):FormulaItemSize {
+  if(groups.metric==='inset') return insetSequence(items,{...groups,metricWidth:nodeWidth,metricHeight:nodeHeight});
+  const sizes=items.map(item=>formulaItemVisualSize(item,nodeHeight,inBracket,nodeWidth,groups));
   return {
     width:sizes.reduce((sum,size)=>sum+size.width,0)+Math.max(0,sizes.length-1)*FORMULA_ITEM_GAP,
     height:Math.max(0,...sizes.map(size=>size.height)),
   };
 }
 
-function formulaItemVisualSize(item:ParsedFormulaItem,nodeHeight:number,inBracket=false):FormulaItemSize {
-  if(item.type==='metric')return {width:FORMULA_NODE_WIDTH,height:nodeHeight};
+function formulaItemVisualSize(item:ParsedFormulaItem,nodeHeight:number,inBracket=false,nodeWidth=FORMULA_NODE_WIDTH,groups=classicGroups):FormulaItemSize {
+  if(groups.metric==='inset'||(item.type==='function'||item.type==='expression')&&groups[item.type]==='inset')return insetItemSize(item,{...groups,metricWidth:nodeWidth,metricHeight:nodeHeight});
+  if(item.type==='metric')return {width:nodeWidth,height:nodeHeight};
   if(item.type==='operator')return inBracket?{width:32,height:32}:{width:46,height:46};
   if(item.type==='constant')return {width:Math.max(32,String(item.value).length*8+22),height:32};
-  const content=formulaSequenceSize(item.items,nodeHeight,item.type==='expression');
+  const content=formulaSequenceSize(item.items,nodeHeight,item.type==='expression',nodeWidth,groups);
+  if(groups[item.type]==='folder') return {
+    width:Math.max(item.type==='function'?Math.max(120,formatFunctionNodeLabel(item.name).length*12+54):126,content.width+26),
+    height:content.height+formulaGroupTopPadding(item.items,'folder',groups)+formulaGroupBottomPadding(
+      item.items.map(child=>({type:child.type,hasChildren:child.type==='metric'&&!!child.node.children?.length})),'folder',
+      item.type==='function'&&!(item.items.length===1&&item.items[0].type==='metric'),
+    ),
+  };
   const labelWidth=item.type==='function'?Math.max(88,formatFunctionNodeLabel(item.name).length*12+54):104;
   return {
     width:Math.max(labelWidth,content.width+FORMULA_GROUP_PADDING),
-    height:content.height+FORMULA_GROUP_EXTRA_HEIGHT+formulaGroupTopPadding(item.items)-FORMULA_GROUP_BASE_PADDING,
+    height:content.height+FORMULA_GROUP_EXTRA_HEIGHT+formulaGroupTopPadding(item.items,'classic',groups)-FORMULA_GROUP_BASE_PADDING,
   };
 }
 
-function formulaItemBlockWidth(item:ParsedFormulaItem,expanded:Set<string>,nodeHeight:number):number {
-  const visual=formulaItemVisualSize(item,nodeHeight).width;
+function formulaItemBlockWidth(item:ParsedFormulaItem,expanded:Set<string>,nodeHeight:number,nodeWidth=FORMULA_NODE_WIDTH,groups=classicGroups):number {
+  const visual=formulaItemVisualSize(item,nodeHeight,false,nodeWidth,groups).width;
   if(item.type==='metric'&&expanded.has(item.node.id)) {
-    return Math.max(visual,buildFormulaExpressionLayout(parseFormulaExpression(item.node),expanded,nodeHeight).width);
+    return Math.max(visual,buildFormulaExpressionLayout(parseFormulaExpression(item.node),expanded,nodeHeight,nodeWidth,groups).width);
   }
   if(item.type==='expression'||item.type==='function') {
-    const nested=buildFormulaExpressionLayout(item.items,expanded,nodeHeight).width+FORMULA_GROUP_PADDING;
+    const nested=buildFormulaExpressionLayout(item.items,expanded,nodeHeight,nodeWidth,groups).width+(groups[item.type]==='inset'?20:groups[item.type]==='folder'?26:FORMULA_GROUP_PADDING);
     return Math.max(visual,nested);
   }
   return visual;
 }
 
-function visualMetricAnchors(items:ParsedFormulaItem[],originX:number,originY:number,nodeHeight:number,inBracket=false):FormulaMetricAnchor[] {
+function visualMetricAnchors(items:ParsedFormulaItem[],originX:number,originY:number,nodeHeight:number,inBracket=false,nodeWidth=FORMULA_NODE_WIDTH,groups=classicGroups):FormulaMetricAnchor[] {
   const anchors:FormulaMetricAnchor[]=[];
-  const rowHeight=formulaSequenceSize(items,nodeHeight,inBracket).height;
+  if(groups.metric==='inset'||groups.function==='inset'||groups.expression==='inset') {
+    const sequence=insetSequence(items,{...groups,metricWidth:nodeWidth,metricHeight:nodeHeight},!inBracket&&groups.function==='inset');
+    items.forEach((item,index)=>{
+      const entry=sequence.entries[index],x=originX+entry.x,y=originY+entry.y;
+      if(item.type==='metric') anchors.push({node:item.node,itemId:item.id,centerX:x+nodeWidth/2,topY:y});
+      if(item.type==='function'||item.type==='expression')anchors.push(...visualMetricAnchors(item.items,x+10,y+40,nodeHeight,item.type==='expression',nodeWidth,groups));
+    });
+    return anchors;
+  }
+  const rowHeight=formulaSequenceSize(items,nodeHeight,inBracket,nodeWidth,groups).height;
   let cursor=originX;
   items.forEach(item=>{
-    const size=formulaItemVisualSize(item,nodeHeight,inBracket);
+    const size=formulaItemVisualSize(item,nodeHeight,inBracket,nodeWidth,groups);
     const topY=originY+(rowHeight-size.height)/2;
-    if(item.type==='metric')anchors.push({node:item.node,itemId:item.id,centerX:cursor+FORMULA_NODE_WIDTH/2,topY});
+    if(item.type==='metric')anchors.push({node:item.node,itemId:item.id,centerX:cursor+nodeWidth/2,topY});
     if(item.type==='expression'||item.type==='function') {
-      anchors.push(...visualMetricAnchors(item.items,cursor+17,topY+1+formulaGroupTopPadding(item.items),nodeHeight,item.type==='expression'));
+      const folder=groups[item.type]==='folder';
+      anchors.push(...visualMetricAnchors(item.items,cursor+(folder?13:17),topY+(folder?0:1)+formulaGroupTopPadding(item.items,groups[item.type],groups),nodeHeight,item.type==='expression',nodeWidth,groups));
     }
     cursor+=size.width+FORMULA_ITEM_GAP;
   });
   return anchors;
 }
 
-function buildFormulaExpressionLayout(items:ParsedFormulaItem[],expanded:Set<string>,nodeHeight:number):FormulaExpressionLayout {
+function buildFormulaExpressionLayout(items:ParsedFormulaItem[],expanded:Set<string>,nodeHeight:number,nodeWidth=FORMULA_NODE_WIDTH,groups=classicGroups):FormulaExpressionLayout {
   const entries:FormulaExpressionEntry[]=[];
   const anchors:FormulaMetricAnchor[]=[];
   let cursor=0;
-  const height=formulaSequenceSize(items,nodeHeight).height;
-  items.forEach(item=>{
-    const size=formulaItemVisualSize(item,nodeHeight);
-    const cellWidth=formulaItemBlockWidth(item,expanded,nodeHeight);
+  const sequence=groups.metric==='inset'?insetSequence(items,{...groups,metricWidth:nodeWidth,metricHeight:nodeHeight}):undefined;
+  const height=sequence?.height??formulaSequenceSize(items,nodeHeight,false,nodeWidth,groups).height;
+  items.forEach((item,index)=>{
+    const size=formulaItemVisualSize(item,nodeHeight,false,nodeWidth,groups);
+    const cellWidth=formulaItemBlockWidth(item,expanded,nodeHeight,nodeWidth,groups);
     const visualX=cursor+(cellWidth-size.width)/2;
-    const visualY=(height-size.height)/2;
+    const visualY=sequence?.entries[index].y??(height-size.height)/2;
     entries.push({item,cellX:cursor,cellWidth,visualX,visualY,size});
-    if(item.type==='metric')anchors.push({node:item.node,itemId:item.id,centerX:visualX+FORMULA_NODE_WIDTH/2,topY:visualY});
+    if(item.type==='metric')anchors.push({node:item.node,itemId:item.id,centerX:visualX+nodeWidth/2,topY:visualY});
     if(item.type==='expression'||item.type==='function') {
-      anchors.push(...visualMetricAnchors(item.items,visualX+17,visualY+1+formulaGroupTopPadding(item.items),nodeHeight,item.type==='expression'));
+      const folder=groups[item.type]==='folder',inset=groups[item.type]==='inset';
+      anchors.push(...visualMetricAnchors(item.items,visualX+(inset?10:folder?13:17),visualY+(inset?40:(folder?0:1)+formulaGroupTopPadding(item.items,groups[item.type],groups)),nodeHeight,item.type==='expression',nodeWidth,groups));
     }
     cursor+=cellWidth+FORMULA_ITEM_GAP;
   });
@@ -409,7 +431,7 @@ function buildFormulaExpressionLayout(items:ParsedFormulaItem[],expanded:Set<str
       entry.visualX=(left.visualX+left.size.width+right.visualX)/2-entry.size.width/2;
     }
   });
-  return {width:Math.max(0,cursor-(items.length?FORMULA_ITEM_GAP:0)),height,entries,anchors};
+  return {width:Math.max(0,cursor-(items.length?FORMULA_ITEM_GAP:0)),height,reference:sequence?.reference??height/2,entries,anchors};
 }
 
 function bracketItem(item:ParsedFormulaItem,context:FormulaRenderContext,expressionId:string):BracketExpressionItem {
@@ -435,25 +457,56 @@ function formulaExpressionItem(item:ParsedFormulaItem,context:FormulaRenderConte
   if(item.type==='constant')return <ConstantTopologyNode value={item.value}/>;
   if(item.type==='operator')return <CalculationOperatorNode nodeId={nodeId} operator={item.operator}/>;
   if(item.type==='expression')return <BracketExpressionNode nodeId={nodeId} items={item.items.map(child=>bracketItem(child,context,expressionId))}/>;
+  if(item.items.length===1&&item.items[0].type==='metric') {
+    const metricItem=item.items[0];
+    return <FunctionTopologyNode nodeId={nodeId} name={item.name} variant="metric" metric={{nodeId:formulaCanvasItemId(expressionId,metricItem.id),...formulaMetricProps(metricItem.node,context)}}/>;
+  }
   return <FunctionTopologyNode nodeId={nodeId} name={item.name} variant="formula" items={item.items.map(child=>functionItem(child,context,expressionId))}/>;
 }
 
-function buildFormulaCanvas(root:FormulaNode,expanded:Set<string>,targetCount:number) {
-  const nodeHeight=FORMULA_NODE_BASE_HEIGHT+targetCount*24;
+function buildFormulaCanvas(root:FormulaNode,expanded:Set<string>,targetCount:number,nodeWidth=FORMULA_NODE_WIDTH,groups=classicGroups,formulaGap=10) {
+  const nodeHeight=FORMULA_NODE_BASE_HEIGHT+targetCount*24+formulaGap-10-(groups.metric==='inset'?2:0);
   const expressions:FormulaCanvasExpression[]=[];
   const edges:FormulaCanvasEdge[]=[];
   const horizontalEdges:FormulaHorizontalEdge[]=[];
   const visited=new Set<string>();
+  const levelReferences:number[]=[];
+  if(groups.metric==='inset') {
+    const collect=(node:FormulaNode,level:number)=>{
+      if(!expanded.has(node.id))return;
+      const items=parseFormulaExpression(node);
+      const sequence=insetSequence(items,{...groups,metricWidth:nodeWidth,metricHeight:nodeHeight});
+      levelReferences[level]=Math.max(levelReferences[level]??0,sequence.reference);
+      const visit=(entries:ParsedFormulaItem[])=>entries.forEach(item=>{
+        if(item.type==='metric')collect(item.node,level+1);
+        else if(item.type==='function'||item.type==='expression')visit(item.items);
+      });
+      visit(items);
+    };
+    collect(root,1);
+  }
 
-  const placeExpression=(node:FormulaNode,parentCenterX:number,parentY:number,path:string,sourceNodeId:string)=>{
+  const placeExpression=(node:FormulaNode,parentCenterX:number,parentY:number,path:string,sourceNodeId:string,level=1)=>{
     if(!expanded.has(node.id)||visited.has(`${path}:${node.id}`))return;
     visited.add(`${path}:${node.id}`);
     const items=parseFormulaExpression(node);
-    const layout=buildFormulaExpressionLayout(items,expanded,nodeHeight);
-    const x=parentCenterX-layout.width/2;
-    const y=parentY+nodeHeight+FORMULA_LEVEL_GAP;
+    const layout=buildFormulaExpressionLayout(items,expanded,nodeHeight,nodeWidth,groups);
+    let x=parentCenterX-layout.width/2;
+    const rowTop=parentY+nodeHeight+FORMULA_LEVEL_GAP;
+    const y=rowTop+(groups.metric==='inset'?(levelReferences[level]??layout.reference)-layout.reference:0);
+    // Nested operands share a compact visible row. Reserve separate drill-down
+    // rows while retaining the actual parent anchors and their alignment.
+    if(groups.metric==='inset') {
+      const occupied=expressions.filter(other=>y<other.y+other.layout.height&&y+layout.height>other.y)
+        .sort((left,right)=>left.x-right.x);
+      for(const other of occupied) {
+        if(x<other.x+other.layout.width+FORMULA_ITEM_GAP&&x+layout.width>other.x-FORMULA_ITEM_GAP) {
+          x=other.x+other.layout.width+FORMULA_ITEM_GAP;
+        }
+      }
+    }
     const expressionId=`${path}-${node.id}`;
-    expressions.push({id:expressionId,items,layout,x,y});
+    expressions.push({id:expressionId,level,items,layout,x,y});
     layout.entries.slice(1).forEach((right,index)=>{
       const left=layout.entries[index];
       const sourceX=x+left.visualX+left.size.width;
@@ -466,7 +519,7 @@ function buildFormulaCanvas(root:FormulaNode,expanded:Set<string>,targetCount:nu
         target:formulaCanvasItemId(expressionId,right.item.id),
         sourceHandle:'right',
         targetHandle:'left',
-        sourceX,targetX,y:y+layout.height/2,
+        sourceX,targetX,y:y+layout.reference,
       });
     });
     layout.entries.forEach(entry=>{
@@ -478,26 +531,26 @@ function buildFormulaCanvas(root:FormulaNode,expanded:Set<string>,targetCount:nu
         sourceHandle:'bottom',
         target:formulaCanvasItemId(expressionId,entry.item.id),
         sourceX:parentCenterX,
-        sourceY:parentY+nodeHeight+METRIC_SOURCE_OFFSET,
+        sourceY:parentY+nodeHeight+METRIC_SOURCE_OFFSET+(groups.metric==='inset'?2:0),
         targetX:x+entry.visualX+entry.size.width/2,
-        targetY:y+entry.visualY,
-        centerY:y-FORMULA_LEVEL_GAP/2,
+        targetY:y+entry.visualY+((entry.item.type==='function'||entry.item.type==='expression')&&groups[entry.item.type]==='folder'?26:0),
+        centerY:rowTop-FORMULA_LEVEL_GAP/2,
       });
     });
     layout.anchors.forEach(anchor=>{
       const cardId=formulaCanvasItemId(expressionId,anchor.itemId);
-      placeExpression(anchor.node,x+anchor.centerX,y+anchor.topY,cardId,cardId);
+      placeExpression(anchor.node,x+anchor.centerX,y+anchor.topY,cardId,cardId,level+1);
     });
   };
 
   placeExpression(root,0,0,'root',root.id);
-  const minX=Math.min(-FORMULA_NODE_WIDTH/2,...expressions.map(item=>item.x));
-  const maxX=Math.max(FORMULA_NODE_WIDTH/2,...expressions.map(item=>item.x+item.layout.width));
+  const minX=Math.min(-nodeWidth/2,...expressions.map(item=>item.x));
+  const maxX=Math.max(nodeWidth/2,...expressions.map(item=>item.x+item.layout.width));
   const maxY=Math.max(nodeHeight,...expressions.map(item=>item.y+item.layout.height));
   const offsetX=48-minX;
   const offsetY=48;
   return {
-    rootX:offsetX-FORMULA_NODE_WIDTH/2,
+    rootX:offsetX-nodeWidth/2,
     rootY:offsetY,
     expressions:expressions.map(item=>({...item,x:item.x+offsetX,y:item.y+offsetY})),
     edges:edges.map(edge=>({
@@ -518,7 +571,7 @@ function buildFormulaCanvas(root:FormulaNode,expanded:Set<string>,targetCount:nu
 }
 
 function FormulaExpressionRow({expression,context}:{expression:FormulaCanvasExpression;context:FormulaRenderContext}) {
-  return <div className="formula-expression-row" style={{width:expression.layout.width,height:expression.layout.height}} onPointerDown={event=>event.stopPropagation()}>
+  return <div className="formula-expression-row" data-formula-level={expression.level} style={{width:expression.layout.width,height:expression.layout.height}} onPointerDown={event=>event.stopPropagation()}>
     {expression.layout.entries.map(entry=><div
       className={`formula-expression-cell is-${entry.item.type}`}
       style={{left:entry.visualX,top:entry.visualY,width:entry.size.width,height:entry.size.height}}
@@ -530,7 +583,8 @@ function FormulaExpressionRow({expression,context}:{expression:FormulaCanvasExpr
   </div>;
 }
 
-export function FormulaCanvas({tree,row,expanded,toggle,onTrend,onDetails=()=>{},detailsOpen=false,targets,height,allowFullscreen=true}:{tree:FormulaNode;row:AnalysisRow;expanded:Set<string>;toggle:(id:string)=>void;onTrend:(id:string)=>void;onDetails?:(node:FormulaNode)=>void;detailsOpen?:boolean;targets:string[];height?:string;allowFullscreen?:boolean}) {
+export function FormulaCanvas({tree,row,expanded,toggle,onTrend,onDetails=()=>{},detailsOpen=false,targets,height,allowFullscreen=true,viewport,onViewportChange,metricNodeWidth=FORMULA_NODE_WIDTH,groupStyle=classicGroups,minZoom=.25,metricFormulaGap=10}:{tree:FormulaNode;row:AnalysisRow;expanded:Set<string>;toggle:(id:string)=>void;onTrend:(id:string)=>void;onDetails?:(node:FormulaNode)=>void;detailsOpen?:boolean;targets:string[];height?:string;allowFullscreen?:boolean;viewport?:TopologyCanvasViewport;onViewportChange?:(viewport:TopologyCanvasViewport)=>void;metricNodeWidth?:number;groupStyle?:FormulaGroupStyle;minZoom?:number;metricFormulaGap?:number}) {
+  const connectorId=`formula-canvas-connector-${useId().replace(/:/g,'')}`;
   const [fullscreen,setFullscreen]=useState(false);
   const canvasAnchorRef=useRef<HTMLDivElement>(null);
   const pendingActionRef=useRef<{type:'trend';id:string}|null>(null);
@@ -540,24 +594,26 @@ export function FormulaCanvas({tree,row,expanded,toggle,onTrend,onDetails=()=>{}
     pendingActionRef.current={type:'trend',id};
     closeFullscreen();
   };
-  const graph=useMemo(()=>buildFormulaCanvas(tree,expanded,targets.length),[tree,expanded,targets.length]);
+  const graph=useMemo(()=>buildFormulaCanvas(tree,expanded,targets.length,metricNodeWidth,groupStyle,metricFormulaGap),[tree,expanded,targets.length,metricNodeWidth,groupStyle,metricFormulaGap]);
   const context={row,expanded,toggle,onTrend:handleTrend,onDetails,targets};
-  const canvas=<TopologyCanvasShell
+  const canvas=<FormulaGroupContext.Provider value={{...groupStyle,metricWidth:metricNodeWidth,metricHeight:graph.nodeHeight}}><TopologyCanvasShell
     title="指标公式"
     className="pricing-formula-flow"
     height={fullscreen?'100%':height || 'calc(100vh - 300px)'}
     minHeight={0}
     canvasWidth={graph.width}
     canvasHeight={graph.height}
-    minZoom={.25}
+    minZoom={minZoom}
     maxZoom={1.4}
     showLegend={false}
+    viewport={viewport}
+    onViewportChange={onViewportChange}
     isFullscreen={fullscreen}
     onToggleFullscreen={allowFullscreen?()=>fullscreen?closeFullscreen():setFullscreen(true):undefined}
   >
     <defs>
       <marker
-        id="formula-canvas-connector-end"
+        id={connectorId}
         markerWidth="13"
         markerHeight="12"
         refX="6.5"
@@ -585,7 +641,7 @@ export function FormulaCanvas({tree,row,expanded,toggle,onTrend,onDetails=()=>{}
       />)}
     </g>
     <g className="formula-canvas-nodes">
-      <foreignObject x={graph.rootX} y={graph.rootY} width={FORMULA_NODE_WIDTH} height={graph.nodeHeight}>
+      <foreignObject x={graph.rootX} y={graph.rootY} width={metricNodeWidth} height={graph.nodeHeight}>
         <div className="formula-canvas-node" onPointerDown={event=>event.stopPropagation()}>
           <FormulaCard node={tree} context={context}/>
         </div>
@@ -622,11 +678,11 @@ export function FormulaCanvas({tree,row,expanded,toggle,onTrend,onDetails=()=>{}
           data-target={edge.target}
           data-type={edge.type}
           data-beam-y={edge.centerY}
-          markerEnd="url(#formula-canvas-connector-end)"
+          markerEnd={`url(#${connectorId})`}
         />;
       })}
     </g>
-  </TopologyCanvasShell>;
+  </TopologyCanvasShell></FormulaGroupContext.Provider>;
   return <>
     <div ref={canvasAnchorRef} className="pricing-formula-canvas-anchor">
       {fullscreen?<div className="pricing-formula-canvas-placeholder" aria-hidden="true"/>:canvas}

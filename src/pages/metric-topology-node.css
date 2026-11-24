@@ -7,6 +7,8 @@
   cursor: default;
 }
 
+.metric-topology-node-body { display: contents; }
+
 .metric-topology-node-card {
   overflow: hidden;
   width: 100%;
@@ -58,6 +60,14 @@
   color: rgb(var(--primary-6));
   cursor: pointer;
   padding: 0;
+}
+
+.metric-topology-node-status {
+  display: inline-flex;
+  height: 20px;
+  flex: 0 0 auto;
+  align-items: center;
+  line-height: 20px;
 }
 
 .metric-topology-node-trend:hover,

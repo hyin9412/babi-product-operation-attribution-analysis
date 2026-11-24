@@ -8,6 +8,7 @@ import '../style.css';
 import './analysis.css';
 import { AnalysisChart, AnalysisSelect, Field, FilterSummary, MultiFilter, Section, type ChartValue } from './analysisUI';
 import Popover from './AnalysisPopover';
+import AnalysisMonthPicker from './AnalysisMonthPicker';
 import { type AnalysisFilters, BYTEGRAPH, TOS, areaNames, areaRegions, defaultFilters, months, normalizeAnalysisFilters, products, targetOptions, unitCategories, unitOptions } from './analysisData';
 import './filter-guide-preview.css';
 
@@ -139,7 +140,7 @@ function FilterGuidePreview() {
       </div>
       {expanded ? <div className="filter-grid pricing-filters">
         <Field label="商品名称" required><AnalysisSelect aria-label="商品名称" showSearch value={draft.product} options={products} onChange={value => update('product', value)} /></Field>
-        <Field label="账期" required><AnalysisSelect aria-label="账期" value={draft.month} options={months} onChange={value => update('month', value)} /></Field>
+        <Field label="账期" required><AnalysisMonthPicker value={draft.month} onChange={value => update('month', value)} /></Field>
         {multi('收入计费单元类别', 'categories', categories)}
         {multi('收入计费单元', 'units', units)}
         {multi('大区', 'areas', areas)}

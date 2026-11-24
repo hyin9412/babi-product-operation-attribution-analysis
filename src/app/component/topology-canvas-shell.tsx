@@ -43,6 +43,7 @@ export type TopologyCanvasShellProps = {
   legendItems?: TopologyCanvasLegendItem[];
   iconBasePath?: string;
   children?: ReactNode;
+  viewport?: TopologyCanvasViewport;
   onViewportChange?: (viewport: TopologyCanvasViewport) => void;
   isFullscreen?: boolean;
   onToggleFullscreen?: () => void;
@@ -82,13 +83,15 @@ export function TopologyCanvasShell({
   legendItems = DEFAULT_LEGEND_ITEMS,
   iconBasePath,
   children,
+  viewport: controlledViewport,
   onViewportChange,
   isFullscreen = false,
   onToggleFullscreen,
 }: TopologyCanvasShellProps) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const lastPointRef = useRef<{ x: number; y: number } | null>(null);
-  const [viewport, setViewport] = useState<TopologyCanvasViewport>(DEFAULT_VIEWPORT);
+  const [localViewport, setViewport] = useState<TopologyCanvasViewport>(DEFAULT_VIEWPORT);
+  const viewport = controlledViewport ?? localViewport;
   const [isDragging, setIsDragging] = useState(false);
 
   const updateViewport = useCallback(

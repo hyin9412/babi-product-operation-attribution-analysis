@@ -1,6 +1,7 @@
 html, body, #root { min-height: 100%; height: auto !important; overflow: auto !important; }
 .topology-playground { min-height: 100vh; background: var(--color-bg-1); color: var(--color-text-1); }
 .topology-playground * { box-sizing: border-box; }
+.topology-playground-preview .metric-topology-node-status { display: none; }
 .playground-header { position: sticky; top: 0; z-index: 20; background: var(--color-bg-1); border-bottom: 1px solid var(--color-border-2); }
 .playground-actions { display: flex; gap: 8px; }
 .playground-workspace { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 32px; padding: 24px 32px; align-items: start; }
@@ -26,10 +27,21 @@ html, body, #root { min-height: 100%; height: auto !important; overflow: auto !i
 .playground-color-control input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
 .playground-color-control input[type="color"]::-webkit-color-swatch { border: 0; border-radius: 2px; }
 .playground-color-control .arco-input { font-family: Menlo, Consolas, monospace; }
+.playground-color-field { display: flex; flex-direction: column; gap: 6px; }
+.playground-color-field > .arco-select { width: 100%; min-width: 0; }
+.playground-token-option { display: flex; align-items: center; gap: 8px; width: 100%; min-width: 0; padding: 3px 0; }
+.playground-token-swatch { display: inline-block; flex: 0 0 16px; width: 16px; height: 16px; border-radius: 3px; border: 1px solid var(--color-border-3); }
+.playground-token-description { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.playground-token-name { font-family: Menlo, Consolas, monospace; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.playground-token-category { font-size: 11px; color: var(--color-text-3); line-height: 16px; }
+.playground-token-hex { margin-left: auto; white-space: nowrap; font-size: 11px; color: var(--color-text-3); font-family: Menlo, Consolas, monospace; }
+.playground-token-selected { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; font-family: Menlo, Consolas, monospace; font-size: 12px; }
+.playground-token-current { color: var(--color-text-3); font-size: 11px; line-height: 18px; }
+.playground-token-menu { max-width: calc(100vw - 32px); }
 .playground-number-control { display: flex; align-items: center; gap: 16px; }
 .playground-number-control .arco-slider { flex: 1; min-width: 0; }
 .playground-number-control .arco-input-number { width: 76px; flex: 0 0 76px; }
-.playground-transfer { display: flex; gap: 8px; margin: 40px 0 16px; }
+.playground-transfer { display: flex; flex-wrap: wrap; gap: 8px; margin: 40px 0 16px; }
 .playground-preview-column { position: sticky; top: 132px; min-width: 0; }
 .playground-preview-toolbar { display: flex; gap: 16px; align-items: center; justify-content: space-between; margin-bottom: 16px; }
 .playground-preview-toolbar > .arco-select { width: 290px; }
@@ -43,10 +55,33 @@ html, body, #root { min-height: 100%; height: auto !important; overflow: auto !i
 .playground-preview-note > span:last-child { margin-left: auto; color: var(--color-text-3); }
 .playground-live-dot { width: 6px; height: 6px; border-radius: 50%; background: #00a32b; }
 .playground-example-note { color: var(--color-text-3); font-size: 12px; line-height: 20px; margin: 8px 0 0; }
+.playground-edit-scheme-toolbar { display: flex; gap: 12px; align-items: center; margin-bottom: 16px; min-height: 32px; flex-wrap: wrap; }
+.playground-edit-scheme-toolbar > .arco-select { width: 260px; }
+.playground-edit-scheme-toolbar > span { font-size: 12px; color: var(--color-text-3); }
+.playground-scheme-section { margin: 16px 32px 32px; padding-top: 24px; min-width: 0; }
+.playground-scheme-heading { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 12px; }
+.playground-scheme-heading h3 { margin-bottom: 0; }
+.playground-scheme-heading > span { font-size: 12px; color: var(--color-text-3); }
+.playground-comparison-options { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; margin-bottom: 16px; }
+.playground-comparison-count { margin-left: auto; font-size: 12px; color: var(--color-text-3); }
+.playground-scheme-list { display: flex; flex-wrap: wrap; gap: 8px 24px; margin-bottom: 20px; }
+.playground-scheme-row { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 12px; }
+.playground-scheme-row strong { font-weight: 500; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.playground-scheme-color { width: 14px; height: 14px; border: 1px solid; border-radius: 4px; flex-shrink: 0; }
+.playground-scheme-date { color: var(--color-text-3); }
+.playground-scheme-empty { color: var(--color-text-3); font-size: 13px; margin: 0 0 20px; line-height: 22px; }
+.playground-comparison-scroll { overflow-x: auto; overscroll-behavior-x: contain; max-width: 100%; padding-bottom: 12px; }
+.playground-comparison-track { display: grid; grid-template-columns: repeat(var(--comparison-count), minmax(520px, 1fr)); gap: 16px; }
+.playground-comparison-card { min-width: 0; }
+.playground-comparison-title { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; height: 24px; }
+.playground-comparison-title strong { font-size: 14px; font-weight: 500; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.playground-comparison-title > span { margin-left: auto; white-space: nowrap; font-size: 12px; color: var(--color-text-3); }
+.playground-comparison-empty { display: flex; align-items: center; justify-content: center; min-height: 180px; border: 1px dashed var(--color-border-2); border-radius: 8px; color: var(--color-text-3); font-size: 13px; }
 @media (max-width: 1100px) {
   .playground-workspace { grid-template-columns: 300px minmax(0, 1fr); gap: 20px; padding: 20px; }
   .playground-target-toolbar { gap: 8px; }
   .playground-preview-toolbar > .arco-select { width: 240px; }
+  .playground-scheme-section { margin: 16px 20px 24px; }
 }
 @media (max-width: 760px) {
   .playground-workspace { display: flex; flex-direction: column-reverse; padding: 16px; }
@@ -55,4 +90,7 @@ html, body, #root { min-height: 100%; height: auto !important; overflow: auto !i
   .playground-preview-toolbar { flex-wrap: wrap; }
   .playground-actions { flex-wrap: wrap; }
   .playground-preview-note > span:last-child { margin-left: 0; }
+  .playground-scheme-section { margin: 16px; }
+  .playground-comparison-track { grid-template-columns: repeat(var(--comparison-count), minmax(320px, 1fr)); }
+  .playground-scheme-row { flex-wrap: wrap; width: 100%; }
 }

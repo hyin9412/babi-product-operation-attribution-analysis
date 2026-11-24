@@ -15,7 +15,7 @@ export function TopologyHandle({ nodeId, id, position, type, borderWidth = 0, ce
   const flowNodeId = useNodeId();
   const style: React.CSSProperties = {
     position: 'absolute',
-    top: centered ? `calc(50% + ${offsetY}px)` : position === Position.Top ? -borderWidth : position === Position.Bottom ? '100%' : '50%',
+    top: centered ? `calc(50% + ${offsetY}px)` : position === Position.Top ? offsetY - borderWidth : position === Position.Bottom ? '100%' : `calc(50% + ${offsetY}px)`,
     left: centered || position === Position.Top || position === Position.Bottom ? '50%' : position === Position.Left ? -borderWidth : 'auto',
     right: !centered && position === Position.Right ? -borderWidth : 'auto',
     width: 0,
@@ -44,13 +44,13 @@ export function TopologyHandle({ nodeId, id, position, type, borderWidth = 0, ce
   );
 }
 
-export function FormulaSideHandles({ nodeId, borderWidth = 0 }: { nodeId?: string; borderWidth?: number }) {
+export function FormulaSideHandles({ nodeId, borderWidth = 0, offsetY = 0 }: { nodeId?: string; borderWidth?: number; offsetY?: number }) {
   return <>
-    <TopologyHandle nodeId={nodeId} id="left" position={Position.Left} type="target" borderWidth={borderWidth} />
-    <TopologyHandle nodeId={nodeId} id="right" position={Position.Right} type="source" borderWidth={borderWidth} />
+    <TopologyHandle nodeId={nodeId} id="left" position={Position.Left} type="target" borderWidth={borderWidth} offsetY={offsetY} />
+    <TopologyHandle nodeId={nodeId} id="right" position={Position.Right} type="source" borderWidth={borderWidth} offsetY={offsetY} />
   </>;
 }
 
-export default function GroupTargetHandle({ nodeId }: { nodeId?: string }) {
-  return <TopologyHandle nodeId={nodeId} id="group-target" position={Position.Top} type="target" borderWidth={1} />;
+export default function GroupTargetHandle({ nodeId, offsetY = 0, borderWidth = 1 }: { nodeId?: string; offsetY?: number; borderWidth?: number }) {
+  return <TopologyHandle nodeId={nodeId} id="group-target" position={Position.Top} type="target" borderWidth={offsetY ? 0 : borderWidth} offsetY={offsetY} />;
 }

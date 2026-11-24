@@ -7,10 +7,16 @@
   cursor: default;
 }
 
-.calculation-operator-node img {
+.calculation-operator-node-icon {
   display: block;
   width: 46px;
   height: 46px;
   object-fit: contain;
   user-select: none;
+}
+
+.calculation-operator-node-icon > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
 }

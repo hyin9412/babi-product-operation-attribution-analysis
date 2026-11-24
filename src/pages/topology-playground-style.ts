@@ -1,3 +1,9 @@
+import { isColorValue } from './topology-color-tokens';
+import functionIcon from '../app/static/icon/function-node.svg';
+import expressionIcon from '../app/static/icon/bracket-expression.svg';
+import expressionDotsIcon from '../app/static/icon/bracket-expression-dots.svg';
+import type { GroupAppearance } from './formula-group-layout';
+
 export const fonts = [
   { value: 'system', label: '系统字体 · 苹方 / 微软雅黑' },
   { value: 'arial', label: 'Arial' },
@@ -16,11 +22,11 @@ export type TextStyle = { size: number; color: string; font: string; weight: num
 export type CardStyle = { border: string; background: string; radius: number; line: string; shadow: number; text: TextStyle; titleBackground: string };
 export type PlaygroundStyle = {
   canvas: { background: string; grid: string; gridColor: string; gridGap: number; gridSize: number; edge: string; edgeWidth: number; edgeDashed: boolean };
-  metric: CardStyle & { formula: TextStyle; value: TextStyle; unit: TextStyle; target: TextStyle; positive: string; negative: string; divider: string };
-  function: CardStyle;
-  expression: CardStyle;
+  metric: CardStyle & { appearance: GroupAppearance; width: number; showStatusTag: boolean; dividerInset: number; formulaGap: number; formula: TextStyle; value: TextStyle; unit: TextStyle; target: TextStyle; targetValue: TextStyle; positive: string; negative: string; divider: string };
+  function: CardStyle & { metricBackground: string; appearance: GroupAppearance };
+  expression: CardStyle & { appearance: GroupAppearance; icon: 'original' | 'dots' };
   constant: CardStyle;
-  operator: CardStyle;
+  operator: CardStyle & { customBackground: boolean };
 };
 const text = (size: number, color: string, weight = 400, font = 'system'): TextStyle => ({ size, color, weight, font });
 const card = (border: string, color: string, titleBackground = '#ffffff', radius = 12): CardStyle => ({
@@ -28,11 +34,11 @@ const card = (border: string, color: string, titleBackground = '#ffffff', radius
 });
 export const defaultStyle: PlaygroundStyle = {
   canvas: { background: '#fcfdfe', grid: 'none', gridColor: '#d0d9e5', gridGap: 24, gridSize: 1, edge: '#d0d9e5', edgeWidth: 2, edgeDashed: false },
-  metric: { ...card('#dde2e9', '#0c0d0e'), text: text(13, '#0c0d0e', 500), formula: text(12, '#42464e'), value: text(13, '#0c0d0e', 500, 'roboto'), unit: text(13, '#0c0d0e'), target: text(12, '#737a87'), positive: '#00a32b', negative: '#ee3f38', divider: '#eaedf1' },
-  function: { ...card('#eaedf1', '#6e4c9f', '#f2eafb'), line: 'dashed' },
-  expression: { ...card('#eaedf1', '#42464e', '#eceded'), line: 'dashed' },
+  metric: { ...card('#dde2e9', '#0c0d0e'), appearance: 'classic', width: 300, showStatusTag: false, dividerInset: 0, formulaGap: 10, text: text(13, '#0c0d0e', 500), formula: text(12, '#42464e'), value: text(13, '#0c0d0e', 500, 'roboto'), unit: text(13, '#0c0d0e'), target: text(12, '#737a87'), targetValue: text(12, '#737a87'), positive: '#00a32b', negative: '#ee3f38', divider: '#eaedf1' },
+  function: { ...card('#eaedf1', '#6e4c9f', '#f2eafb'), metricBackground: '#ffffff', line: 'dashed', appearance: 'classic' },
+  expression: { ...card('#eaedf1', '#42464e', '#eceded'), line: 'dashed', appearance: 'classic', icon: 'original' },
   constant: { ...card('#dde2e9', '#0c0d0e', '#ffffff', 8), text: text(13, '#0c0d0e', 500) },
-  operator: { ...card('#dde2e9', '#737a87', '#ffffff', 16), text: text(18, '#737a87', 500) },
+  operator: { ...card('#dde2e9', '#737a87', '#ffffff', 16), customBackground: false, text: text(18, '#737a87', 500) },
 };
 export function cloneStyle(style: PlaygroundStyle): PlaygroundStyle { return JSON.parse(JSON.stringify(style)); }
 export function presetStyle(name: string) {
@@ -89,12 +95,22 @@ export function presetStyle(name: string) {
     style.expression.text.color = '#bad7ff';
   }
   style.metric.shadow = name === 'dark' ? 0 : 8;
+  style.function.metricBackground = style.function.background;
   return style;
 }
 
 // Validate against the schema; never interpolate unchecked import values into CSS.
 export function parseStyle(input: unknown): PlaygroundStyle {
   const visit = (value: unknown, template: unknown, path: string): unknown => {
+    if (path.endsWith('.appearance') && value === undefined) return 'classic';
+    if (path === 'expression.icon' && value === undefined) return 'original';
+    if (path === 'metric.showStatusTag' && value === undefined) return false;
+    if (path === 'metric.dividerInset' && value === undefined) return 0;
+    if (path === 'metric.formulaGap' && value === undefined) return 10;
+    if (path === 'metric.width' && value === undefined) return 300;
+    if (path === 'operator.customBackground' && value === undefined) return false;
+    if (path === 'metric.targetValue' && value === undefined) return visit((input as PlaygroundStyle).metric.target, template, path);
+    if (path === 'function.metricBackground' && value === undefined) return visit((input as PlaygroundStyle).function.background, template, path);
     if (template && typeof template === 'object') {
       if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error(`缺少配置：${path || '根节点'}`);
       return Object.fromEntries(Object.entries(template).map(([key, child]) => [key, visit((value as Record<string, unknown>)[key], child, path ? `${path}.${key}` : key)]));
@@ -102,21 +118,20 @@ export function parseStyle(input: unknown): PlaygroundStyle {
     const key = path.split('.').pop()!;
     if (typeof template === 'boolean' && typeof value === 'boolean') return value;
     if (typeof template === 'number' && typeof value === 'number' && Number.isFinite(value)) {
-      const ranges: Record<string, [number, number]> = { size: [10, 18], radius: [0, 24], shadow: [0, 24], weight: [400, 700], gridGap: [8, 64], gridSize: [.5, 3], edgeWidth: [.5, 4] };
+      const ranges: Record<string, [number, number]> = { size: [10, 18], radius: [0, 24], shadow: [0, 24], weight: [400, 700], gridGap: [8, 64], gridSize: [.5, 3], edgeWidth: [.5, 4], dividerInset: [0, 48], formulaGap: [8, 32], width: [260, 360] };
       const range = ranges[key];
       if (range && value >= range[0] && value <= range[1] && (key !== 'weight' || [400, 500, 600, 700].includes(value))) return value;
     }
     if (typeof template === 'string' && typeof value === 'string') {
-      const enums: Record<string, string[]> = { grid: ['none', 'dots', 'lines'], line: ['solid', 'dashed', 'dotted'], font: Object.keys(fontFamilies) };
-      if (enums[key] ? enums[key].includes(value) : /^#[0-9a-f]{6}$/i.test(value)) return value;
+      const enums: Record<string, string[]> = { appearance: ['classic', 'folder', 'inset'], icon: ['original', 'dots'], grid: ['none', 'dots', 'lines'], line: ['solid', 'dashed', 'dotted'], font: Object.keys(fontFamilies) };
+      if (enums[key] ? enums[key].includes(value) : isColorValue(value)) return value;
     }
     throw new Error(`配置值无效：${path}`);
   };
   return visit(input, defaultStyle, '') as PlaygroundStyle;
 }
 
-export function styleCss(style: PlaygroundStyle) {
-  const scope = '.topology-playground-preview';
+export function styleCss(style: PlaygroundStyle, scope = '.topology-playground-preview') {
   const rules: string[] = [];
   const rule = (selector: string, css: string) => rules.push(`${selector.split(',').map(s => `${scope} ${s.trim()}`).join(',\n')} { ${css} }`);
   const typography = (t: TextStyle) => `font-size:${t.size}px;font-family:${fontFamilies[t.font]};font-weight:${t.weight};color:${t.color};`;
@@ -131,26 +146,62 @@ export function styleCss(style: PlaygroundStyle) {
   rule('.formula-horizontal-edge', `stroke:${c.edge};stroke-width:${Math.max(.5, c.edgeWidth - .5)}px;`);
   rule('.formula-canvas-connector-end', `stroke:${c.edge};fill:${c.edge};`);
   rule('.metric-topology-node-card', surface(style.metric));
+  rule('.metric-topology-node,.function-topology-node-metric', `width:${style.metric.width}px;`);
+  rule('.metric-topology-node-status', `display:${style.metric.showStatusTag ? 'inline-flex' : 'none'};`);
   rule('.metric-topology-node-name', typography(style.metric.text));
   rule('.metric-topology-node-formula-text', typography(style.metric.formula));
   rule('.metric-topology-node-actual strong', typography(style.metric.value));
+  rule('.metric-topology-node-actual', 'height:22px;flex-shrink:0;');
   rule('.metric-topology-node-actual span', typography(style.metric.unit));
-  rule('.metric-topology-node-target,.metric-topology-node-target b,.metric-topology-node-details', typography(style.metric.target));
+  rule('.metric-topology-node-target,.metric-topology-node-details', typography(style.metric.target));
+  rule('.metric-topology-node-target b', typography(style.metric.targetValue));
   rule('.metric-topology-node-target .is-positive', `color:${style.metric.positive};`);
   rule('.metric-topology-node-target .is-negative', `color:${style.metric.negative};`);
   rule('.metric-topology-node-target .is-neutral', `color:${style.metric.target.color};`);
-  rule('.metric-topology-node-formula', `border-color:${style.metric.divider};`);
+  // Keep the border's original height so text wrapping, node geometry and anchors stay fixed.
+  rule('.metric-topology-node-formula', `position:relative;border-bottom:1px solid transparent;margin-top:${style.metric.formulaGap - 8}px;`);
+  rule('.metric-topology-node-formula::after', `content:"";position:absolute;left:${style.metric.dividerInset}px;right:${style.metric.dividerInset}px;bottom:-1px;border-top:1px dashed ${style.metric.divider};pointer-events:none;`);
   rule('.metric-topology-node-target i', `background:${style.metric.divider};`);
+  if (style.metric.appearance === 'inset') {
+    rule('.metric-topology-node.is-inset .metric-topology-node-card', `border:0;padding:0 2px 2px;background:${style.metric.background};`);
+    rule('.metric-topology-node.is-inset .metric-topology-node-header', 'height:32px;padding:5px 10px;');
+    rule('.metric-topology-node.is-inset .metric-topology-node-body', 'display:block;background:#fff;border-radius:8px;overflow:hidden;');
+    rule('.metric-topology-node.is-inset .metric-topology-node-toggle', 'bottom:-22px;');
+  }
   for (const [key, prefix] of [['function', 'function-topology-node'], ['expression', 'bracket-expression-node']] as const) {
     const item = style[key];
     rule(`.${prefix}-content`, surface(item));
-    rule(`.${prefix}-title`, `${typography(item.text)}background:${item.titleBackground};border-radius:${item.radius}px ${item.radius}px 0 0;`);
+    // Absolute positioning starts inside the 1px frame; keep the Tag above its outer edge.
+    rule(`.${prefix}-title`, `${typography(item.text)}background:${item.titleBackground};border-radius:${item.radius}px ${item.radius}px 0 0;top:-25px;`);
     rule(`.${prefix}-content::before`, `background:radial-gradient(circle at bottom right,transparent ${item.radius}px,${item.titleBackground} ${item.radius}px);width:${item.radius}px;height:${item.radius}px;`);
+    rule(`.${prefix}-title img`, 'display:none;');
+    rule(`.${prefix}-title::before`, `content:"";display:block;flex:0 0 16px;width:16px;height:16px;background:currentColor;mask:url("${key === 'function' ? functionIcon : style.expression.icon === 'dots' ? expressionDotsIcon : expressionIcon}") center/contain no-repeat;`);
+    if (item.appearance === 'folder') {
+      rule(`.${prefix}-content.is-folder`, `border:0;border-radius:0;background:transparent;padding:39px 13px 9px;--group-fill:${key === 'function' ? style.function.metricBackground : item.background};--group-border:${item.border};`);
+      // Formula functions use the general surface; single-metric functions keep their independent setting.
+      if (key === 'function') rule(`.${prefix}-content.is-folder.is-formula`, `--group-fill:${item.background};`);
+      rule(`.${prefix}-content.is-folder::before`, 'display:none;');
+      rule(`.${prefix}.is-folder > header`, 'top:0;left:1px;margin-left:0;padding:8px 12px;background:transparent;border-radius:0;');
+      rule(`.${prefix}.is-folder > .formula-group-frame`, 'position:absolute;inset:0;overflow:visible;pointer-events:none;z-index:0;');
+      rule(`.${prefix}.is-folder > .formula-group-frame path`, `fill:var(--group-fill);stroke:var(--group-border);stroke-width:1;stroke-dasharray:${item.line === 'dashed' ? '3 3' : item.line === 'dotted' ? '1 3' : 'none'};`);
+      rule(`.${prefix}.is-folder > div`, 'position:relative;z-index:1;');
+    }
+    if (item.appearance === 'inset') {
+      rule(`.${prefix}-content.is-inset`, `border:0;border-radius:${item.radius}px;background:${item.background};padding:34px 2px 2px;`);
+      rule(`.${prefix}-content.is-inset::before`, 'display:none;');
+      rule(`.${prefix}.is-inset > header`, 'top:0;left:0;margin-left:0;width:100%;height:34px;padding:6px 12px;line-height:22px;');
+      rule(`.${prefix}.is-inset > .${prefix}-items,.${prefix}.is-inset > .${prefix}-metric`, 'position:relative;display:block;background:#fff;border-radius:8px;');
+    }
   }
+  rule('.function-topology-node-content.is-metric.is-classic', `background:${style.function.metricBackground};`);
   rule('.constant-topology-node', surface(style.constant) + typography(style.constant.text));
-  // Preserve the existing operator footprint and anchors; skin its visible 32px symbol.
-  rule('.calculation-operator-node img', 'visibility:hidden;');
-  rule('.calculation-operator-node::after', `position:absolute;left:50%;top:calc(50% + 2px);transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;width:32px;height:32px;box-sizing:border-box;${surface(style.operator)}${typography(style.operator.text)}line-height:1;`);
-  for (const [label, symbol] of [['加法', '+'], ['减法', '−'], ['乘法', '×'], ['除法', '÷']]) rule(`.calculation-operator-node[aria-label="${label}"]::after`, `content:"${symbol}";`);
+  // All schemes use CalculationOperatorNode's original SVG assets and geometry.
+  if (style.operator.customBackground) rule('.calculation-operator-node', `--calculation-operator-background:${style.operator.background};`);
+  if (style.metric.appearance === 'inset') {
+    rule('.calculation-operator-node', 'width:32px;height:32px;');
+    rule('.calculation-operator-node .calculation-operator-node-icon', 'position:absolute;top:calc(50% + 2px);left:50%;width:44px;height:44px;max-width:none;transform:translate(-50%,-50%);');
+    // Multiplication uses a 46px SVG; preserve its actual 32px circle.
+    rule('.calculation-operator-node.is-multiply .calculation-operator-node-icon', 'width:46px;height:46px;top:calc(50% + 2.0293px);left:calc(50% + .02945px);');
+  }
   return rules.join('\n');
 }

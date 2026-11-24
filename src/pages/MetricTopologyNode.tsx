@@ -1,4 +1,6 @@
 import React from 'react';
+import Tag from '@tod-m/materials/ve-o/es/Tag';
+import '@tod-m/materials/ve-o/es/Tag/style/index.less';
 import { IconLineChart } from '@arco-design/iconbox-react-ve-o-design';
 import Popover from './AnalysisPopover';
 import { FormulaValue } from './IncomeMetricCard';
@@ -8,6 +10,7 @@ import collapseIcon from '../app/static/icon/下级节点_收起.svg';
 import './metric-topology-node.css';
 import { Position } from '@xyflow/react';
 import { FormulaSideHandles, TopologyHandle } from './GroupTargetHandle';
+import { FormulaGroupContext } from './formula-group-layout';
 
 // The 40px icon's visible circle ends at y=32; its button starts 20px above the card bottom.
 export const METRIC_SOURCE_OFFSET = 12;
@@ -24,6 +27,7 @@ export type MetricTopologyTarget = {
 export type MetricTopologyNodeProps = {
   nodeId?: string;
   name: string;
+  status?: { type: 'success' | 'warning' | 'error'; label: string; description?: string };
   formula: string;
   actualValue: string;
   unit: string;
@@ -80,6 +84,7 @@ function deviationTone(value?: number | null) {
 export default function MetricTopologyNode({
   nodeId,
   name,
+  status,
   formula,
   actualValue,
   unit,
@@ -93,11 +98,12 @@ export default function MetricTopologyNode({
   onViewDetails,
 }: MetricTopologyNodeProps) {
   const displayName = name.trim() || '-';
+  const inset = React.useContext(FormulaGroupContext).metric === 'inset';
   const displayFormula = formula.trim() || '-';
   const displayValue = actualValue.trim() || '-';
   const displayUnit = /[%％]$/.test(displayValue) ? '' : unit.trim() || '-';
 
-  return <article className={`metric-topology-node${hasChildren ? ' has-children' : ''}`} data-node-id={nodeId} aria-label={displayName}>
+  return <article className={`metric-topology-node${hasChildren ? ' has-children' : ''}${inset ? ' is-inset' : ''}`} data-node-id={nodeId} aria-label={displayName}>
     <FormulaSideHandles nodeId={nodeId} />
     <div className="metric-topology-node-card">
       <header className="metric-topology-node-header">
@@ -107,6 +113,11 @@ export default function MetricTopologyNode({
         </div>}>
           {displayName}
         </OverflowPopover>
+        {status ? <span className="metric-topology-node-status">
+          <Popover content={status.description || status.label} position="top">
+            <Tag.TagPro type={status.type} size="small" icon={null}>{status.label}</Tag.TagPro>
+          </Popover>
+        </span> : null}
         {showTrend ? <Popover content="查看月趋势" position="top">
           <button type="button" className="metric-topology-node-trend" aria-label={`查看${displayName}月趋势`} onClick={onTrend}>
             <IconLineChart width="14" height="14" />
@@ -114,6 +125,7 @@ export default function MetricTopologyNode({
         </Popover> : null}
       </header>
 
+      <div className="metric-topology-node-body">
       <div className="metric-topology-node-formula">
         <OverflowPopover className="metric-topology-node-formula-text" content={displayFormula} overflowOnly>
           {displayFormula}
@@ -141,6 +153,7 @@ export default function MetricTopologyNode({
             </b></span>
           </div>)}
         </>}
+      </div>
       </div>
     </div>
 
