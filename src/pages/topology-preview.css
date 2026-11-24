@@ -16,22 +16,40 @@ body {
   flex-wrap: wrap;
   align-items: center;
   gap: 12px 24px;
-  margin: 0 0 16px;
-  padding: 12px 16px;
-  border: 1px solid #dde2e9;
-  border-radius: 8px;
+  flex-shrink: 0;
 }
 
-.topology-guide-targets legend {
-  padding: 0 4px;
-  color: var(--color-text-2);
-  font-size: 13px;
+.topology-guide-model-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px 24px;
+  margin-bottom: 16px;
 }
 
 .topology-guide-model-select {
-  width: min(100%, 440px);
-  margin-bottom: 16px;
+  flex: 1 1 320px;
+  width: min(100%, 520px);
+  max-width: 520px;
+  min-width: 0;
 }
+
+.topology-guide-model-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+.topology-guide-model-option .topology-guide-model-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topology-guide-model-option .arco-tag { flex-shrink: 0; }
 
 .topology-guide-model-source {
   display: flex;

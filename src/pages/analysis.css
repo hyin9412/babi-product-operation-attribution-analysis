@@ -93,37 +93,41 @@ html.analysis-scroll body { height: auto !important; min-height: 100vh; overflow
 .analysis-page .filter-caliber { display: inline-flex; align-items: center; gap: 6px; margin-left: 12px; white-space: nowrap; }
 .analysis-page .filter-caliber-tag { min-width: 49px; height: 22px; padding: 0 5px; border: 1px solid #666e7c33; border-radius: 4px; background: transparent; color: #666e7c; font-size: 12px; font-weight: 500; line-height: 20px; letter-spacing: .04px; }
 .analysis-page { overflow-anchor: none; }
-.analysis-page .filter-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 12px; }
+/* References: Figma 5325:124562 + user-approved 276–320px columns; unused space stays on the right. */
+.analysis-page .filter-grid { display: grid; grid-template-columns: repeat(var(--filter-columns,1),minmax(0,320px)); gap: 12px; }
 .analysis-page .analysis-field { min-width: 0; }
 .analysis-page .analysis-field > label { display: block; color: var(--color-text-2); font-size: 14px; margin: 0 0 8px; }
 .analysis-page .analysis-field-required { color: rgb(var(--danger-6)); margin-right: 4px; }
 .analysis-page .analysis-filter-error { color: rgb(var(--danger-6)); font-size: 12px; line-height: 20px; margin-top: 4px; }
-/* VE-O Form tokens: default label 13px / regular, text-2, vertical label gap 4px. */
+/* References: Figma 5325:124562 — 13px / 22px labels with an 8px control gap. */
 .analysis-page .filter-grid .analysis-field { display: flex; flex-direction: column; }
-.analysis-page .filter-grid .analysis-field > label { font-size: 13px; font-weight: 400; color: var(--color-text-2); line-height: 20px; margin-bottom: 4px; }
+.analysis-page .filter-grid .analysis-field > label { font-size: 13px; font-weight: 400; color: var(--color-text-2); line-height: 22px; margin-bottom: 8px; }
 .analysis-page .filter-grid .analysis-field > .arco-select { width: 100%; }
 .analysis-page .filter-disabled-popover-trigger { display: block; width: 100%; cursor: not-allowed; }
 .analysis-page .filter-disabled-popover-trigger .arco-select { width: 100%; pointer-events: none; }
-/* Align to the 32px control after its 20px label and 4px gap, excluding validation text. */
-.analysis-page .filter-query-slot { display: flex; align-items: flex-end; align-self: start; padding-top: 24px; }
-.analysis-page .filter-query-slot:nth-child(4n + 1) { grid-column: 1 / -1; justify-content: flex-start; padding-top: 0; }
+/* Align to the 32px control after its 22px label and 8px gap, excluding validation text. */
+.analysis-page .filter-query-slot { display: flex; align-items: flex-end; align-self: start; padding-top: 30px; }
+.analysis-page .filter-grid[data-query-new-row="true"] .filter-query-slot { grid-column: 1 / -1; padding-top: 0; }
 /* References: none — Figma 5325:124983 / 5325:125306; existing labels and values are retained. */
 .analysis-page .filter-summary { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px; font-size: 12px; line-height: 20px; }
 .analysis-page .filter-summary-tag { display: inline-flex; align-items: center; max-width: 100%; min-height: 20px; height: auto; padding: 0 6px; border: 0; border-radius: 4px; background: #f1f3f5; font-size: 12px; font-weight: 500; line-height: 20px; letter-spacing: .04px; }
 .analysis-page .filter-summary-tag .arco-tag-content { white-space: normal; overflow-wrap: anywhere; line-height: 20px; }
 .analysis-page .filter-summary-label { color: #737a87; }
 .analysis-page .filter-summary-value { color: #42464e; }
-.analysis-page .filter-region-count { display: inline-flex; align-items: center; height: 18px; padding: 0; border: 0; border-bottom: 1px dashed #737a87; border-radius: 0; background: transparent; color: #42464e; font-size: 12px; font-weight: 500; line-height: 17px; letter-spacing: .04px; vertical-align: baseline; }
-.analysis-page .filter-summary .filter-region-count.arco-btn-text:hover, .analysis-page .filter-summary .filter-region-count.arco-btn-text:focus, .analysis-page .filter-summary .filter-region-count.arco-btn-text:active { background: transparent; color: #42464e; border-bottom: 1px dashed #737a87; }
-/* References: none — ByteTree Figma 7072:122364; compact 12px heading and medium-weight numbered content, preserving region text and placement. */
-.filter-region-popover .arco-popover-content { max-width: 280px; max-height: 300px; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; padding: 8px 12px; background: #fff; border: 1px solid #dde2e9; border-radius: 4px; color: #42464e; font-size: 12px; line-height: 20px; letter-spacing: .04px; white-space: normal; }
-.filter-region-popover .arco-popover-title { color: #42464e; font-size: 12px; font-weight: 400; line-height: 20px; letter-spacing: .04px; }
-.filter-region-popover .arco-popover-title + .arco-popover-inner-content { margin-top: 4px; }
-.filter-region-details { min-width: 0; color: #42464e; font-size: 12px; line-height: 20px; letter-spacing: .04px; white-space: normal; }
-/* Reserve marker space for two-digit ordinals so the scroll container cannot clip 10., 11., 12. */
-.filter-region-list { margin: 0; padding-left: 28px; list-style: decimal; font-weight: 500; }
-.filter-region-list li { margin: 0; padding: 0; line-height: 20px; overflow-wrap: anywhere; }
-.filter-region-empty { color: var(--color-text-3); }
+.analysis-page .filter-summary-count { display: inline-flex; align-items: baseline; gap: 3px; height: 18px; padding: 0; border: 0; border-radius: 0; background: transparent; color: #42464e; font-size: 12px; font-weight: 500; line-height: 17px; letter-spacing: .04px; vertical-align: baseline; }
+.analysis-page .filter-summary-count-number { border-bottom: 1px dashed #737a87; }
+.analysis-page .filter-summary .filter-summary-count.arco-btn-text:hover, .analysis-page .filter-summary .filter-summary-count.arco-btn-text:focus, .analysis-page .filter-summary .filter-summary-count.arco-btn-text:active { background: transparent; color: #42464e; }
+/* References: ByteTree popup styling + user-requested regular list and medium total number. */
+.filter-summary-popover .arco-popover-content { max-width: 280px; max-height: 300px; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; padding: 8px 12px; background: #fff; border: 1px solid #dde2e9; border-radius: 4px; color: #42464e; font-size: 12px; line-height: 20px; letter-spacing: .04px; white-space: normal; }
+.filter-summary-popover .arco-popover-title { color: #42464e; font-size: 12px; font-weight: 400; line-height: 20px; letter-spacing: .04px; }
+.filter-summary-popover .filter-summary-total-number { font-weight: 500; }
+.filter-summary-popover .arco-popover-title + .arco-popover-inner-content { margin-top: 4px; }
+.filter-summary-details { min-width: 0; color: #42464e; font-size: 12px; line-height: 20px; letter-spacing: .04px; white-space: normal; }
+/* Align each row with the total; keep one- and two-digit ordinals in a compact right-aligned column. */
+.filter-summary-list { margin: 0; padding: 0; list-style: none; font-weight: 400; }
+.filter-summary-list li { display: grid; grid-template-columns: var(--filter-summary-number-width,2ch) minmax(0,1fr); column-gap: 4px; margin: 0; padding: 0; line-height: 20px; }
+.filter-summary-item-number { text-align: right; white-space: nowrap; }
+.filter-summary-item-value { min-width: 0; overflow-wrap: anywhere; }
 .analysis-page .filter-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; gap: 16px; }
 .analysis-page .filter-footer > span { font-size: 12px; color: var(--color-text-3); }
 .analysis-page .pending-warning { margin-top: 12px; }
@@ -724,19 +728,13 @@ html.analysis-scroll body { height: auto !important; min-height: 100vh; overflow
 .analysis-evidence .version-strip b { font-weight: 500; color: var(--color-text-2); }
 @media(max-width:1250px) {
   .analysis-page { --analysis-page-gutter: 24px; }
-  .analysis-page .filter-grid { grid-template-columns: repeat(3,minmax(0,276px)); }
-  .analysis-page .filter-query-slot:nth-child(4n + 1) { grid-column: auto; justify-content: flex-start; padding-top: 24px; }
-  .analysis-page .filter-query-slot:nth-child(3n + 1) { grid-column: 1 / -1; justify-content: flex-start; padding-top: 0; }
   .analysis-page .conclusion-grid, .analysis-page .kpi-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .analysis-page .analysis-two-col { grid-template-columns: 1fr; }
   .analysis-page .analysis-chart-grid.three { grid-template-columns: 1fr; }
 }
 @media(max-width:760px) {
   .analysis-page { --analysis-page-gutter: 16px; padding-bottom: 16px; }
-  .analysis-page .filter-grid, .analysis-page .filter-grid.pricing-filters, .analysis-page .formula-filter { grid-template-columns: repeat(2,minmax(0,1fr)); }
-  .analysis-page .filter-query-slot:nth-child(4n + 1),
-  .analysis-page .filter-query-slot:nth-child(3n + 1) { grid-column: auto; justify-content: flex-start; padding-top: 24px; }
-  .analysis-page .filter-query-slot:nth-child(2n + 1) { grid-column: 1 / -1; justify-content: flex-start; padding-top: 0; }
+  .analysis-page .formula-filter { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .analysis-page .analysis-chart-grid, .analysis-page .analysis-two-col.equal { grid-template-columns: 1fr; }
   .analysis-page .conclusion-grid, .analysis-page .kpi-grid { grid-template-columns: 1fr; }
 }

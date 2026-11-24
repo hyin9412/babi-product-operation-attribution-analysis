@@ -2,6 +2,8 @@ import { isColorValue } from './topology-color-tokens';
 import functionIcon from '../app/static/icon/function-node.svg';
 import expressionIcon from '../app/static/icon/bracket-expression.svg';
 import expressionDotsIcon from '../app/static/icon/bracket-expression-dots.svg';
+import expandArrowIcon from '../app/static/icon/下级节点_展开箭头.svg';
+import collapseArrowIcon from '../app/static/icon/下级节点_收起箭头.svg';
 import type { GroupAppearance } from './formula-group-layout';
 
 export const fonts = [
@@ -164,9 +166,13 @@ export function styleCss(style: PlaygroundStyle, scope = '.topology-playground-p
   rule('.metric-topology-node-target i', `background:${style.metric.divider};`);
   if (style.metric.appearance === 'inset') {
     rule('.metric-topology-node.is-inset .metric-topology-node-card', `border:0;padding:0 2px 2px;background:${style.metric.background};`);
-    rule('.metric-topology-node.is-inset .metric-topology-node-header', 'height:32px;padding:5px 10px;');
+    rule('.metric-topology-node.is-inset .metric-topology-node-header', 'height:34px;padding:6px 10px;');
     rule('.metric-topology-node.is-inset .metric-topology-node-body', 'display:block;background:#fff;border-radius:8px;overflow:hidden;');
     rule('.metric-topology-node.is-inset .metric-topology-node-toggle', 'bottom:-22px;');
+    rule('.metric-topology-node.is-inset .metric-topology-node-toggle:hover::after',
+      `content:"";position:absolute;inset:0;pointer-events:none;background:rgb(var(--primary-5));mask:url("${expandArrowIcon}") center/contain no-repeat;`);
+    rule('.metric-topology-node.is-inset .metric-topology-node-toggle[aria-expanded="true"]:hover::after',
+      `mask-image:url("${collapseArrowIcon}");`);
   }
   for (const [key, prefix] of [['function', 'function-topology-node'], ['expression', 'bracket-expression-node']] as const) {
     const item = style[key];

@@ -113,7 +113,7 @@ export default function MetricTopologyNode({
         </div>}>
           {displayName}
         </OverflowPopover>
-        {status ? <span className="metric-topology-node-status">
+        {status && !inset ? <span className="metric-topology-node-status">
           <Popover content={status.description || status.label} position="top">
             <Tag.TagPro type={status.type} size="small" icon={null}>{status.label}</Tag.TagPro>
           </Popover>

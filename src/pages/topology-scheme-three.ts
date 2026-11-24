@@ -5,7 +5,7 @@ export function schemeThreeStyle(base: PlaygroundStyle = schemeTwoStyle()) {
   const style = cloneStyle(base);
   Object.assign(style.metric, {
     appearance: 'inset', background: '#EBF1FF', titleBackground: '#EBF1FF',
-    border: '#EBF1FF', radius: 8, dividerInset: 10,
+    border: '#EBF1FF', radius: 8, dividerInset: 10, showStatusTag: false,
     text: { ...style.metric.text, color: 'rgb(var(--primary-6))' },
   });
   style.operator.customBackground = true;

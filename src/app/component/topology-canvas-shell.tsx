@@ -2,7 +2,6 @@ import React, {
   type CSSProperties,
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
-  type WheelEvent as ReactWheelEvent,
   useCallback,
   useEffect,
   useRef,
@@ -60,6 +59,9 @@ const DEFAULT_VIEWPORT: TopologyCanvasViewport = {
   scale: 1,
 };
 
+const WHEEL_ZOOM_SENSITIVITY = 0.003;
+const MAX_WHEEL_DELTA_PER_FRAME = 30;
+
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(value, max));
 }
@@ -92,10 +94,13 @@ export function TopologyCanvasShell({
   const lastPointRef = useRef<{ x: number; y: number } | null>(null);
   const [localViewport, setViewport] = useState<TopologyCanvasViewport>(DEFAULT_VIEWPORT);
   const viewport = controlledViewport ?? localViewport;
+  const viewportRef = useRef(viewport);
+  viewportRef.current = viewport;
   const [isDragging, setIsDragging] = useState(false);
 
   const updateViewport = useCallback(
     (nextViewport: TopologyCanvasViewport) => {
+      viewportRef.current = nextViewport;
       setViewport(nextViewport);
       onViewportChange?.(nextViewport);
     },
@@ -138,9 +143,10 @@ export function TopologyCanvasShell({
 
       const anchorX = clientX == null ? rect.width / 2 : clientX - rect.left;
       const anchorY = clientY == null ? rect.height / 2 : clientY - rect.top;
-      const nextScale = clamp(viewport.scale * factor, minZoom, maxZoom);
-      const graphX = (anchorX - viewport.x) / viewport.scale;
-      const graphY = (anchorY - viewport.y) / viewport.scale;
+      const current = viewportRef.current;
+      const nextScale = clamp(current.scale * factor, minZoom, maxZoom);
+      const graphX = (anchorX - current.x) / current.scale;
+      const graphY = (anchorY - current.y) / current.scale;
 
       updateViewport({
         scale: nextScale,
@@ -148,8 +154,37 @@ export function TopologyCanvasShell({
         y: anchorY - graphY * nextScale,
       });
     },
-    [maxZoom, minZoom, updateViewport, viewport]
+    [maxZoom, minZoom, updateViewport]
   );
+
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg) return;
+    let frame = 0;
+    let pendingDelta = 0;
+    let clientX = 0, clientY = 0;
+    const handleWheel = (event: WheelEvent) => {
+      event.preventDefault();
+      if (!Number.isFinite(event.deltaY) || event.deltaY === 0) return;
+      const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? svg.clientHeight : 1;
+      pendingDelta += event.deltaY * unit;
+      clientX = event.clientX;
+      clientY = event.clientY;
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        const delta = clamp(pendingDelta, -MAX_WHEEL_DELTA_PER_FRAME, MAX_WHEEL_DELTA_PER_FRAME);
+        pendingDelta = 0;
+        zoomAt(Math.exp(-delta * WHEEL_ZOOM_SENSITIVITY), clientX, clientY);
+      });
+    };
+    // Cancel the browser's page zoom/scroll, including trackpad pinch wheel events.
+    svg.addEventListener('wheel', handleWheel, { passive: false });
+    return () => {
+      svg.removeEventListener('wheel', handleWheel);
+      cancelAnimationFrame(frame);
+    };
+  }, [zoomAt]);
 
   useEffect(() => {
     fitView();
@@ -204,11 +239,6 @@ export function TopologyCanvasShell({
     setIsDragging(false);
   };
 
-  const handleWheel = (event: ReactWheelEvent<SVGSVGElement>) => {
-    event.preventDefault();
-    zoomAt(event.deltaY < 0 ? 1.1 : 0.9, event.clientX, event.clientY);
-  };
-
   const rootStyle: CSSProperties = {
     ...style,
     height: toCssSize(height),
@@ -256,7 +286,6 @@ export function TopologyCanvasShell({
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerUp}
-          onWheel={handleWheel}
         >
           <g transform={`translate(${viewport.x} ${viewport.y}) scale(${viewport.scale})`}>
             <rect

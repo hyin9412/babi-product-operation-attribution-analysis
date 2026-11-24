@@ -7,6 +7,8 @@ import Popover from './AnalysisPopover';
 import { IconInfoCircle } from '@arco-design/iconbox-react-ve-o-design';
 import { TopologyCanvasShell, type TopologyCanvasViewport } from '../app/component/topology-canvas-shell';
 import MetricTopologyNode, { METRIC_SOURCE_OFFSET, type MetricTopologyNodeProps, type MetricTopologyTarget } from './MetricTopologyNode';
+import { styleCss, type PlaygroundStyle } from './topology-playground-style';
+import { schemeThreeStyle } from './topology-scheme-three';
 import CalculationOperatorNode, { type CalculationOperator } from './CalculationOperatorNode';
 import ConstantTopologyNode from './ConstantTopologyNode';
 import BracketExpressionNode, { type BracketExpressionItem } from './BracketExpressionNode';
@@ -323,6 +325,7 @@ function FormulaCard({node,context}:{node:FormulaNode;context:FormulaRenderConte
 const FORMULA_NODE_WIDTH=300;
 const FORMULA_NODE_BASE_HEIGHT=141;
 const FORMULA_ITEM_GAP=16;
+const FORMULA_SUBTREE_GAP=80;
 const FORMULA_LEVEL_GAP=80;
 const FORMULA_GROUP_PADDING=34;
 const FORMULA_GROUP_EXTRA_HEIGHT=34;
@@ -331,7 +334,7 @@ type ParsedFormulaItem=FormulaExpressionItem<FormulaNode>;
 type FormulaItemSize={width:number;height:number};
 type FormulaExpressionEntry={item:ParsedFormulaItem;cellX:number;cellWidth:number;visualX:number;visualY:number;size:FormulaItemSize};
 type FormulaMetricAnchor={node:FormulaNode;itemId:string;centerX:number;topY:number};
-type FormulaExpressionLayout={width:number;height:number;reference:number;entries:FormulaExpressionEntry[];anchors:FormulaMetricAnchor[]};
+type FormulaExpressionLayout={width:number;center:number;height:number;reference:number;entries:FormulaExpressionEntry[];anchors:FormulaMetricAnchor[]};
 type FormulaCanvasExpression={id:string;level:number;items:ParsedFormulaItem[];layout:FormulaExpressionLayout;x:number;y:number};
 type FormulaCanvasEdge={id:string;type:'smoothstep';source:string;sourceHandle:'bottom';target:string;sourceX:number;sourceY:number;targetX:number;targetY:number;centerY:number};
 type FormulaHorizontalEdge={id:string;type:'straight';source:string;target:string;sourceHandle:'right';targetHandle:'left';sourceX:number;targetX:number;y:number};
@@ -407,13 +410,39 @@ function visualMetricAnchors(items:ParsedFormulaItem[],originX:number,originY:nu
 function buildFormulaExpressionLayout(items:ParsedFormulaItem[],expanded:Set<string>,nodeHeight:number,nodeWidth=FORMULA_NODE_WIDTH,groups=classicGroups):FormulaExpressionLayout {
   const entries:FormulaExpressionEntry[]=[];
   const anchors:FormulaMetricAnchor[]=[];
+  const childLayouts=items.map(item=>item.type==='metric'&&expanded.has(item.node.id)
+    ?buildFormulaExpressionLayout(parseFormulaExpression(item.node),expanded,nodeHeight,nodeWidth,groups):undefined);
+  const widths=items.map((item,index)=>childLayouts[index]
+    ?Math.max(formulaItemVisualSize(item,nodeHeight,false,nodeWidth,groups).width,childLayouts[index]!.width)
+    :formulaItemBlockWidth(item,expanded,nodeHeight,nodeWidth,groups));
+  const gaps=items.slice(1).map(()=>FORMULA_ITEM_GAP);
+  if(groups.metric==='inset') {
+    const hasSubtree=(item:ParsedFormulaItem):boolean=>item.type==='metric'
+      ? expanded.has(item.node.id)&&!!item.node.children?.length
+      : (item.type==='function'||item.type==='expression')&&item.items.some(hasSubtree);
+    let previous=-1;
+    items.forEach((item,index)=>{
+      if(!hasSubtree(item))return;
+      if(previous>=0) {
+        const separation=widths.slice(previous+1,index).reduce((sum,width)=>sum+width,0)
+          +gaps.slice(previous,index).reduce((sum,gap)=>sum+gap,0);
+        const extra=Math.max(0,FORMULA_SUBTREE_GAP-separation)/(index-previous);
+        for(let gapIndex=previous;gapIndex<index;gapIndex++)gaps[gapIndex]+=extra;
+      }
+      previous=index;
+    });
+  }
   let cursor=0;
   const sequence=groups.metric==='inset'?insetSequence(items,{...groups,metricWidth:nodeWidth,metricHeight:nodeHeight}):undefined;
   const height=sequence?.height??formulaSequenceSize(items,nodeHeight,false,nodeWidth,groups).height;
   items.forEach((item,index)=>{
     const size=formulaItemVisualSize(item,nodeHeight,false,nodeWidth,groups);
-    const cellWidth=formulaItemBlockWidth(item,expanded,nodeHeight,nodeWidth,groups);
-    const visualX=cursor+(cellWidth-size.width)/2;
+    const cellWidth=widths[index];
+    const childLayout=childLayouts[index];
+    // A wider descendant tree can have unequal left/right extents. Keep the
+    // metric over that tree's visible expression center within its reserved cell.
+    const visualX=cursor+(groups.metric==='inset'&&childLayout&&childLayout.width>size.width
+      ?childLayout.center-size.width/2:(cellWidth-size.width)/2);
     const visualY=sequence?.entries[index].y??(height-size.height)/2;
     entries.push({item,cellX:cursor,cellWidth,visualX,visualY,size});
     if(item.type==='metric')anchors.push({node:item.node,itemId:item.id,centerX:visualX+nodeWidth/2,topY:visualY});
@@ -421,7 +450,7 @@ function buildFormulaExpressionLayout(items:ParsedFormulaItem[],expanded:Set<str
       const folder=groups[item.type]==='folder',inset=groups[item.type]==='inset';
       anchors.push(...visualMetricAnchors(item.items,visualX+(inset?10:folder?13:17),visualY+(inset?40:(folder?0:1)+formulaGroupTopPadding(item.items,groups[item.type],groups)),nodeHeight,item.type==='expression',nodeWidth,groups));
     }
-    cursor+=cellWidth+FORMULA_ITEM_GAP;
+    cursor+=cellWidth+(gaps[index]??0);
   });
   // Operand positions are final before placing each binary operator between
   // their visible borders, independently of the widths reserved for children.
@@ -431,7 +460,10 @@ function buildFormulaExpressionLayout(items:ParsedFormulaItem[],expanded:Set<str
       entry.visualX=(left.visualX+left.size.width+right.visualX)/2-entry.size.width/2;
     }
   });
-  return {width:Math.max(0,cursor-(items.length?FORMULA_ITEM_GAP:0)),height,reference:sequence?.reference??height/2,entries,anchors};
+  const center=groups.metric==='inset'&&entries.length
+    ?(Math.min(...entries.map(entry=>entry.visualX))+Math.max(...entries.map(entry=>entry.visualX+entry.size.width)))/2
+    :cursor/2;
+  return {width:cursor,center,height,reference:sequence?.reference??height/2,entries,anchors};
 }
 
 function bracketItem(item:ParsedFormulaItem,context:FormulaRenderContext,expressionId:string):BracketExpressionItem {
@@ -465,7 +497,7 @@ function formulaExpressionItem(item:ParsedFormulaItem,context:FormulaRenderConte
 }
 
 function buildFormulaCanvas(root:FormulaNode,expanded:Set<string>,targetCount:number,nodeWidth=FORMULA_NODE_WIDTH,groups=classicGroups,formulaGap=10) {
-  const nodeHeight=FORMULA_NODE_BASE_HEIGHT+targetCount*24+formulaGap-10-(groups.metric==='inset'?2:0);
+  const nodeHeight=FORMULA_NODE_BASE_HEIGHT+targetCount*24+formulaGap-10;
   const expressions:FormulaCanvasExpression[]=[];
   const edges:FormulaCanvasEdge[]=[];
   const horizontalEdges:FormulaHorizontalEdge[]=[];
@@ -491,7 +523,7 @@ function buildFormulaCanvas(root:FormulaNode,expanded:Set<string>,targetCount:nu
     visited.add(`${path}:${node.id}`);
     const items=parseFormulaExpression(node);
     const layout=buildFormulaExpressionLayout(items,expanded,nodeHeight,nodeWidth,groups);
-    let x=parentCenterX-layout.width/2;
+    let x=parentCenterX-layout.center;
     const rowTop=parentY+nodeHeight+FORMULA_LEVEL_GAP;
     const y=rowTop+(groups.metric==='inset'?(levelReferences[level]??layout.reference)-layout.reference:0);
     // Nested operands share a compact visible row. Reserve separate drill-down
@@ -500,8 +532,8 @@ function buildFormulaCanvas(root:FormulaNode,expanded:Set<string>,targetCount:nu
       const occupied=expressions.filter(other=>y<other.y+other.layout.height&&y+layout.height>other.y)
         .sort((left,right)=>left.x-right.x);
       for(const other of occupied) {
-        if(x<other.x+other.layout.width+FORMULA_ITEM_GAP&&x+layout.width>other.x-FORMULA_ITEM_GAP) {
-          x=other.x+other.layout.width+FORMULA_ITEM_GAP;
+        if(x<other.x+other.layout.width+FORMULA_SUBTREE_GAP&&x+layout.width>other.x-FORMULA_SUBTREE_GAP) {
+          x=other.x+other.layout.width+FORMULA_SUBTREE_GAP;
         }
       }
     }
@@ -571,7 +603,7 @@ function buildFormulaCanvas(root:FormulaNode,expanded:Set<string>,targetCount:nu
 }
 
 function FormulaExpressionRow({expression,context}:{expression:FormulaCanvasExpression;context:FormulaRenderContext}) {
-  return <div className="formula-expression-row" data-formula-level={expression.level} style={{width:expression.layout.width,height:expression.layout.height}} onPointerDown={event=>event.stopPropagation()}>
+  return <div className="formula-expression-row" data-formula-level={expression.level} data-expression-id={expression.id} style={{width:expression.layout.width,height:expression.layout.height}} onPointerDown={event=>event.stopPropagation()}>
     {expression.layout.entries.map(entry=><div
       className={`formula-expression-cell is-${entry.item.type}`}
       style={{left:entry.visualX,top:entry.visualY,width:entry.size.width,height:entry.size.height}}
@@ -583,8 +615,9 @@ function FormulaExpressionRow({expression,context}:{expression:FormulaCanvasExpr
   </div>;
 }
 
-export function FormulaCanvas({tree,row,expanded,toggle,onTrend,onDetails=()=>{},detailsOpen=false,targets,height,allowFullscreen=true,viewport,onViewportChange,metricNodeWidth=FORMULA_NODE_WIDTH,groupStyle=classicGroups,minZoom=.25,metricFormulaGap=10}:{tree:FormulaNode;row:AnalysisRow;expanded:Set<string>;toggle:(id:string)=>void;onTrend:(id:string)=>void;onDetails?:(node:FormulaNode)=>void;detailsOpen?:boolean;targets:string[];height?:string;allowFullscreen?:boolean;viewport?:TopologyCanvasViewport;onViewportChange?:(viewport:TopologyCanvasViewport)=>void;metricNodeWidth?:number;groupStyle?:FormulaGroupStyle;minZoom?:number;metricFormulaGap?:number}) {
+export function FormulaCanvas({tree,row,expanded,toggle,onTrend,onDetails=()=>{},detailsOpen=false,targets,height,allowFullscreen=true,viewport,onViewportChange,visualStyle,metricNodeWidth=visualStyle?.metric.width??FORMULA_NODE_WIDTH,groupStyle=visualStyle?{function:visualStyle.function.appearance,expression:visualStyle.expression.appearance,metric:visualStyle.metric.appearance}:classicGroups,minZoom=.25,metricFormulaGap=visualStyle?.metric.formulaGap??10}:{tree:FormulaNode;row:AnalysisRow;expanded:Set<string>;toggle:(id:string)=>void;onTrend:(id:string)=>void;onDetails?:(node:FormulaNode)=>void;detailsOpen?:boolean;targets:string[];height?:string;allowFullscreen?:boolean;viewport?:TopologyCanvasViewport;onViewportChange?:(viewport:TopologyCanvasViewport)=>void;visualStyle?:PlaygroundStyle;metricNodeWidth?:number;groupStyle?:FormulaGroupStyle;minZoom?:number;metricFormulaGap?:number}) {
   const connectorId=`formula-canvas-connector-${useId().replace(/:/g,'')}`;
+  const scopedCss=useMemo(()=>visualStyle?styleCss(visualStyle,`.${connectorId}`):'', [visualStyle,connectorId]);
   const [fullscreen,setFullscreen]=useState(false);
   const canvasAnchorRef=useRef<HTMLDivElement>(null);
   const pendingActionRef=useRef<{type:'trend';id:string}|null>(null);
@@ -598,7 +631,7 @@ export function FormulaCanvas({tree,row,expanded,toggle,onTrend,onDetails=()=>{}
   const context={row,expanded,toggle,onTrend:handleTrend,onDetails,targets};
   const canvas=<FormulaGroupContext.Provider value={{...groupStyle,metricWidth:metricNodeWidth,metricHeight:graph.nodeHeight}}><TopologyCanvasShell
     title="指标公式"
-    className="pricing-formula-flow"
+    className={`pricing-formula-flow${visualStyle?` ${connectorId}`:''}`}
     height={fullscreen?'100%':height || 'calc(100vh - 300px)'}
     minHeight={0}
     canvasWidth={graph.width}
@@ -684,6 +717,7 @@ export function FormulaCanvas({tree,row,expanded,toggle,onTrend,onDetails=()=>{}
     </g>
   </TopologyCanvasShell></FormulaGroupContext.Provider>;
   return <>
+    {visualStyle&&<style>{scopedCss}</style>}
     <div ref={canvasAnchorRef} className="pricing-formula-canvas-anchor">
       {fullscreen?<div className="pricing-formula-canvas-placeholder" aria-hidden="true"/>:canvas}
     </div>
@@ -714,7 +748,9 @@ export function FormulaCanvas({tree,row,expanded,toggle,onTrend,onDetails=()=>{}
   </>;
 }
 
-export default function PricingTab({ filters, topologyOnly = false }: AnalysisProps & { topologyOnly?: boolean }) {
+const analysisTopologyStyle=schemeThreeStyle();
+
+export default function PricingTab({ filters, topologyOnly = false, topologyCanvasHeight }: AnalysisProps & { topologyOnly?: boolean; topologyCanvasHeight?: string }) {
   const isTos = filters.product === TOS;
   const supported = filters.product === BYTEGRAPH || isTos;
   const rows = useMemo(() => getRows(filters), [filters]);
@@ -951,7 +987,7 @@ export default function PricingTab({ filters, topologyOnly = false }: AnalysisPr
         <Select addBefore="收入售卖区域" defaultActiveFirstOption={false} showSearch={!isTos && availableRegions.length > SELECT_SEARCH_THRESHOLD} disabled={isTos} value={isTos ? undefined : activeRegion || undefined} options={availableRegions} placeholder={getSelectPlaceholder(!isTos && availableRegions.length > SELECT_SEARCH_THRESHOLD)} onChange={setFormulaRegion}/>
       </div>
       {!tree ? <EmptyState text={rows.length === 0 ? '当前公式链路筛选组合暂无可用于公式归因的指标数据' : '当前计费单元暂无已接入的定价公式链路，不使用 CPU 公式替代'}/> : <>
-        <div className="pricing-formula-container"><FormulaCanvas tree={tree} row={formulaRow!} expanded={expanded} toggle={toggle} onTrend={showTrend} onDetails={setDetailNode} detailsOpen={!!detailNode} targets={filters.targets}/></div>
+        <div className="pricing-formula-container"><FormulaCanvas tree={tree} row={formulaRow!} expanded={expanded} toggle={toggle} onTrend={showTrend} onDetails={setDetailNode} detailsOpen={!!detailNode} targets={filters.targets} visualStyle={analysisTopologyStyle} height={topologyCanvasHeight}/></div>
         <div id="pricing-metric-trend" className="pricing-metric-panel">
           <div className="pricing-metric-panel-heading">
             <h3>指标趋势</h3>

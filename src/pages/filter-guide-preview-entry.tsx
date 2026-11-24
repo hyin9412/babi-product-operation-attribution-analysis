@@ -9,6 +9,8 @@ import './analysis.css';
 import { AnalysisChart, AnalysisSelect, Field, FilterSummary, MultiFilter, Section, type ChartValue } from './analysisUI';
 import Popover from './AnalysisPopover';
 import AnalysisMonthPicker from './AnalysisMonthPicker';
+import AnalysisFilterGrid from './AnalysisFilterGrid';
+import { getMultiFilterSummary, type FilterSummaryItem } from './analysisFilterSummary';
 import { type AnalysisFilters, BYTEGRAPH, TOS, areaNames, areaRegions, defaultFilters, months, normalizeAnalysisFilters, products, targetOptions, unitCategories, unitOptions } from './analysisData';
 import './filter-guide-preview.css';
 
@@ -93,14 +95,14 @@ function FilterGuidePreview() {
       Message.success({ content: '数据已更新' });
     }, 2000);
   };
-  const selectionName = (values: string[] | null) => values === null ? '全部' : values.length ? values.map(value => areaNames[value] ?? value).join('、') : '未选择';
-  const summary = [
+  const summaryRegionOptions = (applied.areas ?? areas).flatMap(area => areaRegions[area] ?? []);
+  const summary: FilterSummaryItem[] = [
     ['商品名称', applied.product], ['账期', applied.month],
-    ['收入计费单元类别', selectionName(applied.categories)],
-    ['收入计费单元', selectionName(applied.units)],
-    ['大区', selectionName(applied.areas)],
-    ['收入售卖区域', applied.product === TOS ? '不适用' : selectionName(applied.regions)],
-    ['目标值对比', applied.targets.length ? applied.targets.join('、') : '不对比'],
+    getMultiFilterSummary('收入计费单元类别', applied.categories, Object.keys(unitCategories(applied.product))),
+    getMultiFilterSummary('收入计费单元', applied.units, unitOptions(applied.product, applied.categories)),
+    getMultiFilterSummary('大区', applied.areas, areas),
+    applied.product === TOS ? ['收入售卖区域', '不适用'] : getMultiFilterSummary('收入售卖区域', applied.regions, summaryRegionOptions),
+    getMultiFilterSummary('目标值对比', applied.targets, targetOptions, '不对比'),
   ];
   const multi = (label: string, key: 'areas' | 'regions' | 'categories' | 'units' | 'targets', options: string[]) =>
     <Field label={label} required={key !== 'targets'}><MultiFilter value={draft[key]} options={options} onChange={value => update(key, value)}
@@ -138,7 +140,7 @@ function FilterGuidePreview() {
         <h2 style={{ fontSize: 14 }}>全局筛选</h2>
         <div className="filter-caliber">{['日正式+月正式', '人民币', '纯资源'].map(text => <Tag key={text} size="small" bordered className="filter-caliber-tag">{text}</Tag>)}</div>
       </div>
-      {expanded ? <div className="filter-grid pricing-filters">
+      {expanded ? <AnalysisFilterGrid className="pricing-filters">
         <Field label="商品名称" required><AnalysisSelect aria-label="商品名称" showSearch value={draft.product} options={products} onChange={value => update('product', value)} /></Field>
         <Field label="账期" required><AnalysisMonthPicker value={draft.month} onChange={value => update('month', value)} /></Field>
         {multi('收入计费单元类别', 'categories', categories)}
@@ -149,7 +151,7 @@ function FilterGuidePreview() {
         </Popover></Field> : multi('收入售卖区域', 'regions', regions)}
         {multi('目标值对比', 'targets', targetOptions)}
         <div className="filter-query-slot"><Button type="primary" disabled={!dirty || loading} loading={loading} className={dirty && !loading ? 'pending-query' : ''} onClick={query}>查询</Button></div>
-      </div> : <FilterSummary items={summary} />}
+      </AnalysisFilterGrid> : <FilterSummary items={summary} />}
     </div>
     {dirty && <Alert className="pending-warning" type="warning" content="筛选条件已变更，当前仍展示上次查询结果，请点击“查询”刷新数据" />}
     <div className="filter-guide-results" aria-live="polite">
@@ -160,7 +162,7 @@ function FilterGuidePreview() {
       <Section title="下方数据明细">
         <div className="filter-guide-table-wrap"><table className="filter-guide-table">
           <thead><tr><th>账期</th><th>商品名称</th><th>大区</th><th>收入售卖区域</th><th>查询状态</th></tr></thead>
-          <tbody><tr><td>{applied.month}</td><td>{applied.product}</td><td>{selectionName(applied.areas)}</td><td>{applied.product === TOS ? '不适用' : selectionName(applied.regions)}</td><td>已查询</td></tr></tbody>
+          <tbody><tr><td>{applied.month}</td><td>{applied.product}</td><td>{getMultiFilterSummary('大区', applied.areas, areas)[1]}</td><td>{applied.product === TOS ? '不适用' : getMultiFilterSummary('收入售卖区域', applied.regions, summaryRegionOptions)[1]}</td><td>已查询</td></tr></tbody>
         </table></div>
       </Section>
       <Section title="目标选择对照示例">

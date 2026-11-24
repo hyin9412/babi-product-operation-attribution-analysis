@@ -3,6 +3,8 @@ import React, {useEffect,useMemo,useRef,useState} from 'react';
 import {Alert, Button, Message, Tabs, Tag} from '@byted-babi/babi-design';
 import Popover from './AnalysisPopover';
 import AnalysisMonthPicker from './AnalysisMonthPicker';
+import AnalysisFilterGrid from './AnalysisFilterGrid';
+import {getMultiFilterSummary,type FilterSummaryItem} from './analysisFilterSummary';
 import {IconDown, IconRight} from '@arco-design/iconbox-react-ve-o-design';
 import {useSearchParams} from 'react-router-dom';
 import OverviewTab from './OverviewTab';
@@ -13,8 +15,6 @@ import {AnalysisSelect as Select,Field,FilterSummary,MultiFilter,SELECT_SEARCH_T
 import './analysis.css';
 const tabNames:Record<AnalysisTab,string>={overview:'商品概览',income:'收支分析',pricing:'成本定价'};
 const TOS_REGION_DISABLED_TIP='不适用';
-// References: none — full selections share the concise “全部” summary; partial and empty selections retain their meaning.
-const names=(items:string[]|null,options:string[])=>items===null||(options.length>0&&items.length===options.length&&options.every(option=>items.includes(option)))?'全部':items.length?items.map(v=>areaNames[v]||v).join('、'):'未选择';
 export default function AnalysisPage(){
  const [params,setParams]=useSearchParams();
  const initialProduct=params.get('product')==='tos'?TOS:params.get('product')&&products.includes(params.get('product')!)?params.get('product')!:BYTEGRAPH;
@@ -97,10 +97,18 @@ export default function AnalysisPage(){
 };
  // References: none — all tabs summarize submitted filters, never pending draft selections.
  const summaryRegionOptions=(active.areas===null?areas:active.areas).flatMap(area=>areaRegions[area]||[]);
- const summary=tab==='pricing'?[['商品名称',pricing.product],['账期',pricing.month],['收入计费单元类别',names(pricing.categories,Object.keys(unitCategories(pricing.product)))],['收入计费单元',names(pricing.units,unitOptions(pricing.product,pricing.categories))],['大区',names(pricing.areas,areas)],['收入售卖区域',pricing.product===TOS?TOS_REGION_DISABLED_TIP:names(pricing.regions,summaryRegionOptions)],['目标值对比',pricing.targets.length?names(pricing.targets,targetOptions):'不对比']]:[['部门收支_产品线名称',applied.productLine],['商品名称',applied.product],['售卖大区',names(applied.areas,areas)],['收入售卖区域',applied.product===TOS?TOS_REGION_DISABLED_TIP:names(applied.regions,summaryRegionOptions)],['账期',applied.month],['目标值对比',applied.targets.length?names(applied.targets,targetOptions):'不对比'],['海外即时 True Up 账单',applied.trueUp],['同商品过滤',applied.sameProduct]];
-  const regionSelection=active.regions;
-  const allRegionsSelected=regionSelection===null || (regionSelection.length>0 && regionSelection.length===summaryRegionOptions.length && summaryRegionOptions.every(region=>regionSelection.includes(region)));
-  const summaryRegions=active.product!==TOS && !allRegionsSelected ? regionSelection ?? [] : undefined;
+ const summary:FilterSummaryItem[]=tab==='pricing'?
+  [['商品名称',active.product],['账期',active.month],
+   getMultiFilterSummary('收入计费单元类别',active.categories,Object.keys(unitCategories(active.product))),
+   getMultiFilterSummary('收入计费单元',active.units,unitOptions(active.product,active.categories)),
+   getMultiFilterSummary('大区',active.areas,areas),
+   active.product===TOS?['收入售卖区域',TOS_REGION_DISABLED_TIP]:getMultiFilterSummary('收入售卖区域',active.regions,summaryRegionOptions),
+   getMultiFilterSummary('目标值对比',active.targets,targetOptions,'不对比')]:
+  [['部门收支_产品线名称',active.productLine],['商品名称',active.product],
+   getMultiFilterSummary('售卖大区',active.areas,areas),
+   active.product===TOS?['收入售卖区域',TOS_REGION_DISABLED_TIP]:getMultiFilterSummary('收入售卖区域',active.regions,summaryRegionOptions),
+   ['账期',active.month],getMultiFilterSummary('目标值对比',active.targets,targetOptions,'不对比'),
+   ['海外即时 True Up 账单',active.trueUp],['同商品过滤',active.sameProduct]];
   const single=(label:string,key:keyof AnalysisFilters,options:string[])=>{
    const searchable=key==='productLine'||key==='product'||options.length > SELECT_SEARCH_THRESHOLD;
    return <Field label={label} required><Select aria-label={label} aria-required defaultActiveFirstOption={false} showSearch={searchable} value={filters[key] as string} options={options} placeholder={getSelectPlaceholder(searchable)} onChange={value=>update(key,value)}/></Field>;
@@ -110,10 +118,10 @@ export default function AnalysisPage(){
  const regionFilter=regionDisabled?<Field label="收入售卖区域" required><Popover content={filters.product===TOS?TOS_REGION_DISABLED_TIP:'请先选择售卖大区'} trigger="hover" position="top" unmountOnExit><span className="filter-disabled-popover-trigger"><Select defaultActiveFirstOption={false} disabled placeholder="请选择"/></span></Popover></Field>:multi('收入售卖区域','regions',regions);
  return <main className={`analysis-page${loading?' content-loading':''}`} aria-busy={loading}><div className="analysis-sticky-header" ref={stickyHeaderRef}><header className="analysis-page-header"><h1>透明化分析</h1><Tabs className="analysis-tabs" type="line" activeTab={tab} headerPadding={false} onChange={key=>changeTab(key as AnalysisTab)}>{(Object.keys(tabNames) as AnalysisTab[]).map(key=><Tabs.TabPane key={key} title={tabNames[key]}/>)}</Tabs><a href={`${import.meta.env.BASE_URL}docs/operation-conclusion-card-guide-topology.html`} target="_blank" rel="noopener noreferrer" style={{marginLeft:'auto',paddingLeft:16,color:'rgb(var(--primary-6))',fontSize:12,whiteSpace:'nowrap'}}>交互说明</a></header>
  <div className={`filter-panel${expanded?'':' filter-panel-collapsed'}`}><div className="filter-heading"><Popover content={expanded?'收起':'展开'} trigger="hover" position="top" unmountOnExit><span className="filter-toggle-popover-trigger"><Button type="text" size="mini" shape="square" className="filter-toggle" icon={expanded?<IconDown width="16" height="16"/>:<IconRight width="16" height="16"/>} aria-label={expanded?'收起筛选':'展开筛选'} aria-expanded={expanded} onClick={()=>setExpanded(!expanded)}/></span></Popover><h2 style={{ 'fontSize': '14px' }}>全局筛选</h2><div className="filter-caliber"><Tag size="small" bordered className="filter-caliber-tag">日正式+月正式</Tag><Tag size="small" bordered className="filter-caliber-tag">人民币</Tag><Tag size="small" bordered className="filter-caliber-tag">纯资源</Tag></div></div>
- {expanded?<><div className={`filter-grid ${tab==='pricing'?'pricing-filters':''}`}>
+ {expanded?<><AnalysisFilterGrid className={tab==='pricing'?'pricing-filters':''}>
  {tab==='pricing'?<>{single('商品名称','product',products)}<Field label="账期" required><AnalysisMonthPicker value={filters.month} onChange={value=>update('month',value)}/></Field>{multi('收入计费单元类别','categories',categoryOptions)}{multi('收入计费单元','units',units)}{multi('大区','areas',areas)}{regionFilter}{multi('目标值对比','targets',targetOptions)}</>:<>{single('部门收支_产品线名称','productLine',['研发商品中心-基础架构'])}{single('商品名称','product',products)}{multi('售卖大区','areas',areas)}{regionFilter}<Field label="账期" required><AnalysisMonthPicker value={filters.month} onChange={value=>update('month',value)}/></Field>{multi('目标值对比','targets',targetOptions)}{single('海外即时 True Up 账单','trueUp',['不包含','包含'])}{single('同商品过滤','sameProduct',['否','是'])}</>}
    <div className="filter-query-slot"><Button type="primary" disabled={queryDisabled} loading={loading} className={!queryDisabled?'pending-query':''} onClick={query}>查询</Button></div>
-  </div></>:<FilterSummary items={summary} regions={summaryRegions}/>}
+  </AnalysisFilterGrid></>:<FilterSummary items={summary}/>}
  </div>
  {dirty&&<Alert className="pending-warning" type="warning" content="筛选条件已变更，当前仍展示上次查询结果，请点击“查询”刷新数据"/>}</div>
 

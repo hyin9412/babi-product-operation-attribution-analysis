@@ -18,6 +18,7 @@ export default mergeConfig(appConfig, defineConfig({
         playground: path.join(root, 'topology-playground.html'),
         chartGuide: path.join(root, 'chart-guide-preview.html'),
         filterGuide: path.join(root, 'filter-guide-preview.html'),
+        interactionGuide: path.join(root, 'public/docs/operation-conclusion-card-guide-topology.html'),
       },
     },
   },

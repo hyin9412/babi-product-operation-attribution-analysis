@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>商品经营结论卡片与状态 Tag 交互说明</title>
+    <title>透明化分析页面交互说明</title>
     <style>
       :root {
         --bg: #f6f8fa;
@@ -19,7 +19,7 @@
         box-sizing: border-box;
       }
 
-      body {
+      body.guide-page {
         margin: 0;
         color: var(--text-1);
         background: var(--bg);
@@ -35,57 +35,45 @@
         line-height: 1.6;
       }
 
-      .page {
-        width: min(1240px, calc(100vw - 64px));
+      main.page {
+        width: min(1920px, calc(100vw - 64px));
         margin: 0 auto;
-        padding: 40px 0 80px;
+        padding: 20px 0;
       }
 
-      h1,
-      h2,
-      h3,
-      p {
+      .page h1,
+      .page h2,
+      .page h3,
+      .page p {
         margin: 0;
       }
 
-      h1 {
+      .page h1 {
         font-size: 28px;
         font-weight: 600;
         line-height: 36px;
       }
 
-      h2 {
+      .page h2 {
         position: relative;
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        margin: 0 0 18px;
-        padding-left: 11px;
-        font-size: 14px;
-        font-weight: 500;
-        line-height: 22px;
+        margin: 0 0 12px;
+        padding-left: 0;
+        font-size: 18px;
+        font-weight: 600;
+        line-height: 26px;
       }
 
-      h2::before {
-        content: "";
-        position: absolute;
-        left: 0;
-        top: 50%;
-        width: 3px;
-        height: 12px;
-        transform: translateY(-50%);
-        background: var(--primary);
-        border-radius: 0 2px 2px 0;
-      }
-
-      h3 {
+      .page h3 {
         margin: 32px 0 14px;
         font-size: 18px;
         font-weight: 600;
         line-height: 26px;
       }
 
-      .subtitle {
+      .page .subtitle {
         margin-top: 10px;
         color: var(--text-2);
         font-size: 15px;
@@ -93,16 +81,85 @@
 
       .section {
         margin-top: 28px;
-        padding: 24px;
+        padding: 20px;
         background: var(--panel);
         border: 1px solid var(--border-2);
         border-radius: 8px;
       }
 
+      .topology-model-heading {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .topology-model-heading h2 { margin-bottom: 0; }
+      .topology-model-heading a { margin-left: auto; white-space: nowrap; }
+      .topology-spacing-heading a { margin-left: 0; }
+      .page [aria-labelledby="topology-spacing-title"] > .chart-guide-note { margin: 20px 0; }
+
+      .topology-hover-scroll { overflow-x: auto; container-type: inline-size; }
+      .topology-hover-table {
+        --hover-image-width: clamp(150px, 36cqw, 360px);
+        --hover-region-width: clamp(110px, 14cqw, 140px);
+        table-layout: fixed;
+        min-width: 1000px;
+        border-collapse: separate;
+        border-spacing: 0;
+        counter-reset: hover-region;
+      }
+      .topology-hover-table.spec-table { display: table; overflow: visible; white-space: normal; }
+      .topology-hover-table.spec-table th,
+      .topology-hover-table.spec-table td {
+        border: 0;
+        border-right: 1px solid var(--border-2);
+        border-bottom: 1px solid var(--border-2);
+      }
+      .topology-hover-table tr > :last-child { border-right: 0; }
+      .topology-hover-table thead th:first-child,
+      .topology-hover-table .topology-hover-image-cell {
+        position: sticky;
+        left: 0;
+        z-index: 3;
+        background: #fff;
+      }
+      .topology-hover-table thead th:nth-child(2),
+      .topology-hover-table td:first-child:not(.topology-hover-image-cell),
+      .topology-hover-image-cell + td {
+        position: sticky;
+        left: var(--hover-image-width);
+        z-index: 2;
+        background: #fff;
+        box-shadow: 3px 0 5px rgba(31, 35, 41, .06);
+      }
+      .topology-hover-table thead th:nth-child(-n+2) { z-index: 4; background: #f6f8fa; }
+      .topology-hover-table .topology-hover-image-cell { vertical-align: top; }
+      .topology-hover-image-cell a { display: block; margin-bottom: 16px; }
+      .topology-hover-image-cell a:last-child { margin-bottom: 0; }
+      .topology-hover-image-cell img { display: block; width: 100%; height: auto; }
+      .topology-hover-table tbody tr { counter-increment: hover-region; }
+      .topology-hover-table td:first-child:not(.topology-hover-image-cell)::before,
+      .topology-hover-image-cell + td::before {
+        content: counter(hover-region);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 22px;
+        height: 22px;
+        margin-right: 8px;
+        border-radius: 50%;
+        color: #c62828;
+        background: #fff1f0;
+        font-size: 12px;
+        font-weight: 500;
+      }
+
       .doc-layout {
         display: grid;
-        grid-template-columns: 240px minmax(0, 1fr);
-        gap: 24px;
+        grid-template-columns: 160px minmax(0, 1fr);
+        gap: 20px;
         align-items: start;
         margin-top: 28px;
       }
@@ -110,39 +167,9 @@
       .doc-nav {
         position: sticky;
         top: 24px;
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        padding: 8px;
-        background: var(--panel);
-        border: 1px solid var(--border-2);
-        border-radius: 8px;
-      }
-
-      .doc-anchor {
-        width: 100%;
-        min-height: 36px;
-        padding: 7px 10px;
-        border: 0;
-        border-radius: 4px;
-        background: transparent;
-        color: var(--text-2);
-        cursor: pointer;
-        font: inherit;
-        font-size: 13px;
-        line-height: 22px;
-        text-align: left;
-      }
-
-      .doc-anchor:hover {
-        background: #f6f8fa;
-        color: var(--text-1);
-      }
-
-      .doc-anchor.active {
-        background: #f0f6ff;
-        color: #1664ff;
-        font-weight: 500;
+        min-width: 0;
+        width: 160px;
+        max-width: 100%;
       }
 
       .doc-content {
@@ -530,8 +557,20 @@
         --color-text-1: #0c0d0e;
         --color-text-3: #737a87;
         margin-top: 24px;
+        padding: 20px;
       }
       .table-style-preview h3 { margin-bottom: 12px; }
+      #doc-panel-table > .section {
+        margin: 40px 0 0;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+      }
+      #doc-panel-table > .section:first-of-type { margin-top: 0; }
+      .page #doc-panel-table > .section > h3 { margin: 0 0 12px; }
+      #doc-panel-table > .section > p + .spec-table,
+      #doc-panel-table > .section > p + .table-samples-scroll { margin-top: 12px; }
       .table-state-samples { min-width: 640px; }
       .table-samples-scroll { overflow-x: auto; }
       .table-style-preview .table-trend-value {
@@ -925,14 +964,13 @@
       }
 
       @media (max-width: 720px) {
-        .page {
+        main.page {
           width: calc(100vw - 32px);
-          padding-top: 24px;
         }
 
         .doc-layout {
           grid-template-columns: 1fr;
-          gap: 16px;
+          gap: 20px;
         }
 
         .doc-nav {
@@ -940,7 +978,7 @@
         }
 
         .section {
-          padding: 16px;
+          padding: 20px;
         }
 
         .conclusion-grid,
@@ -960,23 +998,24 @@
         }
       }
     </style>
+    <script type="module" crossorigin src="../assets/interactionGuide-yvprwilX.js"></script>
+    <link rel="modulepreload" crossorigin href="../assets/index-Bbz386Kl.js">
+    <link rel="modulepreload" crossorigin href="../assets/index-0eGvBvRE.js">
+    <link rel="stylesheet" crossorigin href="../assets/index-BOMoRDbN.css">
+    <link rel="stylesheet" crossorigin href="../assets/interactionGuide-kbvOz-SF.css">
   </head>
-  <body>
+  <body class="guide-page">
     <main class="page">
       <header>
-        <h1>商品经营结论卡片与状态 Tag 交互说明</h1>
+        <h1>透明化分析页面交互说明</h1>
         <p class="subtitle">
-          本页用于给前端实现对齐：标题旁状态 Tag、四张结论卡片、语义颜色映射、表格优先级、图表空态与拓扑图组件的展示规则。
+          用于给产研团队枚举不同的交互细节，前端实现的一些规则
         </p>
       </header>
 
       <div class="doc-layout">
         <aside class="doc-nav" aria-label="交互说明导航">
-          <button class="doc-anchor active" type="button" data-doc-panel="conclusion">商品经营结论卡片与状态 Tag</button>
-          <button class="doc-anchor" type="button" data-doc-panel="table">表格</button>
-          <button class="doc-anchor" type="button" data-doc-panel="chart">图表</button>
-          <button class="doc-anchor" type="button" data-doc-panel="topology">拓扑图</button>
-          <button class="doc-anchor" type="button" data-doc-panel="filter">全局筛选</button>
+          <div id="guide-tabs"></div>
         </aside>
 
         <div class="doc-content">
@@ -1135,6 +1174,43 @@
                 <tr><td>成本定价</td><td>商品名称、账期、收入计费单元类别、收入计费单元、大区、收入售卖区域、目标值对比</td></tr>
               </tbody>
             </table>
+            <h3 id="filter-summary-title">收起态多选值展示规则</h3>
+            <p>所有多选筛选项统一遵循以下规则，包括大区、收入售卖区域、收入计费单元类别、收入计费单元和目标值对比。摘要与 hover 列表均展示上次成功查询的选择，未提交的修改不会改变摘要。</p>
+            <table class="spec-table" aria-labelledby="filter-summary-title">
+              <thead><tr><th>选择情况</th><th>收起后的展示</th><th>Hover 规则</th></tr></thead>
+              <tbody>
+                <tr><td>选中全部当前可选项</td><td>优先展示“全部”，即使超过 3 个也不展示数量。</td><td>不展示列表 Popover。</td></tr>
+                <tr><td>未选全部，已选 1–3 个</td><td>展示已选名称，用“、”连接；内容过长时换行。</td><td>不展示数量 Popover。</td></tr>
+                <tr><td>未选全部，已选超过 3 个</td><td>展示“共 N 个”，数字 N 下方加下划虚线。</td><td>Hover 数量展示源力 Popover，包含总数与完整已选编号列表；列表文字与编号为 regular（400），总计文案中的数字为 medium（500）；总计文案与列表行左对齐，编号列内右对齐，与名称间距 4px；列表过长时纵向滚动。</td></tr>
+                <tr><td>未选择 / 不适用</td><td>空选展示“未选择”；目标值对比为空展示“不对比”；TOS 的收入售卖区域展示“不适用”。</td><td>不展示列表 Popover。</td></tr>
+              </tbody>
+            </table>
+            <h3 id="filter-responsive-title">筛选自适应规则</h3>
+            <p>商品概览、收支分析、成本定价共用以下规则。列数由筛选容器的实际可用宽度决定，窗口缩放后自动重新排列。</p>
+            <table class="spec-table" aria-labelledby="filter-responsive-title">
+              <thead><tr><th>规则</th><th>展示与交互说明</th></tr></thead>
+              <tbody>
+                <tr><td>选择器宽度</td><td>所有选择器（含账期）等宽，最小 276px、最大 320px；控件填满所属列。</td></tr>
+                <tr><td>自动增减列数</td><td>按最小宽度 276px 和列间距 12px，排列当前容器可容纳的最多列数；空间增加时自动增列，空间减少时自动减列并换行。1920px 及以上继续按同一规则排列。</td></tr>
+                <tr><td>达到最大宽度</td><td>各列最多扩展至 320px；尚不足以增加一列时，剩余空间保留在右侧。</td></tr>
+                <tr><td>上下行对齐</td><td>所有行共用相同列宽，各列选择器左右边缘对齐；最后一行不足一整行时保留相同列宽，不单独拉伸。</td></tr>
+                <tr><td>间距与高度</td><td>行间距、列间距均为 12px；标签与控件间距为 8px，控件高 32px。</td></tr>
+                <tr><td>查询按钮</td><td>位于最后一个筛选项之后，与同一行控件底边对齐；独占新行时靠左排列，不预留标签空位。必填错误文案不改变按钮与同一行控件的对齐关系。</td></tr>
+                <tr><td>极窄容器</td><td>容器可用宽度小于 276px 时使用单列，选择器缩小至容器宽度。</td></tr>
+                <tr><td>排列与状态</td><td>换行仍按从左到右、从上到下的固定筛选顺序；窗口缩放只调整布局，筛选选择、待查询条件和已查询结果保持不变。</td></tr>
+              </tbody>
+            </table>
+            <p>以下为当前页面布局下的实测示例，其他尺寸按容器空间自动排列，不固定为这些屏幕断点。</p>
+            <table class="spec-table">
+              <thead><tr><th>屏幕宽度</th><th>每行可容纳列数</th><th>单个选择器宽度（约）</th></tr></thead>
+              <tbody>
+                <tr><td>1280px</td><td>3 列</td><td>319px</td></tr>
+                <tr><td>1440px</td><td>4 列</td><td>277px</td></tr>
+                <tr><td>1920px</td><td>5 列</td><td>315px</td></tr>
+                <tr><td>2050px</td><td>6 列</td><td>282px</td></tr>
+                <tr><td>2560px</td><td>7 列</td><td>313px</td></tr>
+              </tbody>
+            </table>
             <h3>修改条件与查询更新</h3>
             <table class="spec-table">
               <thead><tr><th>状态 / 操作</th><th>筛选区域</th><th>下方数据与反馈</th></tr></thead>
@@ -1204,7 +1280,8 @@
           <symbol id="table-trend-flat" viewBox="0 0 12 12"><path d="M3 6H9" stroke-width="3" stroke-linecap="round" stroke="url(#table-trend-flat-gradient)"/></symbol>
         </defs>
       </svg>
-      <h3>表格优先级列</h3>
+      <section class="section" aria-labelledby="table-priority-title">
+      <h3 id="table-priority-title">表格优先级列</h3>
       <table class="spec-table">
         <thead>
           <tr>
@@ -1235,7 +1312,8 @@
           </tr>
         </tbody>
       </table>
-      <section class="table-style-preview" aria-labelledby="table-trend-style-title">
+      </section>
+      <section class="section table-style-preview" aria-labelledby="table-trend-style-title">
         <h3 id="table-trend-style-title">偏差、环比类数值样式</h3>
         <p>复用透明化分析页面表格样式：上涨用红色渐变箭头，下跌用绿色渐变箭头；数值保持正文色，单位为灰色。</p>
         <div class="table-samples-scroll">
@@ -1252,7 +1330,7 @@
         </div>
         <p style="margin-top:12px;margin-bottom:0">图标 12 × 12px，图标与数值间距 4px；数值字号 13px、字重 400、行高 22px，保留两位小数，整体右对齐。月度、季度偏差及环比类字段使用此样式；年度目标累计占比按普通比例展示。</p>
       </section>
-      <section class="table-style-preview" aria-labelledby="table-trend-position-title">
+      <section class="section table-style-preview" aria-labelledby="table-trend-position-title">
         <h3 id="table-trend-position-title">数据明细表趋势图 icon 位置</h3>
         <p>有的商品不支持售卖区域，数据明细表里的趋势图 icon 在大区列里。</p>
         <table class="spec-table">
@@ -1354,20 +1432,20 @@
                 <thead><tr><th>场景</th><th>统一顺序</th><th>对应示例</th></tr></thead>
                 <tbody>
                   <tr><td>单计费项图例</td><td>同一计费项内先实际值，再按月度、季度、年度目标的顺序展示。只展示图表已提供且当前选中的指标，不支持或未选中的目标直接跳过。</td><td>cpu, 实际值 → cpu, 月度目标 → cpu, 季度目标 → cpu, 年度目标（如提供）。
-                    <figure class="chart-order-example"><a href="chart-order-examples/single-legend.png" target="_blank" rel="noopener" aria-label="查看单计费项图例截图原图"><img src="chart-order-examples/single-legend.png" alt="cpu 图例按实际值、月度目标、季度目标、年度目标排列" loading="lazy"></a><figcaption>单计费项图例截图 · 点击查看原图</figcaption></figure>
+                    <figure class="chart-order-example"><a href="chart-order-examples/single-legend.png" target="_blank" rel="noopener" aria-label="查看单计费项图例截图原图"><img src="../assets/single-legend-D-YuHAW4.png" alt="cpu 图例按实际值、月度目标、季度目标、年度目标排列" loading="lazy"></a><figcaption>单计费项图例截图 · 点击查看原图</figcaption></figure>
                   </td></tr>
                   <tr><td>多计费项图例</td><td>先按图表的计费项展示顺序分组；Top N 场景沿用计费项排名。每个计费项内仍先实际值、再目标值，展示完一组后再展示下一组；换行、翻页均延续此顺序。</td><td>cpu, 实际值 → cpu, 月度目标 → cpu, 季度目标 → mem, 实际值 → mem, 月度目标 → mem, 季度目标。
-                    <figure class="chart-order-example"><a href="chart-order-examples/multiple-legend.png" target="_blank" rel="noopener" aria-label="查看多计费项图例第 1 页截图原图"><img src="chart-order-examples/multiple-legend.png" alt="多计费项图例第 1 页：cpu 实际值、月度目标、季度目标，随后 mem 实际值" loading="lazy"></a><a href="chart-order-examples/multiple-legend-page-2.png" target="_blank" rel="noopener" aria-label="查看多计费项图例第 2 页截图原图"><img src="chart-order-examples/multiple-legend-page-2.png" alt="多计费项图例第 2 页：继续展示 mem 月度目标、季度目标" loading="lazy"></a><figcaption>多计费项图例第 1、2 页截图 · 换行、翻页延续顺序 · 点击查看原图</figcaption></figure>
+                    <figure class="chart-order-example"><a href="chart-order-examples/multiple-legend.png" target="_blank" rel="noopener" aria-label="查看多计费项图例第 1 页截图原图"><img src="../assets/multiple-legend-Bv0DR5L0.png" alt="多计费项图例第 1 页：cpu 实际值、月度目标、季度目标，随后 mem 实际值" loading="lazy"></a><a href="chart-order-examples/multiple-legend-page-2.png" target="_blank" rel="noopener" aria-label="查看多计费项图例第 2 页截图原图"><img src="../assets/multiple-legend-page-2-Dh26YOTP.png" alt="多计费项图例第 2 页：继续展示 mem 月度目标、季度目标" loading="lazy"></a><figcaption>多计费项图例第 1、2 页截图 · 换行、翻页延续顺序 · 点击查看原图</figcaption></figure>
                   </td></tr>
                   <tr><td>单／多计费项 Tooltip</td><td>顶部展示当前月份，内容逐行沿用图例的计费项分组及指标顺序。不会按悬停月份的数值大小重新排序；排除或仅展示后，只保留可见系列，剩余系列的相对顺序不变。Tooltip 不受图例当前页限制。</td><td>月份：6月；依次展示 cpu 的实际值、目标值，再展示 mem 的实际值、目标值。
                     <div class="chart-order-tooltips">
-                      <figure class="chart-order-example is-tooltip"><a href="chart-order-examples/single-tooltip.png" target="_blank" rel="noopener" aria-label="查看单计费项 Tooltip 截图原图"><img src="chart-order-examples/single-tooltip.png" alt="6 月单计费项 Tooltip：cpu 实际值、月度目标、季度目标、年度目标依次排列" loading="lazy"></a><figcaption>单计费项 · 6 月 Tooltip · 点击查看原图</figcaption></figure>
-                      <figure class="chart-order-example is-tooltip"><a href="chart-order-examples/multiple-tooltip.png" target="_blank" rel="noopener" aria-label="查看多计费项 Tooltip 截图原图"><img src="chart-order-examples/multiple-tooltip.png" alt="6 月多计费项 Tooltip：先 cpu 后 mem，各组先实际值再月度与季度目标，不按数值排序" loading="lazy"></a><figcaption>多计费项 · 6 月 Tooltip · 点击查看原图</figcaption></figure>
+                      <figure class="chart-order-example is-tooltip"><a href="chart-order-examples/single-tooltip.png" target="_blank" rel="noopener" aria-label="查看单计费项 Tooltip 截图原图"><img src="../assets/single-tooltip-CjLw_Be5.png" alt="6 月单计费项 Tooltip：cpu 实际值、月度目标、季度目标、年度目标依次排列" loading="lazy"></a><figcaption>单计费项 · 6 月 Tooltip · 点击查看原图</figcaption></figure>
+                      <figure class="chart-order-example is-tooltip"><a href="chart-order-examples/multiple-tooltip.png" target="_blank" rel="noopener" aria-label="查看多计费项 Tooltip 截图原图"><img src="../assets/multiple-tooltip-BxUW1sTR.png" alt="6 月多计费项 Tooltip：先 cpu 后 mem，各组先实际值再月度与季度目标，不按数值排序" loading="lazy"></a><figcaption>多计费项 · 6 月 Tooltip · 点击查看原图</figcaption></figure>
                     </div>
                   </td></tr>
                   <tr><td>单价类月趋势图</td><td>每个计费项内按「测算单价 → 目标单价 → 偏差幅度」展示；累计口径按「累计测算单价 → 目标单价 → 累计偏差幅度」展示。图例与 Tooltip 顺序一致。</td><td>cpu, 测算单价 → cpu, 目标单价 → cpu, 偏差幅度 → mem, 测算单价 → mem, 目标单价 → mem, 偏差幅度。
-                    <figure class="chart-order-example"><a href="chart-order-examples/price-legend.png" target="_blank" rel="noopener" aria-label="查看单价趋势图图例第 1 页截图原图"><img src="chart-order-examples/price-legend.png" alt="单价图例第 1 页：cpu 测算单价、目标单价、偏差幅度，随后 mem 测算单价" loading="lazy"></a><a href="chart-order-examples/price-legend-page-2.png" target="_blank" rel="noopener" aria-label="查看单价趋势图图例第 2 页截图原图"><img src="chart-order-examples/price-legend-page-2.png" alt="单价图例第 2 页：继续展示 mem 目标单价、偏差幅度" loading="lazy"></a><figcaption>单价趋势图图例第 1、2 页截图 · 点击查看原图</figcaption></figure>
-                    <figure class="chart-order-example is-tooltip"><a href="chart-order-examples/price-tooltip.png" target="_blank" rel="noopener" aria-label="查看单价趋势图 Tooltip 截图原图"><img src="chart-order-examples/price-tooltip.png" alt="6 月单价 Tooltip 与图例顺序一致，偏差幅度显示百分比" loading="lazy"></a><figcaption>单价趋势图 · 6 月 Tooltip · 点击查看原图</figcaption></figure>
+                    <figure class="chart-order-example"><a href="chart-order-examples/price-legend.png" target="_blank" rel="noopener" aria-label="查看单价趋势图图例第 1 页截图原图"><img src="../assets/price-legend-BIPc268E.png" alt="单价图例第 1 页：cpu 测算单价、目标单价、偏差幅度，随后 mem 测算单价" loading="lazy"></a><a href="chart-order-examples/price-legend-page-2.png" target="_blank" rel="noopener" aria-label="查看单价趋势图图例第 2 页截图原图"><img src="../assets/price-legend-page-2-rFHbDeJa.png" alt="单价图例第 2 页：继续展示 mem 目标单价、偏差幅度" loading="lazy"></a><figcaption>单价趋势图图例第 1、2 页截图 · 点击查看原图</figcaption></figure>
+                    <figure class="chart-order-example is-tooltip"><a href="chart-order-examples/price-tooltip.png" target="_blank" rel="noopener" aria-label="查看单价趋势图 Tooltip 截图原图"><img src="../assets/price-tooltip-qGDEGWtm.png" alt="6 月单价 Tooltip 与图例顺序一致，偏差幅度显示百分比" loading="lazy"></a><figcaption>单价趋势图 · 6 月 Tooltip · 点击查看原图</figcaption></figure>
                   </td></tr>
                 </tbody>
               </table>
@@ -1444,9 +1522,71 @@
           </section>
 
           <section class="doc-panel" id="doc-panel-topology" data-doc-panel-content="topology">
+            <section class="section" aria-labelledby="topology-spacing-title">
+              <div class="topology-model-heading topology-spacing-heading">
+                <h2 id="topology-spacing-title">拓扑图 Playground</h2>
+                <a href="https://www.figma.com/design/eXQQeB4FWw5jsIIhhFOwAH/%E5%95%86%E5%93%81%E7%BB%8F%E8%90%A5%E9%80%8F%E6%98%8E%E5%8C%96?node-id=5406-132678&amp;t=kOWg4UKYCi5aveJF-4" target="_blank" rel="noopener">Figma样式</a>
+              </div>
+              <iframe src="../topology-flow-preview.html?example=spacing" title="拓扑图结构与间距交互示例" loading="lazy" style="display:block;width:100%;height:1320px;border:0;background:#fff;"></iframe>
+              <p class="chart-guide-note">拓扑图容器与画布宽度均等于页面内容区宽度；标题行固定48px，实际画布高度＝屏幕高度−300px−48px。示例固定预览高度，动态宽高仅标注计算规则。局部间距按100%节点尺寸测量；子树包围盒包含该父指标下方的全部节点，不包含父指标、连线、展开控制器及阴影。<a href="../topology-flow-preview.html?example=spacing" target="_blank" rel="noopener">独立打开间距示例</a>。</p>
+              <table class="spec-table">
+                <thead><tr><th>间距类型</th><th>当前规则</th><th>对应场景</th></tr></thead>
+                <tbody>
+                  <tr><td>拓扑图容器宽度与标题行</td><td>容器宽度＝页面内容区宽度，与画布同宽；标题行固定 <span class="code">48px</span>（包含底部分隔线）。容器高度＝屏幕高度−300px。</td><td>所有场景；窗口宽高变化</td></tr>
+                  <tr><td>画布可视区域宽高</td><td>宽度＝页面内容区宽度；高度＝屏幕高度−300px−48px，即 <span class="code">calc(100vh - 348px)</span>。动态宽高仅展示规则，不展示当前计算出的像素值。</td><td>所有场景；窗口宽高变化</td></tr>
+                  <tr><td>节点与运算符</td><td>普通行中运算符两侧各16px，可见圆形32px；两个指标之间合计64px。展开后会因子树预留宽度增加。</td><td>普通指标与运算符、相邻兄弟子树展开</td></tr>
+                  <tr><td>兄弟子树包围盒</td><td>兄弟展开子树间距80px，画布中以编号尺寸线标注。按各自全部下级节点的联合边界测量；不能直接用上层卡片之间的距离代替。</td><td>相邻兄弟子树展开、不同宽度子树展开</td></tr>
+                  <tr><td>父卡片与下层</td><td>层间基准80px；展开圆形向下突出14px。单层、双层嵌套中的指标顶边另按整行对齐规则放置，查看示例中的实时尺寸。</td><td>普通指标、单指标函数、双层嵌套公式</td></tr>
+                  <tr><td>函数和括号包裹层</td><td>左右及底部彩色细边2px；白色层左右内边距8px、上下6px。嵌套内容按同行最深同类元素对齐。</td><td>单指标函数、常量与括号表达式、双层嵌套公式</td></tr>
+                  <tr><td>指标卡片内部</td><td>名称与公式按实际文本行框测量；切换目标行数可查看卡片高度和周围间距变化。</td><td>所有场景；目标行数0、1、3</td></tr>
+                </tbody>
+              </table>
+            </section>
+            <section class="section" aria-labelledby="topology-hover-title">
+              <h2 id="topology-hover-title">节点 Hover 与光标</h2>
+              <div class="topology-hover-scroll">
+              <table class="spec-table topology-hover-table">
+                <colgroup><col style="width:var(--hover-image-width)"><col style="width:var(--hover-region-width)"><col><col style="width:120px"><col style="width:130px"></colgroup>
+                <thead><tr><th>截图标注</th><th>节点 / 区域</th><th>Hover 触发条件与内容</th><th>光标</th><th>点击行为</th></tr></thead>
+                <tbody>
+                  <tr>
+                    <td rowspan="8" class="topology-hover-image-cell">
+                      <a href="topology-hover/metric.png" target="_blank" rel="noopener"><img src="../assets/metric-LX3mIuf-.png" alt="常规指标：标注1名称、2月趋势、3公式、4实际值与单位、5目标名称与值、6偏差、8展开收起按钮。" /></a>
+                      <a href="topology-hover/details.png" target="_blank" rel="noopener"><img src="../assets/details-U-Utw1A2.png" alt="多行数据指标：标注7指向查看详细数据按钮。" loading="lazy" /></a>
+                    </td>
+                    <td>指标 · 蓝色标题行中的名称</td><td>悬停名称文字即可显示完整指标名称和指标解释提示，不要求文字被截断。当前示例提示为“调用统一的指标解释卡片”。</td><td>手形（pointer）</td><td>名称本身无点击操作。</td>
+                  </tr>
+                  <tr><td>指标 · 右上角月趋势图标</td><td>显示“查看月趋势”；仅支持趋势的指标展示此图标。</td><td>手形（pointer）</td><td>查看对应指标的月趋势。</td></tr>
+                  <tr><td>指标 · 公式文字</td><td>仅公式超出两行或可见宽度、被截断时，显示完整公式；未截断时不弹出。</td><td>截断时为手形（pointer）；未截断时为默认箭头（default）。</td><td>无。</td></tr>
+                  <tr><td>指标 · 实际值与单位</td><td>不弹出提示；即使文字被省略，也没有全文浮层。</td><td>默认箭头（default）</td><td>无。</td></tr>
+                  <tr><td>指标 · 月度 / 季度 / 年度目标名称与目标值</td><td>不弹出提示。</td><td>默认箭头（default）</td><td>无。</td></tr>
+                  <tr><td>指标 · 目标行中的偏差数值</td><td>悬停带虚线下划线的偏差值，显示对应偏差的计算公式、代入值和结果；无法计算时显示原因。</td><td>手形（pointer）</td><td>无；计算说明通过 Hover 展示。</td></tr>
+                  <tr><td>指标 · “请点击查看详细数据”区域</td><td>仅多行数据指标显示；无提示浮层，悬停时“点击”文字变色。</td><td>整个按钮区域为手形（pointer）。</td><td>打开指标详细数据。</td></tr>
+                  <tr><td>指标 · 下方展开 / 收起圆形按钮</td><td>仅有下级的指标显示；按当前状态提示“展开下层节点”或“收起下层节点”。方案三 Hover 时箭头变为 primary-5，移出恢复。</td><td>手形（pointer）</td><td>展开或收起下级节点。</td></tr>
+                </tbody>
+                <tbody>
+                  <tr>
+                    <td class="topology-hover-image-cell"><a href="topology-hover/function.png" target="_blank" rel="noopener"><img src="../assets/function-BDGCw7_v.png" alt="函数节点：标注9指向函数标题和外框。" loading="lazy" /></a></td>
+                    <td>函数 · 标题文字、图标、彩色外框与白色留白</td><td>不弹出提示。单指标函数和公式函数均如此；内部指标、运算符、常量分别沿用各自规则。</td><td>默认箭头（default）</td><td>外层无点击操作。</td>
+                  </tr>
+                </tbody>
+                <tbody>
+                  <tr>
+                    <td rowspan="3" class="topology-hover-image-cell"><a href="topology-hover/bracket.png" target="_blank" rel="noopener"><img src="../assets/bracket-DnAWeMQP.png" alt="括号表达式：标注10标题与外框、11计算式子、12常量。" loading="lazy" /></a></td>
+                    <td>括号表达式 · 标题文字、三点图标、彩色外框与白色留白</td><td>不弹出提示；嵌套节点沿用各自规则。</td><td>默认箭头（default）</td><td>外层无点击操作。</td>
+                  </tr>
+                  <tr><td>计算式子 · 加 / 减 / 乘 / 除圆形节点</td><td>不弹出提示。</td><td>默认箭头（default）</td><td>无。</td></tr>
+                  <tr><td>常量 · 数值与外框</td><td>不弹出提示。</td><td>默认箭头（default）</td><td>无。</td></tr>
+                </tbody>
+              </table>
+              </div>
+              <p class="chart-guide-note">指标卡片其余背景与留白为默认箭头，不触发提示。以上规则同样适用于函数、括号中的指标和多层嵌套；切换模型、目标行数或进入全屏后保持一致。手形只表示当前区域的交互提示，具体能否点击按表中“点击行为”区分。</p>
+            </section>
             <section class="section" aria-labelledby="topology-flow-title">
-              <h2 id="topology-flow-title">指标公式拓扑图</h2>
-              <p style="margin-bottom: 16px;">点击指标下方按钮展开或收起；支持滚轮缩放、拖拽平移和一键适配。点击指标右上角月趋势图标，查看该指标的趋势与明细。</p>
+              <div class="topology-model-heading">
+                <h2 id="topology-flow-title">指标公式拓扑图 - 按实际模型的示例</h2>
+                <a href="../topology-playground.html" target="_blank" rel="noopener">设计探索样式playground →</a>
+              </div>
               <iframe
                 src="../topology-flow-preview.html"
                 title="指标公式拓扑图交互预览"
@@ -1456,7 +1596,7 @@
             <h3>画布交互</h3>
             <div class="rules">
               <div class="rule-card"><strong>展开与布局</strong><p>点击指标节点下方控制器展开直接下级；收起时隐藏全部后代，并重新计算树布局。</p></div>
-              <div class="rule-card"><strong>缩放与平移</strong><p>滚轮缩放、拖拽平移、控制器缩放和一键适配均作用于画布；节点不可任意拖动。</p></div>
+              <div class="rule-card"><strong>缩放与平移</strong><p>触控板和滚轮按滚动幅度连续缩放，以指针位置为中心；轻微手势只产生小幅变化，连续输入合并并限制单帧变化。拖拽平移、控制器缩放和一键适配均作用于画布；节点不可任意拖动。画布空白处为抓手光标（grab），按住拖拽时变为抓取光标（grabbing）。</p></div>
               <div class="rule-card"><strong>连线关系</strong><p>父指标连接直接表达式项，运算符不生成纵向连线。纵向连线颜色 #D0D9E5，粗细 2px，圆角半径 16px；横向连线为 1.5px 虚线。</p></div>
               <div class="rule-card"><strong>窄屏策略</strong><p>节点保持固定尺寸，通过画布平移或说明页横向滚动查看，不压缩公式和数值。</p></div>
             </div>
@@ -1517,8 +1657,17 @@
       const grid = document.querySelector("#card-grid");
       const tag = document.querySelector("#status-tag");
       const buttons = Array.from(document.querySelectorAll(".scenario-button"));
-      const docAnchors = Array.from(document.querySelectorAll(".doc-anchor"));
       const docPanels = Array.from(document.querySelectorAll(".doc-panel"));
+      const spacingFrame = document.querySelector('iframe[title="拓扑图结构与间距交互示例"]');
+      const modelFrame = document.querySelector('iframe[title="指标公式拓扑图交互预览"]');
+      window.addEventListener("message", event => {
+        if (event.origin !== location.origin) return;
+        const frame = event.data?.type === "topology-spacing-height" ? spacingFrame
+          : event.data?.type === "topology-model-height" ? modelFrame : null;
+        if (!frame || event.source !== frame.contentWindow) return;
+        const height = event.data.height;
+        if (Number.isFinite(height) && height > 0) frame.style.height = `${height}px`;
+      });
       const metricNodeToggles = Array.from(document.querySelectorAll(".metric-node-toggle"));
 
       function renderCard(card) {
@@ -1662,15 +1811,16 @@
       });
 
       function switchDocPanel(panelName) {
-        docAnchors.forEach(anchor => anchor.classList.toggle("active", anchor.dataset.docPanel === panelName));
         docPanels.forEach(panel => panel.classList.toggle("active", panel.dataset.docPanelContent === panelName));
         history.replaceState(null, "", `#${panelName}`);
         allocateFieldWidths();
         bindOverflowTitles();
       }
 
-      docAnchors.forEach(anchor => {
-        anchor.addEventListener("click", () => switchDocPanel(anchor.dataset.docPanel));
+      window.addEventListener("guide-tab-change", event => {
+        if (docPanels.some(panel => panel.dataset.docPanelContent === event.detail)) {
+          switchDocPanel(event.detail);
+        }
       });
 
       metricNodeToggles.forEach(toggle => {

@@ -4,8 +4,11 @@ import { FormulaCanvas, type FormulaNode } from './PricingTab';
 import { defaultFilters, getRows } from './analysisData';
 import { AnalysisChart, type ChartValue } from './analysisUI';
 import { buildRocketMQTree, flattenRocketMQTree, rocketmqModelSource } from './rocketmq-model-259';
+import { schemeThreeStyle } from './topology-scheme-three';
 
-export default function RocketMQTopologyPreview({ targets }: { targets: string[] }) {
+const previewStyle = schemeThreeStyle();
+
+export default function RocketMQTopologyPreview({ targets, height }: { targets: string[]; height?: string }) {
   const tree = useMemo(buildRocketMQTree, []);
   const [expanded, setExpanded] = useState(() => new Set([tree.id]));
   const [selectedNode, setSelectedNode] = useState<FormulaNode | null>(null);
@@ -40,7 +43,7 @@ export default function RocketMQTopologyPreview({ targets }: { targets: string[]
       <a href={rocketmqModelSource.url} target="_blank" rel="noreferrer">查看原模型</a>
       <span>实际值、目标值和单位为示例；偏差按示例值计算。</span>
     </div>
-    <FormulaCanvas tree={tree} row={row} expanded={expanded} toggle={toggle} onTrend={showTrend} targets={targets} />
+    <FormulaCanvas tree={tree} row={row} expanded={expanded} toggle={toggle} onTrend={showTrend} targets={targets} visualStyle={previewStyle} height={height} />
     {selectedNode && <section id="rocketmq-metric-trend" className="pricing-metric-panel">
       <div className="analysis-toolbar">
         <h3>指标月趋势（示例）</h3>

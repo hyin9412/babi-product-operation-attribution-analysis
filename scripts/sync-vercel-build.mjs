@@ -1,4 +1,4 @@
-import { cpSync, existsSync } from 'node:fs';
+import { cpSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const buildDir = fileURLToPath(new URL('../dist/', import.meta.url));
@@ -10,5 +10,12 @@ for (const entry of ['index.html', 'topology-flow-preview.html', 'topology-playg
   }
 }
 
+// Publish the compiled guide so its source module resolves to built assets.
+const guideBuild = `${buildDir}/public/docs/operation-conclusion-card-guide-topology.html`;
+if (!existsSync(guideBuild)) {
+  throw new Error('交互说明构建文件缺失，请先完成 npm run build。');
+}
+writeFileSync(`${buildDir}/docs/operation-conclusion-card-guide-topology.html`,
+  readFileSync(guideBuild, 'utf8').replaceAll('../../assets/', '../assets/'));
 cpSync(buildDir, publishDir, { recursive: true });
 console.log('已同步正式构建到 Vercel 发布目录 docs。');

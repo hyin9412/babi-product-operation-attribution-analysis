@@ -13,6 +13,7 @@ import trendUpIcon from '../app/static/icon/环比icon正.svg';
 import trendDownIcon from '../app/static/icon/环比icon负.svg';
 import trendFlatIcon from '../app/static/icon/环比icon无变化.svg';
 import { percent } from './analysisData';
+import type { FilterSummaryItem } from './analysisFilterSummary';
 export const Section=({title,children,id,subtitle,extra,blue=false}:{title:React.ReactNode;children:React.ReactNode;id?:string;subtitle?:React.ReactNode;extra?:React.ReactNode;blue?:boolean})=><section id={id} className={`analysis-section ${blue?'section-blue':''}`}><IconRunningInProgress className="analysis-section-loading-icon" width="24" height="24" aria-hidden="true"/><div className="section-heading"><h2>{title}</h2>{extra}</div>{subtitle&&<p className="section-subtitle">{subtitle}</p>}{children}</section>;
 export const Note=({children,tone='info'}:{children:React.ReactNode;tone?:'info'|'warning'|'error'})=><Alert className="analysis-note" type={tone} content={children}/>;
 export type SemanticCardTone = 'red' | 'blue' | 'green' | 'yellow' | 'neutral';
@@ -184,9 +185,18 @@ export const SELECT_SEARCH_THRESHOLD = 10;
 export const getSelectPlaceholder = (searchable:boolean) => searchable ? '请输入' : '请选择';
 // References: none — keep the region popup in the same sticky coordinate space as its summary trigger.
 const getFilterPopupContainer = (node:HTMLElement) => node.closest('.analysis-sticky-header') || document.body;
-// References: none — Figma 5325:124983 / 5325:125306 summary and ByteTree 7072:122364 popup list styling; supplied region names and popup direction are unchanged.
-export function FilterSummary({items,regions}:{items:string[][];regions?:string[]}) {
- return <div className="filter-summary">{items.map(([label,value])=>{const isRegionLabel=label.endsWith('售卖区域');return <Tag key={label} size="small" bordered={false} className="filter-summary-tag" data-testid={isRegionLabel?'filter-region-summary':undefined}><span className="filter-summary-label">{label}：</span>{isRegionLabel && regions!==undefined ? <Popover className="filter-region-popover" style={{width:'max-content',maxWidth:280}} title={`共 ${regions.length} 个${label}`} trigger="hover" position="bl" getPopupContainer={getFilterPopupContainer} unmountOnExit content={<div className="filter-region-details" data-testid="filter-region-details">{regions.length ? <ol className="filter-region-list">{regions.map(region=><li key={region}>{region}</li>)}</ol> : <span className="filter-region-empty">当前未选择{label}</span>}</div>}><Button type="text" size="mini" className="filter-region-count" data-testid="filter-region-count">共 {regions.length} 个</Button></Popover> : <span className="filter-summary-value">{value}</span>}</Tag>;})}</div>;
+// References: Figma summary / ByteTree popup styling; partial multiselections over three items show a count.
+export function FilterSummary({items}:{items:FilterSummaryItem[]}) {
+ return <div className="filter-summary">{items.map(([label,value,selectedValues])=>{
+  const isRegionLabel=label.endsWith('售卖区域');
+  const showCount=!!selectedValues&&selectedValues.length>3;
+  return <Tag key={label} size="small" bordered={false} className="filter-summary-tag" data-testid={isRegionLabel?'filter-region-summary':undefined}>
+   <span className="filter-summary-label">{label}：</span>
+   {showCount?<Popover className="filter-summary-popover" style={{width:'max-content',maxWidth:280}} title={<>共 <span className="filter-summary-total-number">{selectedValues.length}</span> 个{label}</>} trigger="hover" position="bl" getPopupContainer={getFilterPopupContainer} unmountOnExit content={<div className="filter-summary-details" data-testid="filter-summary-details"><ol role="list" className="filter-summary-list" style={{'--filter-summary-number-width':`${String(selectedValues.length).length+1}ch`} as React.CSSProperties}>{selectedValues.map((item,index)=><li key={`${item}-${index}`}><span className="filter-summary-item-number" aria-hidden>{index+1}.</span><span className="filter-summary-item-value">{item}</span></li>)}</ol></div>}>
+    <Button type="text" size="mini" className="filter-summary-count" aria-label={`${label}：共 ${selectedValues.length} 个，查看完整列表`} data-testid="filter-summary-count">共 <span className="filter-summary-count-number">{selectedValues.length}</span> 个</Button>
+   </Popover>:<span className="filter-summary-value">{value}</span>}
+  </Tag>;
+ })}</div>;
 }
 export function MultiFilter({value,options,onChange,disabled=false,addBefore,size='default',requiredLabel,showValidation=false,allowClear=true}:{value:string[]|null;options:string[];onChange:(value:string[])=>void;disabled?:boolean;addBefore?:React.ReactNode;size?:'mini'|'small'|'default'|'large';requiredLabel?:string;showValidation?:boolean;allowClear?:boolean}) {
  // References: none — Figma 5324:123773 menu presentation; existing option values and callbacks are unchanged.
